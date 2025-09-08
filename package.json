@@ -1,0 +1,32 @@
+{
+  "name": "back-end-sigma-la",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:dev": "cross-env NODE_ENV=development tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/app.js\"",
+    "start:prod": "cross-env NODE_ENV=production node ./dist/app.js",
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.15.1",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.1",
+    "cross-env": "^10.0.0",
+    "ts-node": "^10.9.2",
+    "tsc-watch": "^7.1.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
