@@ -17,6 +17,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
+    "@prisma/client": "^6.15.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -37,6 +38,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.6",
     "prettier": "^3.6.2",
+    "prisma": "^6.15.0",
     "ts-node": "^10.9.2",
     "tsc-watch": "^7.1.1",
     "tsx": "^4.20.5",
