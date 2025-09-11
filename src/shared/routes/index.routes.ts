@@ -32,7 +32,10 @@ router.use('/api/vehiculos', vehiculosRoutes)
 */
 
 import empleadoRouter from '../../models/Empleado/empleado.routes.js'
+import vehiculoRouter from '../../models/Vehiculo/vehiculo.routes.js'
+
 router.use('/api/empleados', empleadoRouter)
+router.use('/api/vehiculos', vehiculoRouter)
 
 router.use((req, res) => {
   res.status(404).json({
