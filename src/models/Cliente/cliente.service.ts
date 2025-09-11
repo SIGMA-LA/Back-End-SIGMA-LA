@@ -1,8 +1,5 @@
-import { PrismaClient, Prisma, cliente } from '@prisma/client'
-/**
- * Servicio para manejar operaciones CRUD de clientes.
- */
-const prisma = new PrismaClient()
+import { Prisma, cliente } from '@prisma/client'
+import { ClienteRepository } from './cliente.repository'
 
 /**
  * Servicio para manejar operaciones CRUD de clientes.
@@ -16,29 +13,62 @@ const prisma = new PrismaClient()
  * @throws {Error} - Si ocurre un error durante la operación.
  */
 export class ClienteService {
+  private repository: ClienteRepository
+
+  constructor() {
+    this.repository = new ClienteRepository()
+  }
+
   async create(data: Prisma.clienteCreateInput): Promise<cliente> {
-    return prisma.cliente.create({ data })
+    try {
+      const existingCliente = await this.repository.findById(
+        data.cuil as bigint,
+      )
+      if (existingCliente) {
+        throw new Error('Ya existe un cliente con el mismo CUIL.')
+      }
+      return await this.repository.create(data)
+    } catch (error) {
+      throw new Error(`Error al crear el cliente: ${error}`)
+    }
   }
 
   async findAll(): Promise<cliente[]> {
-    return prisma.cliente.findMany()
+    return await this.repository.findAll()
   }
 
   async findById(cuil: bigint): Promise<cliente | null> {
-    return prisma.cliente.findUnique({ where: { cuil } })
+    try {
+      return await this.repository.findById(cuil)
+    } catch (error) {
+      throw new Error(`Error al obtener cliente: ${error}`)
+    }
   }
 
   async update(
     cuil: bigint,
     data: Prisma.clienteUpdateInput,
   ): Promise<cliente> {
-    return prisma.cliente.update({
-      where: { cuil },
-      data,
-    })
+    try {
+      const existingCliente = await this.repository.findById(cuil)
+      if (!existingCliente) {
+        throw new Error('No existe un cliente con el CUIL proporcionado.')
+      }
+      return await this.repository.update(cuil, data)
+    } catch (error) {
+      throw new Error(`Error al actualizar el cliente: ${error}`)
+    }
   }
 
   async remove(cuil: bigint): Promise<cliente> {
-    return prisma.cliente.delete({ where: { cuil } })
+    try {
+      const existingCliente = await this.repository.findById(cuil)
+      if (!existingCliente) {
+        throw new Error('No existe un cliente con el CUIL proporcionado.')
+      }
+      return await this.repository.delete(cuil)
+    } catch (error) {
+      throw new Error(`Error al eliminar el cliente: ${error}`)
+    }
   }
 }

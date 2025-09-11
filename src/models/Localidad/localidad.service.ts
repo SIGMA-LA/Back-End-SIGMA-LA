@@ -1,6 +1,5 @@
-import { localidad, Prisma, PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { localidad, Prisma } from '@prisma/client'
+import { LocalidadRepository } from './localidad.repository'
 
 /**
  * Servicio para manejar operaciones CRUD de localidades.
@@ -14,29 +13,67 @@ const prisma = new PrismaClient()
  * @throws {Error} - Si ocurre un error durante la operación.
  */
 export class LocalidadService {
+  private repository: LocalidadRepository
+
+  constructor() {
+    this.repository = new LocalidadRepository()
+  }
+
   async create(data: Prisma.localidadCreateInput): Promise<localidad> {
-    return prisma.localidad.create({ data })
+    try {
+      const existingLocalidad = await this.repository.findById(
+        data.cod_postal as number,
+      )
+      if (existingLocalidad) {
+        throw new Error('Ya existe una localidad con el mismo código postal.')
+      }
+      return await this.repository.create(data)
+    } catch (error) {
+      throw new Error(`Error al crear la localidad: ${error}`)
+    }
   }
 
   async findAll(): Promise<localidad[]> {
-    return prisma.localidad.findMany()
+    return await this.repository.findAll()
   }
 
   async findById(cod_postal: number): Promise<localidad | null> {
-    return prisma.localidad.findUnique({ where: { cod_postal } })
+    try {
+      return await this.repository.findById(cod_postal)
+    } catch (error) {
+      throw new Error(`Error al obtener localidades: ${error}`)
+    }
   }
 
   async update(
     cod_postal: number,
     data: Prisma.localidadUpdateInput,
   ): Promise<localidad> {
-    return prisma.localidad.update({
-      where: { cod_postal },
-      data,
-    })
+    try {
+      const existingLocalidad = await this.repository.findById(cod_postal)
+      if (!existingLocalidad) {
+        throw new Error(
+          'No existe una localidad con el código postal proporcionado.',
+        )
+      }
+      return await this.repository.update(cod_postal, data)
+    } catch (error) {
+      throw new Error(`Error al actualizar la localidad: ${error}`)
+    }
   }
 
   async remove(cod_postal: number): Promise<localidad> {
-    return prisma.localidad.delete({ where: { cod_postal } })
+    try {
+      const existingLocalidad = await this.repository.findById(cod_postal)
+      if (!existingLocalidad) {
+        throw new Error(
+          'No existe una localidad con el código postal proporcionado.',
+        )
+      }
+
+      return await this.repository.delete(cod_postal)
+    } catch (error) {
+      throw new Error(`Error al elimina la localidad: ${error}`)
+    }
   }
 }
