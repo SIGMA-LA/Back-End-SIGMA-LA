@@ -10,14 +10,6 @@ router.get('/', (req, res) => {
   })
 })
 
-// not found endpoint
-router.use((req, res) => {
-  res.status(404).json({
-    error: 'Not found',
-    path: req.originalUrl,
-  })
-})
-
 // Health check endpoint
 router.get('/health', (req, res) => {
   res.json({
@@ -38,5 +30,15 @@ router.use('/api/empleados', empleadosRoutes)
 router.use('/api/clientes', clientesRoutes)
 router.use('/api/vehiculos', vehiculosRoutes)
 */
+
+import empleadoRouter from '../../models/Empleado/empleado.routes.js'
+router.use('/api/empleados', empleadoRouter)
+
+router.use((req, res) => {
+  res.status(404).json({
+    error: 'Not found',
+    path: req.originalUrl,
+  })
+})
 
 export default router
