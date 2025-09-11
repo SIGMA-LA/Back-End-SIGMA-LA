@@ -1,13 +1,27 @@
 import { Router } from 'express'
-import { ParametroController } from './parametro.controller'
+import { ParametroController } from './parametro.controller.js'
 
-const controller = new ParametroController()
-const router = Router()
+const parametroController = new ParametroController()
+const parametroRouter = Router()
 
-router.post('/', (req, res) => controller.create(req, res))
-router.get('/', (req, res) => controller.getAll(req, res))
-router.get('/:fecha:hora', (req, res) => controller.getOne(req, res))
-router.put('/:fecha:hora', (req, res) => controller.update(req, res))
-router.delete('/:fecha:hora', (req, res) => controller.remove(req, res))
+parametroRouter.get('/', (req, res) => {
+  parametroController.getAll(req, res)
+})
 
-export default router
+parametroRouter.post('/', (req, res) => {
+  parametroController.create(req, res)
+})
+
+parametroRouter.get('/:fecha:hora', (req, res) => {
+  parametroController.getOne(req, res)
+})
+
+parametroRouter.put('/:fecha:hora', (req, res) => {
+  parametroController.update(req, res)
+})
+
+parametroRouter.delete('/:fecha:hora', (req, res) => {
+  parametroController.remove(req, res)
+})
+
+export default parametroRouter

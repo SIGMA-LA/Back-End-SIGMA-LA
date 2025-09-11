@@ -1,13 +1,27 @@
 import { Router } from 'express'
-import { ClienteController } from './cliente.controller'
+import { ClienteController } from './cliente.controller.js'
 
-const router = Router()
-const controller = new ClienteController()
+const clienteController = new ClienteController()
+const clienteRouter = Router()
 
-router.post('/', (req, res) => controller.create(req, res))
-router.get('/', (req, res) => controller.getAll(req, res))
-router.get('/:cuil', (req, res) => controller.getOne(req, res))
-router.put('/:cuil', (req, res) => controller.update(req, res))
-router.delete('/:cuil', (req, res) => controller.remove(req, res))
+clienteRouter.get('/', (req, res) => {
+  clienteController.getAll(req, res)
+})
 
-export default router
+clienteRouter.post('/', (req, res) => {
+  clienteController.create(req, res)
+})
+
+clienteRouter.get('/:cuil', (req, res) => {
+  clienteController.getOne(req, res)
+})
+
+clienteRouter.put('/:cuil', (req, res) => {
+  clienteController.update(req, res)
+})
+
+clienteRouter.delete('/:cuil', (req, res) => {
+  clienteController.remove(req, res)
+})
+
+export default clienteRouter
