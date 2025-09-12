@@ -33,9 +33,17 @@ router.use('/api/vehiculos', vehiculosRoutes)
 
 import empleadoRouter from '../../models/Empleado/empleado.routes.js'
 import vehiculoRouter from '../../models/Vehiculo/vehiculo.routes.js'
+import clienteRouter from '../../models/Cliente/cliente.routes.js'
+import localidadRouter from '../../models/Localidad/localidad.routes.js'
+import maquinariaRouter from '../../models/Maquinaria/maquinaria.routes.js'
+import parametroRouter from '../../models/Parametro/parametro.routes.js'
 
 router.use('/api/empleados', empleadoRouter)
 router.use('/api/vehiculos', vehiculoRouter)
+router.use('/api/clientes', clienteRouter)
+router.use('/api/localidades', localidadRouter)
+router.use('/api/maquinarias', maquinariaRouter)
+router.use('/api/parametros', parametroRouter)
 
 router.use((req, res) => {
   res.status(404).json({

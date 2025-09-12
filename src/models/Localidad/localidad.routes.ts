@@ -1,13 +1,27 @@
 import { Router } from 'express'
 import { LocalidadController } from './localidad.controller.js'
 
-const router = Router()
-const controller = new LocalidadController()
+const localidadController = new LocalidadController()
+const localidadRouter = Router()
 
-router.post('/', (req, res) => controller.create(req, res))
-router.get('/', (req, res) => controller.getAll(req, res))
-router.get('/:id', (req, res) => controller.getOne(req, res))
-router.put('/:id', (req, res) => controller.update(req, res))
-router.delete('/:id', (req, res) => controller.remove(req, res))
+localidadRouter.get('/', (req, res) => {
+  localidadController.getAll(req, res)
+})
 
-export default router
+localidadRouter.post('/', (req, res) => {
+  localidadController.create(req, res)
+})
+
+localidadRouter.get('/:id', (req, res) => {
+  localidadController.getOne(req, res)
+})
+
+localidadRouter.put('/:id', (req, res) => {
+  localidadController.update(req, res)
+})
+
+localidadRouter.delete('/:id', (req, res) => {
+  localidadController.remove(req, res)
+})
+
+export default localidadRouter
