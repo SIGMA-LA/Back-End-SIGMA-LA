@@ -25,21 +25,17 @@ export class ParametroService {
    * @returns El parámetro creado.
    */
   async create(data: Prisma.parametroCreateInput): Promise<parametro> {
-    try {
-      const existingParametro = await this.repository.findByFecha(
-        data.fecha_cambio as Date,
-        data.hora_cambio as Date,
+    const existingParametro = await this.repository.findByFecha(
+      data.fecha_cambio as Date,
+      data.hora_cambio as Date,
+    )
+    if (existingParametro) {
+      throw new Error(
+        'Ya existe un parámetro con la misma fecha y hora de cambio.',
       )
-      if (existingParametro) {
-        throw new Error(
-          'Ya existe un parámetro con la misma fecha y hora de cambio.',
-        )
-      }
-
-      return await this.repository.create(data)
-    } catch (error) {
-      throw new Error(`Error al crear el parámetro: ${error}`)
     }
+
+    return await this.repository.create(data)
   }
 
   /**
@@ -47,11 +43,7 @@ export class ParametroService {
    * @returns Una lista de todos los parámetros.
    */
   async findAll(): Promise<parametro[]> {
-    try {
-      return await this.repository.findAll()
-    } catch (error) {
-      throw new Error(`Error al obtener parametros: ${error}`)
-    }
+    return await this.repository.findAll()
   }
 
   /**
@@ -64,11 +56,7 @@ export class ParametroService {
     fecha_cambio: Date,
     hora_cambio: Date,
   ): Promise<parametro | null> {
-    try {
-      return await this.repository.findByFecha(fecha_cambio, hora_cambio)
-    } catch (error) {
-      throw new Error(`Error al obtener parametros: ${error}`)
-    }
+    return await this.repository.findByFecha(fecha_cambio, hora_cambio)
   }
 
   /**
@@ -83,19 +71,15 @@ export class ParametroService {
     hora_cambio: Date,
     data: Prisma.parametroUpdateInput,
   ): Promise<parametro> {
-    try {
-      const existingParametro = await this.repository.findByFecha(
-        fecha_cambio,
-        hora_cambio,
-      )
-      if (!existingParametro) {
-        throw new Error('Parametro no encontrado.')
-      }
-
-      return await this.repository.update(fecha_cambio, hora_cambio, data)
-    } catch (error) {
-      throw new Error(`Error al actualizar parametro: ${error}`)
+    const existingParametro = await this.repository.findByFecha(
+      fecha_cambio,
+      hora_cambio,
+    )
+    if (!existingParametro) {
+      throw new Error('Parametro no encontrado.')
     }
+
+    return await this.repository.update(fecha_cambio, hora_cambio, data)
   }
 
   /**
@@ -105,18 +89,14 @@ export class ParametroService {
    * @returns El parámetro eliminado.
    */
   async remove(fecha_cambio: Date, hora_cambio: Date): Promise<parametro> {
-    try {
-      const existingParametro = await this.repository.findByFecha(
-        fecha_cambio,
-        hora_cambio,
-      )
-      if (!existingParametro) {
-        throw new Error('Empleado no encontrado')
-      }
-
-      return await this.repository.delete(fecha_cambio, hora_cambio)
-    } catch (error) {
-      throw new Error(`Error al eliminar parametro: ${error}`)
+    const existingParametro = await this.repository.findByFecha(
+      fecha_cambio,
+      hora_cambio,
+    )
+    if (!existingParametro) {
+      throw new Error('Empleado no encontrado')
     }
+
+    return await this.repository.delete(fecha_cambio, hora_cambio)
   }
 }

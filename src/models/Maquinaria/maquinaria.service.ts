@@ -20,11 +20,7 @@ export class MaquinariaService {
   }
 
   async create(data: Prisma.maquinariaCreateInput): Promise<maquinaria> {
-    try {
-      return await this.repository.create(data)
-    } catch (error) {
-      throw new Error(`Error al crear la maquinaria: ${error}`)
-    }
+    return await this.repository.create(data)
   }
 
   async findAll(): Promise<maquinaria[]> {
@@ -32,11 +28,7 @@ export class MaquinariaService {
   }
 
   async findById(cod_maquina: number): Promise<maquinaria | null> {
-    try {
-      return await this.repository.findById(cod_maquina)
-    } catch (error) {
-      throw new Error(`Error al obtener maquinaria: ${error}`)
-    }
+    return await this.repository.findById(cod_maquina)
   }
 
   async update(
@@ -47,14 +39,10 @@ export class MaquinariaService {
   }
 
   async remove(cod_maquina: number): Promise<maquinaria> {
-    try {
-      const existingMaquinaria = await this.repository.findById(cod_maquina)
-      if (!existingMaquinaria) {
-        throw new Error('No existe una maquinaria con el código proporcionado.')
-      }
-      return await this.repository.delete(cod_maquina)
-    } catch (error) {
-      throw new Error(`Error al eliminar la maquinaria: ${error}`)
+    const existingMaquinaria = await this.repository.findById(cod_maquina)
+    if (!existingMaquinaria) {
+      throw new Error('No existe una maquinaria con el código proporcionado.')
     }
+    return await this.repository.delete(cod_maquina)
   }
 }
