@@ -1,5 +1,11 @@
 import { Router } from 'express'
 import { EmpleadoController } from './empleado.controller.js'
+import { validate } from '../../shared/middlewares/validateSchemas.js'
+import {
+  createEmpleadoSchema,
+  updateEmpleadoSchema,
+} from '../../schemas/empleado.schema.js'
+import { cuilParamsSchema } from '../../schemas/common.schema.js'
 
 const empleadoController = new EmpleadoController()
 const empleadoRouter = Router()
@@ -8,20 +14,39 @@ empleadoRouter.get('/', (req, res) => {
   empleadoController.getAll(req, res)
 })
 
-empleadoRouter.post('/', (req, res) => {
-  empleadoController.create(req, res)
-})
+empleadoRouter.post(
+  '/',
+  validate({ body: createEmpleadoSchema }),
+  (req, res) => {
+    empleadoController.create(req, res)
+  },
+)
 
-empleadoRouter.get('/:cuil', (req, res) => {
-  empleadoController.getOne(req, res)
-})
+empleadoRouter.get(
+  '/:cuil',
+  validate({ params: cuilParamsSchema }),
+  (req, res) => {
+    empleadoController.getOne(req, res)
+  },
+)
 
-empleadoRouter.put('/:cuil', (req, res) => {
-  empleadoController.update(req, res)
-})
+empleadoRouter.put(
+  '/:cuil',
+  validate({
+    params: cuilParamsSchema,
+    body: updateEmpleadoSchema,
+  }),
+  (req, res) => {
+    empleadoController.update(req, res)
+  },
+)
 
-empleadoRouter.delete('/:cuil', (req, res) => {
-  empleadoController.remove(req, res)
-})
+empleadoRouter.delete(
+  '/:cuil',
+  validate({ params: cuilParamsSchema }),
+  (req, res) => {
+    empleadoController.remove(req, res)
+  },
+)
 
 export default empleadoRouter
