@@ -29,42 +29,22 @@ export class EmpleadoService {
     area_trabajo: string
     contrasenia?: string
   }): Promise<empleado> {
-    try {
-      const existingEmpleado = await this.empleadoRepository.findByCuil(
-        data.cuil,
-      )
-      if (existingEmpleado) {
-        throw new Error('Ya existe un empleado con ese CUIL')
-      }
-
-      return await this.empleadoRepository.create(data)
-    } catch (error: unknown) {
-      throw new Error(
-        `Error al crear empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-      )
+    const existingEmpleado = await this.empleadoRepository.findByCuil(data.cuil)
+    if (existingEmpleado) {
+      throw new Error('Ya existe un empleado con ese CUIL')
     }
+
+    return await this.empleadoRepository.create(data)
   }
 
   // Obtener todos los empleados
   async findAll(): Promise<empleado[]> {
-    try {
-      return await this.empleadoRepository.findAll()
-    } catch (error: unknown) {
-      throw new Error(
-        `Error al obtener empleados: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-      )
-    }
+    return await this.empleadoRepository.findAll()
   }
 
   // Obtener empleado por CUIL
   async findByCuil(cuil: bigint): Promise<empleado | null> {
-    try {
-      return await this.empleadoRepository.findByCuil(cuil)
-    } catch (error: unknown) {
-      throw new Error(
-        `Error al obtener empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-      )
-    }
+    return await this.empleadoRepository.findByCuil(cuil)
   }
 
   // Actualizar empleado
@@ -78,44 +58,26 @@ export class EmpleadoService {
       contrasenia: string
     }>,
   ): Promise<empleado> {
-    try {
-      const existingEmpleado = await this.empleadoRepository.findByCuil(cuil)
-      if (!existingEmpleado) {
-        throw new Error('Empleado no encontrado')
-      }
-
-      return await this.empleadoRepository.update(cuil, data)
-    } catch (error: unknown) {
-      throw new Error(
-        `Error al actualizar empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-      )
+    const existingEmpleado = await this.empleadoRepository.findByCuil(cuil)
+    if (!existingEmpleado) {
+      throw new Error('Empleado no encontrado')
     }
+
+    return await this.empleadoRepository.update(cuil, data)
   }
 
   // Eliminar empleado
   async remove(cuil: bigint): Promise<empleado> {
-    try {
-      const existingEmpleado = await this.empleadoRepository.findByCuil(cuil)
-      if (!existingEmpleado) {
-        throw new Error('Empleado no encontrado')
-      }
-
-      return await this.empleadoRepository.delete(cuil)
-    } catch (error: unknown) {
-      throw new Error(
-        `Error al eliminar empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-      )
+    const existingEmpleado = await this.empleadoRepository.findByCuil(cuil)
+    if (!existingEmpleado) {
+      throw new Error('Empleado no encontrado')
     }
+
+    return await this.empleadoRepository.delete(cuil)
   }
 
   // Contar total de empleados
   async count(): Promise<number> {
-    try {
-      return await this.empleadoRepository.count()
-    } catch (error: unknown) {
-      throw new Error(
-        `Error al contar empleados: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-      )
-    }
+    return await this.empleadoRepository.count()
   }
 }

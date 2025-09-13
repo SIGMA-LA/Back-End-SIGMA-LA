@@ -16,12 +16,8 @@ const localidadService = new LocalidadService()
  */
 export class LocalidadController {
   async create(req: Request, res: Response) {
-    try {
-      const localidad = await localidadService.create(req.body)
-      res.status(201).json(localidad)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const localidad = await localidadService.create(req.body)
+    res.status(201).json(localidad)
   }
 
   async getAll(req: Request, res: Response) {
@@ -40,21 +36,13 @@ export class LocalidadController {
 
   async update(req: Request, res: Response) {
     const id = parseInt(req.params.id)
-    try {
-      const localidad = await localidadService.update(id, req.body)
-      res.json(localidad)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const localidad = await localidadService.update(id, req.body)
+    res.json(localidad)
   }
 
   async remove(req: Request, res: Response) {
     const id = parseInt(req.params.id)
-    try {
-      const localidad = await localidadService.remove(id)
-      res.json(localidad)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const localidad = await localidadService.remove(id)
+    res.json(localidad)
   }
 }

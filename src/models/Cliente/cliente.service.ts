@@ -20,17 +20,11 @@ export class ClienteService {
   }
 
   async create(data: Prisma.clienteCreateInput): Promise<cliente> {
-    try {
-      const existingCliente = await this.repository.findById(
-        data.cuil as bigint,
-      )
-      if (existingCliente) {
-        throw new Error('Ya existe un cliente con el mismo CUIL.')
-      }
-      return await this.repository.create(data)
-    } catch (error) {
-      throw new Error(`Error al crear el cliente: ${error}`)
+    const existingCliente = await this.repository.findById(data.cuil as bigint)
+    if (existingCliente) {
+      throw new Error('Ya existe un cliente con el mismo CUIL.')
     }
+    return await this.repository.create(data)
   }
 
   async findAll(): Promise<cliente[]> {
@@ -38,37 +32,25 @@ export class ClienteService {
   }
 
   async findById(cuil: bigint): Promise<cliente | null> {
-    try {
-      return await this.repository.findById(cuil)
-    } catch (error) {
-      throw new Error(`Error al obtener cliente: ${error}`)
-    }
+    return await this.repository.findById(cuil)
   }
 
   async update(
     cuil: bigint,
     data: Prisma.clienteUpdateInput,
   ): Promise<cliente> {
-    try {
-      const existingCliente = await this.repository.findById(cuil)
-      if (!existingCliente) {
-        throw new Error('No existe un cliente con el CUIL proporcionado.')
-      }
-      return await this.repository.update(cuil, data)
-    } catch (error) {
-      throw new Error(`Error al actualizar el cliente: ${error}`)
+    const existingCliente = await this.repository.findById(cuil)
+    if (!existingCliente) {
+      throw new Error('No existe un cliente con el CUIL proporcionado.')
     }
+    return await this.repository.update(cuil, data)
   }
 
   async remove(cuil: bigint): Promise<cliente> {
-    try {
-      const existingCliente = await this.repository.findById(cuil)
-      if (!existingCliente) {
-        throw new Error('No existe un cliente con el CUIL proporcionado.')
-      }
-      return await this.repository.delete(cuil)
-    } catch (error) {
-      throw new Error(`Error al eliminar el cliente: ${error}`)
+    const existingCliente = await this.repository.findById(cuil)
+    if (!existingCliente) {
+      throw new Error('No existe un cliente con el CUIL proporcionado.')
     }
+    return await this.repository.delete(cuil)
   }
 }

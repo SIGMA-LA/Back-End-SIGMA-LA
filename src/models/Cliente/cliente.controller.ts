@@ -16,12 +16,8 @@ const clienteService = new ClienteService()
  */
 export class ClienteController {
   async create(req: Request, res: Response) {
-    try {
-      const cliente = await clienteService.create(req.body)
-      res.status(201).json(cliente)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const cliente = await clienteService.create(req.body)
+    res.status(201).json(cliente)
   }
 
   async getAll(req: Request, res: Response) {
@@ -40,21 +36,13 @@ export class ClienteController {
 
   async update(req: Request, res: Response) {
     const cuil = BigInt(req.params.cuil)
-    try {
-      const cliente = await clienteService.update(cuil, req.body)
-      res.json(cliente)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const cliente = await clienteService.update(cuil, req.body)
+    res.json(cliente)
   }
 
   async remove(req: Request, res: Response) {
     const cuil = BigInt(req.params.cuil)
-    try {
-      const cliente = await clienteService.remove(cuil)
-      res.json(cliente)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const cliente = await clienteService.remove(cuil)
+    res.json(cliente)
   }
 }

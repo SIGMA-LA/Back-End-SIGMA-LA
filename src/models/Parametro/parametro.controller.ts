@@ -16,12 +16,8 @@ const parametroService = new ParametroService()
  */
 export class ParametroController {
   async create(req: Request, res: Response) {
-    try {
-      const parametro = await parametroService.create(req.body)
-      res.status(201).json(parametro)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const parametro = await parametroService.create(req.body)
+    res.status(201).json(parametro)
   }
 
   async getAll(req: Request, res: Response) {
@@ -43,28 +39,20 @@ export class ParametroController {
 
   async update(req: Request, res: Response) {
     const { fecha_cambio, hora_cambio } = req.params
-    try {
-      const parametro = await parametroService.update(
-        new Date(fecha_cambio),
-        new Date(hora_cambio),
-        req.body,
-      )
-      res.json(parametro)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const parametro = await parametroService.update(
+      new Date(fecha_cambio),
+      new Date(hora_cambio),
+      req.body,
+    )
+    res.json(parametro)
   }
 
   async remove(req: Request, res: Response) {
     const { fecha_cambio, hora_cambio } = req.params
-    try {
-      const parametro = await parametroService.remove(
-        new Date(fecha_cambio),
-        new Date(hora_cambio),
-      )
-      res.json(parametro)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const parametro = await parametroService.remove(
+      new Date(fecha_cambio),
+      new Date(hora_cambio),
+    )
+    res.json(parametro)
   }
 }

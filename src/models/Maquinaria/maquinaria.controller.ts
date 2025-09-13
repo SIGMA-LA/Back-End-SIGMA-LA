@@ -16,12 +16,8 @@ const maquinariaService = new MaquinariaService()
  */
 export class MaquinariaController {
   async create(req: Request, res: Response) {
-    try {
-      const nueva = await maquinariaService.create(req.body)
-      res.status(201).json(nueva)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const nueva = await maquinariaService.create(req.body)
+    res.status(201).json(nueva)
   }
 
   async getAll(req: Request, res: Response) {
@@ -40,21 +36,13 @@ export class MaquinariaController {
 
   async update(req: Request, res: Response) {
     const cod_maquina = parseInt(req.params.cod_maquina, 10)
-    try {
-      const maquina = await maquinariaService.update(cod_maquina, req.body)
-      res.json(maquina)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const maquina = await maquinariaService.update(cod_maquina, req.body)
+    res.json(maquina)
   }
 
   async remove(req: Request, res: Response) {
     const cod_maquina = parseInt(req.params.cod_maquina, 10)
-    try {
-      const maquina = await maquinariaService.remove(cod_maquina)
-      res.json(maquina)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const maquina = await maquinariaService.remove(cod_maquina)
+    res.json(maquina)
   }
 }

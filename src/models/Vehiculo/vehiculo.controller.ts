@@ -15,12 +15,8 @@ import { vehiculoService } from './vehiculo.service.js'
 
 export class VehiculoController {
   async create(req: Request, res: Response) {
-    try {
-      const vehiculo = await vehiculoService.create(req.body)
-      res.status(201).json(vehiculo)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const vehiculo = await vehiculoService.create(req.body)
+    res.status(201).json(vehiculo)
   }
 
   async getAll(req: Request, res: Response) {
@@ -39,22 +35,14 @@ export class VehiculoController {
 
   async update(req: Request, res: Response) {
     const patente = req.params.patente
-    try {
-      const vehiculo = await vehiculoService.update(patente, req.body)
-      res.json(vehiculo)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const vehiculo = await vehiculoService.update(patente, req.body)
+    res.json(vehiculo)
   }
 
   async remove(req: Request, res: Response) {
     const patente = req.params.patente
-    try {
-      const vehiculo = await vehiculoService.remove(patente)
-      res.json(vehiculo)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const vehiculo = await vehiculoService.remove(patente)
+    res.json(vehiculo)
   }
 }
 

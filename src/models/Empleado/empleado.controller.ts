@@ -17,12 +17,8 @@ const empleadoService = new EmpleadoService()
 
 export class EmpleadoController {
   async create(req: Request, res: Response) {
-    try {
-      const empleado = await empleadoService.create(req.body)
-      res.status(201).json(empleado)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const empleado = await empleadoService.create(req.body)
+    res.status(201).json(empleado)
   }
 
   async getAll(req: Request, res: Response) {
@@ -41,21 +37,13 @@ export class EmpleadoController {
 
   async update(req: Request, res: Response) {
     const cuil = BigInt(req.params.cuil)
-    try {
-      const empleado = await empleadoService.update(cuil, req.body)
-      res.json(empleado)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const empleado = await empleadoService.update(cuil, req.body)
+    res.json(empleado)
   }
 
   async remove(req: Request, res: Response) {
     const cuil = BigInt(req.params.cuil)
-    try {
-      const empleado = await empleadoService.remove(cuil)
-      res.json(empleado)
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message })
-    }
+    const empleado = await empleadoService.remove(cuil)
+    res.json(empleado)
   }
 }

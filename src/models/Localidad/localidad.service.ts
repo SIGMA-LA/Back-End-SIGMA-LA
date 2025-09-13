@@ -20,17 +20,13 @@ export class LocalidadService {
   }
 
   async create(data: Prisma.localidadCreateInput): Promise<localidad> {
-    try {
-      const existingLocalidad = await this.repository.findById(
-        data.cod_postal as number,
-      )
-      if (existingLocalidad) {
-        throw new Error('Ya existe una localidad con el mismo código postal.')
-      }
-      return await this.repository.create(data)
-    } catch (error) {
-      throw new Error(`Error al crear la localidad: ${error}`)
+    const existingLocalidad = await this.repository.findById(
+      data.cod_postal as number,
+    )
+    if (existingLocalidad) {
+      throw new Error('Ya existe una localidad con el mismo código postal.')
     }
+    return await this.repository.create(data)
   }
 
   async findAll(): Promise<localidad[]> {
@@ -38,42 +34,30 @@ export class LocalidadService {
   }
 
   async findById(cod_postal: number): Promise<localidad | null> {
-    try {
-      return await this.repository.findById(cod_postal)
-    } catch (error) {
-      throw new Error(`Error al obtener localidades: ${error}`)
-    }
+    return await this.repository.findById(cod_postal)
   }
 
   async update(
     cod_postal: number,
     data: Prisma.localidadUpdateInput,
   ): Promise<localidad> {
-    try {
-      const existingLocalidad = await this.repository.findById(cod_postal)
-      if (!existingLocalidad) {
-        throw new Error(
-          'No existe una localidad con el código postal proporcionado.',
-        )
-      }
-      return await this.repository.update(cod_postal, data)
-    } catch (error) {
-      throw new Error(`Error al actualizar la localidad: ${error}`)
+    const existingLocalidad = await this.repository.findById(cod_postal)
+    if (!existingLocalidad) {
+      throw new Error(
+        'No existe una localidad con el código postal proporcionado.',
+      )
     }
+    return await this.repository.update(cod_postal, data)
   }
 
   async remove(cod_postal: number): Promise<localidad> {
-    try {
-      const existingLocalidad = await this.repository.findById(cod_postal)
-      if (!existingLocalidad) {
-        throw new Error(
-          'No existe una localidad con el código postal proporcionado.',
-        )
-      }
-
-      return await this.repository.delete(cod_postal)
-    } catch (error) {
-      throw new Error(`Error al elimina la localidad: ${error}`)
+    const existingLocalidad = await this.repository.findById(cod_postal)
+    if (!existingLocalidad) {
+      throw new Error(
+        'No existe una localidad con el código postal proporcionado.',
+      )
     }
+
+    return await this.repository.delete(cod_postal)
   }
 }
