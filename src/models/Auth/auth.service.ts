@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
 const JWT_SECRET = process.env.JWT_SECRET as string
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN
 
 if (!JWT_SECRET) {
   throw new Error('La variable de entorno JWT_SECRET no está definida.')
@@ -88,7 +89,7 @@ export class AuthService {
         rol_actual: empleado.rol_actual,
       },
       JWT_SECRET,
-      { expiresIn: '8h' },
+      { expiresIn: JWT_EXPIRES_IN },
     )
   }
 }
