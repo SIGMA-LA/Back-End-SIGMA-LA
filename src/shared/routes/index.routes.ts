@@ -37,6 +37,9 @@ import clienteRouter from '../../models/Cliente/cliente.routes.js'
 import localidadRouter from '../../models/Localidad/localidad.routes.js'
 import maquinariaRouter from '../../models/Maquinaria/maquinaria.routes.js'
 import parametroRouter from '../../models/Parametro/parametro.routes.js'
+import authRouter from '../../models/Auth/auth.routes.js'
+
+router.use('/api/auth', authRouter)
 
 router.use('/api/empleados', empleadoRouter)
 router.use('/api/vehiculos', vehiculoRouter)
