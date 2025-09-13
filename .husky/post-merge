@@ -1,47 +1,47 @@
 #!/usr/bin/env sh
 
-echo "🔄 Running post-merge tasks..."
+echo "Ejecutando tareas post-merge..."
 
-# Check if package.json was updated
+# Verificar si package.json fue actualizado
 if git diff HEAD~1 HEAD --name-only | grep -q "package.json"; then
-    echo "📦 Dependencies updated, running pnpm install..."
+    echo "Dependencias actualizadas, ejecutando pnpm install..."
     pnpm install
-    echo "✅ Dependencies updated successfully!"
+    echo "Dependencias actualizadas exitosamente."
 fi
 
-# Check if package-lock or pnpm-lock was updated
+# Verificar si el lock file fue actualizado
 if git diff HEAD~1 HEAD --name-only | grep -q "pnpm-lock.yaml"; then
-    echo "🔒 Lock file updated, ensuring dependencies sync..."
+    echo "Lock file actualizado, sincronizando dependencias..."
     pnpm install
-    echo "✅ Dependencies synced successfully!"
+    echo "Dependencias sincronizadas exitosamente."
 fi
 
-# Check if Prisma schema was updated
+# Verificar si el schema de Prisma fue actualizado
 if git diff HEAD~1 HEAD --name-only | grep -q "prisma/schema.prisma"; then
-    echo "🗄️ Prisma schema updated, generating client..."
+    echo "Schema de Prisma actualizado, generando cliente..."
     pnpm prisma generate
-    echo "⚠️ Remember to run migrations if needed: pnpm db:migrate"
-    echo "✅ Prisma client regenerated successfully!"
+    echo "ATENCION: Ejecutar migraciones si es necesario: pnpm db:migrate"
+    echo "Cliente de Prisma regenerado exitosamente."
 fi
 
-# Check if migrations were added
+# Verificar si se agregaron migraciones
 if git diff HEAD~1 HEAD --name-only | grep -q "prisma/migrations"; then
-    echo "🚀 New migrations detected!"
-    echo "⚠️ Run 'pnpm db:migrate' to apply them to your database"
+    echo "Nuevas migraciones detectadas."
+    echo "ATENCION: Ejecutar 'pnpm db:migrate' para aplicarlas a la base de datos."
 fi
 
-# Check if many source files changed (rebuild might be needed)
+# Verificar si muchos archivos fuente cambiaron
 CHANGED_TS_FILES=$(git diff HEAD~1 HEAD --name-only | grep -E '\.(ts|js)$' | wc -l)
 if [ "$CHANGED_TS_FILES" -gt 5 ]; then
-    echo "🔧 Many TypeScript files changed ($CHANGED_TS_FILES), rebuilding..."
+    echo "Multiples archivos TypeScript modificados ($CHANGED_TS_FILES), reconstruyendo..."
     pnpm build
-    echo "✅ Build completed successfully!"
+    echo "Build completado exitosamente."
 fi
 
-# Check if .env.example was updated
+# Verificar si .env.example fue actualizado
 if git diff HEAD~1 HEAD --name-only | grep -q ".env.example"; then
-    echo "🔧 .env.example updated!"
-    echo "⚠️ Check if you need to update your .env file with new variables"
+    echo "Archivo .env.example actualizado."
+    echo "ATENCION: Verificar si necesitas actualizar tu archivo .env con nuevas variables."
 fi
 
-echo "✨ Post-merge tasks completed!"
+echo "Tareas post-merge completadas."
