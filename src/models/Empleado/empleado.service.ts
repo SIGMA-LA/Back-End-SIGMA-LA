@@ -38,8 +38,10 @@ export class EmpleadoService {
       }
 
       return await this.empleadoRepository.create(data)
-    } catch (error: any) {
-      throw new Error(`Error al crear empleado: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al crear empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 
@@ -47,8 +49,10 @@ export class EmpleadoService {
   async findAll(): Promise<empleado[]> {
     try {
       return await this.empleadoRepository.findAll()
-    } catch (error: any) {
-      throw new Error(`Error al obtener empleados: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al obtener empleados: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 
@@ -56,8 +60,10 @@ export class EmpleadoService {
   async findByCuil(cuil: bigint): Promise<empleado | null> {
     try {
       return await this.empleadoRepository.findByCuil(cuil)
-    } catch (error: any) {
-      throw new Error(`Error al obtener empleado: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al obtener empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 
@@ -79,8 +85,10 @@ export class EmpleadoService {
       }
 
       return await this.empleadoRepository.update(cuil, data)
-    } catch (error: any) {
-      throw new Error(`Error al actualizar empleado: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al actualizar empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 
@@ -93,8 +101,10 @@ export class EmpleadoService {
       }
 
       return await this.empleadoRepository.delete(cuil)
-    } catch (error: any) {
-      throw new Error(`Error al eliminar empleado: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al eliminar empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 
@@ -102,8 +112,10 @@ export class EmpleadoService {
   async count(): Promise<number> {
     try {
       return await this.empleadoRepository.count()
-    } catch (error: any) {
-      throw new Error(`Error al contar empleados: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al contar empleados: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 }

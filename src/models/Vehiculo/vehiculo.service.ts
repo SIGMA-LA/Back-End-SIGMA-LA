@@ -35,8 +35,10 @@ export class VehiculoService {
       }
 
       return await this.vehiculoRepository.create(data)
-    } catch (error: any) {
-      throw new Error(`Error al crear vehiculo: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al crear vehiculo: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 
@@ -44,8 +46,10 @@ export class VehiculoService {
   async findAll(): Promise<vehiculo[]> {
     try {
       return await this.vehiculoRepository.findAll()
-    } catch (error: any) {
-      throw new Error(`Error al obtener vehiculos: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al obtener vehiculos: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 
@@ -53,8 +57,10 @@ export class VehiculoService {
   async findByPatente(patente: string): Promise<vehiculo | null> {
     try {
       return await this.vehiculoRepository.findByPatente(patente)
-    } catch (error: any) {
-      throw new Error(`Error al buscar vehiculo: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al buscar vehiculo: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 
@@ -74,8 +80,10 @@ export class VehiculoService {
       }
 
       return await this.vehiculoRepository.update(patente, data)
-    } catch (error: any) {
-      throw new Error(`Error al actualizar vehiculo: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al actualizar vehiculo: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 
@@ -89,8 +97,10 @@ export class VehiculoService {
       }
 
       return await this.vehiculoRepository.remove(patente)
-    } catch (error: any) {
-      throw new Error(`Error al eliminar vehiculo: ${error.message}`)
+    } catch (error: unknown) {
+      throw new Error(
+        `Error al eliminar vehiculo: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      )
     }
   }
 }
