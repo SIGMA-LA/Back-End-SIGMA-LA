@@ -3,7 +3,11 @@ import { empleado } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'jwt_default_secret'
+const JWT_SECRET = process.env.JWT_SECRET as string
+
+if (!JWT_SECRET) {
+  throw new Error('La variable de entorno JWT_SECRET no está definida.')
+}
 
 /**
  * Servicio para manejar la autenticación de empleados.
