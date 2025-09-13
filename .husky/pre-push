@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+
+echo "Running tests and build before push..."
+
+echo "Running tests..."
+pnpm test
+
+if [ $? -eq 0 ]; then
+    echo "Tests passed! Running build..."
+    pnpm build
+else
+    echo "Tests failed! Push cancelled."
+    exit 1
+fi
+
+if [ $? -ne 0 ]; then
+    echo "Build failed! Push cancelled."
+    exit 1
+fi
+
+echo "All checks passed! Proceeding with push..."
