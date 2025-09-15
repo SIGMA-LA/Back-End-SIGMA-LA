@@ -1,4 +1,4 @@
-import { ParametroService } from './parametro.service'
+import { ParametroService } from './parametro.service.js'
 import { Request, Response } from 'express'
 
 const parametroService = new ParametroService()
