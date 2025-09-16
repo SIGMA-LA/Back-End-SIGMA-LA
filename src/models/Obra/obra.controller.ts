@@ -1,4 +1,4 @@
-import { ObraService } from './obra.service'
+import { ObraService } from './obra.service.js'
 import { Request, Response } from 'express'
 
 const obraService = new ObraService()

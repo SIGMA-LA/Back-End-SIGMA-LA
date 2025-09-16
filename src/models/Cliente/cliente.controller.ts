@@ -26,7 +26,7 @@ export class ClienteController {
   }
 
   async getOne(req: Request, res: Response) {
-    const cuil = BigInt(req.params.cuil)
+    const cuil = req.params.cuil
     const cliente = await clienteService.findById(cuil)
     if (!cliente) {
       return res.status(404).json({ message: 'Cliente no encontrado' })
@@ -35,13 +35,13 @@ export class ClienteController {
   }
 
   async update(req: Request, res: Response) {
-    const cuil = BigInt(req.params.cuil)
+    const cuil = req.params.cuil
     const cliente = await clienteService.update(cuil, req.body)
     res.json(cliente)
   }
 
   async remove(req: Request, res: Response) {
-    const cuil = BigInt(req.params.cuil)
+    const cuil = req.params.cuil
     const cliente = await clienteService.remove(cuil)
     res.json(cliente)
   }

@@ -1,5 +1,5 @@
 import { obra, Prisma } from '@prisma/client'
-import { ObraRepository } from './obra.repository'
+import { ObraRepository } from './obra.repository.js'
 
 /**
  * Servicio para gestionar las operaciones relacionadas con las obras.

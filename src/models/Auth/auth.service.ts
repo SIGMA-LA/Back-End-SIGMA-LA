@@ -31,7 +31,7 @@ export class AuthService {
    * @returns {Promise<empleado>} - Empleado creado
    */
   async register(data: {
-    cuil: bigint
+    cuil: string
     nombre: string
     apellido: string
     rol_actual: string
@@ -52,7 +52,7 @@ export class AuthService {
    * @returns {Promise<{ token: string, empleado: empleado }>} - JWT y datos del empleado
    */
   async login(
-    cuil: bigint,
+    cuil: string,
     contrasenia: string,
   ): Promise<{ token: string; empleado: empleado }> {
     const empleado = await this.empleadoRepository.findByCuil(cuil)

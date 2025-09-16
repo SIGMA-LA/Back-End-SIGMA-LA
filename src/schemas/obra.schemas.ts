@@ -1,7 +1,6 @@
 import {
   object,
   number,
-  bigint,
   string,
   date,
   optional,
@@ -9,15 +8,26 @@ import {
   minLength,
   maxLength,
   InferInput,
+  transform,
+  regex,
 } from 'valibot'
 
 export const createObraSchema = object({
   cod_postal: pipe(number('El código postal es requerido.')),
 
-  cuil: pipe(bigint('El CUIL es requerido y debe ser un número grande.')),
+  cuil: pipe(
+    string('El CUIL es requerido y debe ser un string numérico.'),
+    minLength(11, 'El CUIL debe tener 11 dígitos'),
+    maxLength(13, 'El CUIL no debe superar los 13 caracteres'),
+    regex(
+      /^\d{11,13}$/,
+      'El CUIL debe contener solo números (11 a 13 dígitos)',
+    ),
+  ),
 
   fecha_ini: pipe(
-    date('La fecha de inicio es requerida y debe ser una fecha válida.'),
+    string('La fecha de inicio es requerida y debe ser una fecha válida.'),
+    transform(v => new Date(v)),
   ),
 
   estado: pipe(
@@ -28,7 +38,10 @@ export const createObraSchema = object({
 
   // Para el campo opcional, envolvemos todo el "pipe" con "optional"
   fecha_cancelacion: optional(
-    pipe(date('La fecha de cancelación debe ser una fecha válida.')),
+    pipe(
+      string('La fecha de cancelación debe ser una fecha válida.'),
+      transform(v => new Date(v)),
+    ),
   ),
 
   direccion: pipe(
@@ -50,10 +63,23 @@ export const updateObraSchema = object({
     pipe(number('El código postal debe ser un número válido.')),
   ),
 
-  cuil: optional(pipe(bigint('El CUIL debe ser un número grande válido.'))),
+  cuil: optional(
+    pipe(
+      string('El CUIL debe ser un string numérico válido.'),
+      minLength(11, 'El CUIL debe tener 11 dígitos'),
+      maxLength(13, 'El CUIL no debe superar los 13 caracteres'),
+      regex(
+        /^\d{11,13}$/,
+        'El CUIL debe contener solo números (11 a 13 dígitos)',
+      ),
+    ),
+  ),
 
   fecha_ini: optional(
-    pipe(date('La fecha de inicio debe ser una fecha válida.')),
+    pipe(
+      string('La fecha de inicio debe ser una fecha válida.'),
+      transform(v => new Date(v)),
+    ),
   ),
 
   estado: optional(
