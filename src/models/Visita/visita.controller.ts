@@ -6,9 +6,9 @@ import { visitaService } from './visita.service.js'
  * @class VisitaController
  * @method create - Maneja la creación de una nueva visita.
  * @method getAll - Maneja la obtención de todas las visitas.
- * @method getOne - Maneja la obtención de una visita por su ID Obra y fecha de visita.
+ * @method getOne - Maneja la obtención de una visita por su cod_visita.
  * @method update - Maneja la actualización de una visita existente.
- * @method remove - Maneja la eliminación de una visita por su ID Obra y fecha de visita.
+ * @method remove - Maneja la eliminación de una visita por su cod_visita.
  * @returns {Promise<void>} - Respuesta HTTP.
  * @throws {Error} - Si ocurre un error durante la operación.
  */
@@ -25,8 +25,8 @@ export class VisitaController {
   }
 
   async getOne(req: Request, res: Response) {
-    const { idObra, fecha } = req.params
-    const visita = await visitaService.findById(new Date(fecha), Number(idObra))
+    const { id } = req.params
+    const visita = await visitaService.findById(Number(id))
     if (!visita) {
       return res.status(404).json({ message: 'Visita no encontrada' })
     }
@@ -34,18 +34,14 @@ export class VisitaController {
   }
 
   async update(req: Request, res: Response) {
-    const { idObra, fecha } = req.params
-    const visita = await visitaService.update(
-      new Date(fecha),
-      Number(idObra),
-      req.body,
-    )
+    const { id } = req.params
+    const visita = await visitaService.update(Number(id), req.body)
     res.json(visita)
   }
 
   async remove(req: Request, res: Response) {
-    const { idObra, fecha } = req.params
-    const visita = await visitaService.remove(new Date(fecha), Number(idObra))
+    const { id } = req.params
+    const visita = await visitaService.remove(Number(id))
     res.json(visita)
   }
 }

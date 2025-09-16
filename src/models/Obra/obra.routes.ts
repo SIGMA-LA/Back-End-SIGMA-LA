@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { ObraController } from './obra.controller'
+import { ObraController } from './obra.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
 import { idParamsSchema } from '../../schemas/common.schema.js'
 import { createObraSchema, updateObraSchema } from '../../schemas/obra.schemas'

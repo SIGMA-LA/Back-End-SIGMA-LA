@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { MaquinariaService } from './maquinaria.service'
+import { MaquinariaService } from './maquinaria.service.js'
 
 const maquinariaService = new MaquinariaService()
 

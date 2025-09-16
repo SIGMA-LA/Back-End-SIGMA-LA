@@ -14,25 +14,39 @@ export class VisitaRepository {
       include: {
         obra: true,
         localidad: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
+          },
+        },
       },
     })
   }
 
-  // Obtener visita por clave compuesta (fecha_hora_visita y cod_obra)
-  async findById(
-    fecha_hora_visita: Date,
-    cod_obra: number,
-  ): Promise<visita | null> {
+  // Obtener visita por cod_visita
+  async findById(cod_visita: number): Promise<visita | null> {
     return await this.prisma.visita.findUnique({
       where: {
-        fecha_hora_visita_cod_obra: {
-          fecha_hora_visita,
-          cod_obra,
-        },
+        cod_visita,
       },
       include: {
         obra: true,
         localidad: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
+          },
+        },
       },
     })
   }
@@ -44,39 +58,52 @@ export class VisitaRepository {
       include: {
         obra: true,
         localidad: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
+          },
+        },
       },
     })
   }
 
   // Actualizar visita
   async update(
-    fecha_hora_visita: Date,
-    cod_obra: number,
+    cod_visita: number,
     data: Prisma.visitaUpdateInput,
   ): Promise<visita> {
     return await this.prisma.visita.update({
       where: {
-        fecha_hora_visita_cod_obra: {
-          fecha_hora_visita,
-          cod_obra,
-        },
+        cod_visita,
       },
       data,
       include: {
         obra: true,
         localidad: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
+          },
+        },
       },
     })
   }
 
   // Eliminar visita
-  async remove(fecha_hora_visita: Date, cod_obra: number): Promise<visita> {
+  async remove(cod_visita: number): Promise<visita> {
     return await this.prisma.visita.delete({
       where: {
-        fecha_hora_visita_cod_obra: {
-          fecha_hora_visita,
-          cod_obra,
-        },
+        cod_visita,
       },
     })
   }
@@ -89,6 +116,16 @@ export class VisitaRepository {
       include: {
         obra: true,
         localidad: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
+          },
+        },
       },
     })
   }
@@ -101,6 +138,16 @@ export class VisitaRepository {
       include: {
         obra: true,
         localidad: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
+          },
+        },
       },
     })
   }

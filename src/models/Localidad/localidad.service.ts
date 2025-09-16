@@ -1,5 +1,5 @@
 import { localidad, Prisma } from '@prisma/client'
-import { LocalidadRepository } from './localidad.repository'
+import { LocalidadRepository } from './localidad.repository.js'
 
 /**
  * Servicio para manejar operaciones CRUD de localidades.

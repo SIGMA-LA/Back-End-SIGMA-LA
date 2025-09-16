@@ -2,7 +2,6 @@ import { Router } from 'express'
 import { VisitaController } from './visita.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
-  visitaParamsSchema,
   createVisitaSchema,
   updateVisitaSchema,
 } from '../../schemas/visita.schema.js'
@@ -19,18 +18,14 @@ visitaRouter.post('/', validate({ body: createVisitaSchema }), (req, res) => {
   visitaController.create(req, res)
 })
 
-visitaRouter.get(
-  '/:idObra/:fecha',
-  validate({ params: { ...idParamsSchema, ...visitaParamsSchema } }),
-  (req, res) => {
-    visitaController.getOne(req, res)
-  },
-)
+visitaRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
+  visitaController.getOne(req, res)
+})
 
 visitaRouter.put(
-  '/:idObra/:fecha',
+  '/:id',
   validate({
-    params: { ...idParamsSchema, ...visitaParamsSchema },
+    params: idParamsSchema,
     body: updateVisitaSchema,
   }),
   (req, res) => {
@@ -39,8 +34,8 @@ visitaRouter.put(
 )
 
 visitaRouter.delete(
-  '/:idObra/:fecha',
-  validate({ params: { ...idParamsSchema, ...visitaParamsSchema } }),
+  '/:id',
+  validate({ params: idParamsSchema }),
   (req, res) => {
     visitaController.remove(req, res)
   },

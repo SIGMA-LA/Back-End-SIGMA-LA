@@ -1,5 +1,5 @@
 import { Prisma, cliente } from '@prisma/client'
-import { ClienteRepository } from './cliente.repository'
+import { ClienteRepository } from './cliente.repository.js'
 
 /**
  * Servicio para manejar operaciones CRUD de clientes.

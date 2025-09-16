@@ -4,11 +4,11 @@ import { visita, Prisma } from '@prisma/client'
 /**
  * Servicio para manejar la lógica de negocio de visitas.
  * @class VisitaService
- * @method create - Crea una nueva visita validando que no exista la combinación fecha_hora_visita + cod_obra.
+ * @method create - Crea una nueva visita con soporte para campos opcionales.
  * @method findAll - Obtiene todas las visitas.
- * @method findById - Obtiene una visita por su clave compuesta.
+ * @method findById - Obtiene una visita por su cod_visita.
  * @method update - Actualiza una visita existente verificando que existe.
- * @method remove - Elimina una visita por su clave compuesta verificando que existe.
+ * @method remove - Elimina una visita por su cod_visita verificando que existe.
  * @returns {Promise<visita | visita[] | null>} - Resultado de la operación.
  * @throws {Error} - Si ocurre un error durante la operación.
  */
@@ -21,35 +21,38 @@ export class VisitaService {
 
   // Crear nueva visita
   async create(data: {
-    fecha_hora_visita: Date
-    cod_obra: number
-    cod_postal: number
+    fecha_hora_visita: string
+    cod_obra?: number
+    cod_postal?: number
     motivo_visita: string
     estado: string
     observaciones?: string
     direccion_visita?: string
   }): Promise<visita> {
-    const existingVisita = await this.visitaRepository.findById(
-      data.fecha_hora_visita,
-      data.cod_obra,
-    )
-    if (existingVisita) {
-      throw new Error('Ya existe una visita con esa fecha, hora y obra')
-    }
-
-    return await this.visitaRepository.create({
-      fecha_hora_visita: data.fecha_hora_visita,
+    // Construir el objeto de creación dinámicamente
+    const createData: Prisma.visitaCreateInput = {
+      fecha_hora_visita: new Date(data.fecha_hora_visita),
       motivo_visita: data.motivo_visita,
       estado: data.estado,
       observaciones: data.observaciones,
       direccion_visita: data.direccion_visita,
-      obra: {
+    }
+
+    // Conectar obra si se proporciona
+    if (data.cod_obra) {
+      createData.obra = {
         connect: { cod_obra: data.cod_obra },
-      },
-      localidad: {
+      }
+    }
+
+    // Conectar localidad si se proporciona
+    if (data.cod_postal) {
+      createData.localidad = {
         connect: { cod_postal: data.cod_postal },
-      },
-    })
+      }
+    }
+
+    return await this.visitaRepository.create(createData)
   }
 
   // Obtener todas las visitas
@@ -57,65 +60,78 @@ export class VisitaService {
     return await this.visitaRepository.findAll()
   }
 
-  // Obtener visita por clave compuesta
-  async findById(
-    fecha_hora_visita: Date,
-    cod_obra: number,
-  ): Promise<visita | null> {
-    return await this.visitaRepository.findById(fecha_hora_visita, cod_obra)
+  // Obtener visita por cod_visita
+  async findById(cod_visita: number): Promise<visita | null> {
+    return await this.visitaRepository.findById(cod_visita)
   }
 
   // Actualizar visita
   async update(
-    fecha_hora_visita: Date,
-    cod_obra: number,
+    cod_visita: number,
     data: {
+      fecha_hora_visita?: string
+      cod_obra?: number
       cod_postal?: number
       motivo_visita?: string
       estado?: string
       observaciones?: string
       direccion_visita?: string
-      fecha_cancelacion?: Date
+      fecha_cancelacion?: string
     },
   ): Promise<visita> {
-    const existingVisita = await this.visitaRepository.findById(
-      fecha_hora_visita,
-      cod_obra,
-    )
+    const existingVisita = await this.visitaRepository.findById(cod_visita)
     if (!existingVisita) {
       throw new Error('Visita no encontrada')
     }
 
-    // Separar cod_postal del resto de los datos
-    const { cod_postal, ...updateFields } = data
+    // Separar los campos que necesitan conectores de los campos simples
+    const {
+      cod_obra,
+      cod_postal,
+      fecha_hora_visita,
+      fecha_cancelacion,
+      ...simpleFields
+    } = data
 
     const updateData: Prisma.visitaUpdateInput = {
-      ...updateFields,
-      ...(cod_postal && {
-        localidad: {
-          connect: { cod_postal },
-        },
+      ...simpleFields,
+      ...(fecha_hora_visita && {
+        fecha_hora_visita: new Date(fecha_hora_visita),
+      }),
+      ...(fecha_cancelacion && {
+        fecha_cancelacion: new Date(fecha_cancelacion),
       }),
     }
 
-    return await this.visitaRepository.update(
-      fecha_hora_visita,
-      cod_obra,
-      updateData,
-    )
+    // Conectar obra si se proporciona
+    if (cod_obra !== undefined) {
+      if (cod_obra === null) {
+        updateData.obra = { disconnect: true }
+      } else {
+        updateData.obra = { connect: { cod_obra } }
+      }
+    }
+
+    // Conectar localidad si se proporciona
+    if (cod_postal !== undefined) {
+      if (cod_postal === null) {
+        updateData.localidad = { disconnect: true }
+      } else {
+        updateData.localidad = { connect: { cod_postal } }
+      }
+    }
+
+    return await this.visitaRepository.update(cod_visita, updateData)
   }
 
   // Eliminar visita
-  async remove(fecha_hora_visita: Date, cod_obra: number): Promise<visita> {
-    const existingVisita = await this.visitaRepository.findById(
-      fecha_hora_visita,
-      cod_obra,
-    )
+  async remove(cod_visita: number): Promise<visita> {
+    const existingVisita = await this.visitaRepository.findById(cod_visita)
     if (!existingVisita) {
       throw new Error('Visita no encontrada')
     }
 
-    return await this.visitaRepository.remove(fecha_hora_visita, cod_obra)
+    return await this.visitaRepository.remove(cod_visita)
   }
 
   // Obtener visitas por estado

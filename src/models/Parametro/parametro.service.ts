@@ -1,5 +1,5 @@
 import { parametro, Prisma } from '@prisma/client'
-import { ParametroRepository } from './parametro.repository'
+import { ParametroRepository } from './parametro.repository.js'
 
 /**
  * Servicio para manejar operaciones CRUD de parámetros.

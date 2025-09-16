@@ -1,5 +1,5 @@
 import { Prisma, maquinaria } from '@prisma/client'
-import { MaquinariaRepository } from './maquinaria.repository'
+import { MaquinariaRepository } from './maquinaria.repository.js'
 
 /**
  * Servicio para manejar operaciones CRUD de maquinaria.
