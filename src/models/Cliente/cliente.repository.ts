@@ -20,25 +20,25 @@ export class ClienteRepository {
     })
   }
 
-  async findById(cuil: bigint): Promise<cliente | null> {
+  async findById(cuil: string): Promise<cliente | null> {
     return await this.prisma.cliente.findUnique({
-      where: { cuil },
+      where: { cuil: cuil },
     })
   }
 
   async update(
-    cuil: bigint,
+    cuil: string,
     data: Prisma.clienteUpdateInput,
   ): Promise<cliente> {
     return await this.prisma.cliente.update({
-      where: { cuil },
+      where: { cuil: cuil },
       data,
     })
   }
 
-  async delete(cuil: bigint): Promise<cliente> {
+  async delete(cuil: string): Promise<cliente> {
     return await this.prisma.cliente.delete({
-      where: { cuil },
+      where: { cuil: cuil },
     })
   }
 }

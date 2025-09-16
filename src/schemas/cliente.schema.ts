@@ -6,7 +6,6 @@ import {
   regex,
   optional,
   pipe,
-  bigint,
   type InferInput,
 } from 'valibot'
 
@@ -18,7 +17,15 @@ const TELEFONO_REGEX =
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 
 export const createClienteSchema = object({
-  cuil: pipe(bigint('El CUIL/CUIT es obligatorio y debe ser un número')),
+  cuil: pipe(
+    string('El CUIL/CUIT es obligatorio y debe ser un string numérico'),
+    minLength(11, 'El CUIL/CUIT debe tener 11 dígitos'),
+    maxLength(13, 'El CUIL/CUIT no debe superar los 13 caracteres'),
+    regex(
+      /^\d{11,13}$/,
+      'El CUIL/CUIT debe contener solo números (11 a 13 dígitos)',
+    ),
+  ),
   razon_social: pipe(
     string('La razón social es obligatoria'),
     minLength(2, 'La razón social debe tener al menos 2 caracteres'),

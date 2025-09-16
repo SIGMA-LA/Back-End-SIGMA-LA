@@ -22,7 +22,7 @@ export class EmpleadoService {
 
   // Crear nuevo empleado
   async create(data: {
-    cuil: bigint
+    cuil: string
     nombre: string
     apellido: string
     rol_actual: string
@@ -33,7 +33,6 @@ export class EmpleadoService {
     if (existingEmpleado) {
       throw new Error('Ya existe un empleado con ese CUIL')
     }
-
     return await this.empleadoRepository.create(data)
   }
 
@@ -43,13 +42,13 @@ export class EmpleadoService {
   }
 
   // Obtener empleado por CUIL
-  async findByCuil(cuil: bigint): Promise<empleado | null> {
+  async findByCuil(cuil: string): Promise<empleado | null> {
     return await this.empleadoRepository.findByCuil(cuil)
   }
 
   // Actualizar empleado
   async update(
-    cuil: bigint,
+    cuil: string,
     data: Partial<{
       nombre: string
       apellido: string
@@ -62,17 +61,15 @@ export class EmpleadoService {
     if (!existingEmpleado) {
       throw new Error('Empleado no encontrado')
     }
-
     return await this.empleadoRepository.update(cuil, data)
   }
 
   // Eliminar empleado
-  async remove(cuil: bigint): Promise<empleado> {
+  async remove(cuil: string): Promise<empleado> {
     const existingEmpleado = await this.empleadoRepository.findByCuil(cuil)
     if (!existingEmpleado) {
       throw new Error('Empleado no encontrado')
     }
-
     return await this.empleadoRepository.delete(cuil)
   }
 

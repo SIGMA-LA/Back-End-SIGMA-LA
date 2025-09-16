@@ -20,7 +20,8 @@ export class ClienteService {
   }
 
   async create(data: Prisma.clienteCreateInput): Promise<cliente> {
-    const existingCliente = await this.repository.findById(data.cuil as bigint)
+    // Asegurarse de que data.cuil es string
+    const existingCliente = await this.repository.findById(data.cuil)
     if (existingCliente) {
       throw new Error('Ya existe un cliente con el mismo CUIL.')
     }
@@ -31,12 +32,12 @@ export class ClienteService {
     return await this.repository.findAll()
   }
 
-  async findById(cuil: bigint): Promise<cliente | null> {
+  async findById(cuil: string): Promise<cliente | null> {
     return await this.repository.findById(cuil)
   }
 
   async update(
-    cuil: bigint,
+    cuil: string,
     data: Prisma.clienteUpdateInput,
   ): Promise<cliente> {
     const existingCliente = await this.repository.findById(cuil)
@@ -46,7 +47,7 @@ export class ClienteService {
     return await this.repository.update(cuil, data)
   }
 
-  async remove(cuil: bigint): Promise<cliente> {
+  async remove(cuil: string): Promise<cliente> {
     const existingCliente = await this.repository.findById(cuil)
     if (!existingCliente) {
       throw new Error('No existe un cliente con el CUIL proporcionado.')

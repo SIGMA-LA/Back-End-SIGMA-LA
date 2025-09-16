@@ -15,9 +15,9 @@ export class EmpleadoRepository {
   }
 
   // Obtener empleado por CUIL
-  async findByCuil(cuil: bigint): Promise<empleado | null> {
+  async findByCuil(cuil: string): Promise<empleado | null> {
     return await this.prisma.empleado.findUnique({
-      where: { cuil },
+      where: { cuil: cuil },
     })
   }
 
@@ -30,19 +30,19 @@ export class EmpleadoRepository {
 
   // Actualizar empleado
   async update(
-    cuil: bigint,
+    cuil: string,
     data: Prisma.empleadoUpdateInput,
   ): Promise<empleado> {
     return await this.prisma.empleado.update({
-      where: { cuil },
+      where: { cuil: cuil },
       data,
     })
   }
 
   // Eliminar empleado
-  async delete(cuil: bigint): Promise<empleado> {
+  async delete(cuil: string): Promise<empleado> {
     return await this.prisma.empleado.delete({
-      where: { cuil },
+      where: { cuil: cuil },
     })
   }
 
@@ -73,9 +73,9 @@ export class EmpleadoRepository {
   }
 
   // Verificar si existe empleado por CUIL
-  async existsByCuil(cuil: bigint): Promise<boolean> {
+  async existsByCuil(cuil: string): Promise<boolean> {
     const empleado = await this.prisma.empleado.findUnique({
-      where: { cuil },
+      where: { cuil: cuil },
       select: { cuil: true },
     })
     return !!empleado

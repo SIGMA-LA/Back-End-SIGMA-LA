@@ -7,10 +7,8 @@ import {
   picklist,
   optional,
   pipe,
-  bigint,
   type InferInput,
 } from 'valibot'
-
 // Roles
 const ROLES_EMPLEADO = [
   'VENTAS',
@@ -37,8 +35,13 @@ const AREAS_TRABAJO = [
 
 export const createEmpleadoSchema = object({
   cuil: pipe(
-    bigint('El CUIL es obligatorio y debe ser un número'),
-    // Validación adicional para CUIL se puede agregar aquí si necesitas
+    string('El CUIL es obligatorio y debe ser un string numérico'),
+    minLength(11, 'El CUIL debe tener 11 dígitos'),
+    maxLength(13, 'El CUIL no debe superar los 13 caracteres'),
+    regex(
+      /^\d{11,13}$/,
+      'El CUIL debe contener solo números (11 a 13 dígitos)',
+    ),
   ),
   nombre: pipe(
     string('El nombre es obligatorio'),

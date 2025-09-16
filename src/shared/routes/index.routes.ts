@@ -37,6 +37,8 @@ import clienteRouter from '../../models/Cliente/cliente.routes.js'
 import localidadRouter from '../../models/Localidad/localidad.routes.js'
 import maquinariaRouter from '../../models/Maquinaria/maquinaria.routes.js'
 import parametroRouter from '../../models/Parametro/parametro.routes.js'
+import obraRouter from '../../models/Obra/obra.routes.js'
+
 import authRouter from '../../models/Auth/auth.routes.js'
 
 router.use('/api/auth', authRouter)
@@ -47,6 +49,7 @@ router.use('/api/clientes', clienteRouter)
 router.use('/api/localidades', localidadRouter)
 router.use('/api/maquinarias', maquinariaRouter)
 router.use('/api/parametros', parametroRouter)
+router.use('/api/obras', obraRouter)
 
 router.use((req, res) => {
   res.status(404).json({

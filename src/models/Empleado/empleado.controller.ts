@@ -27,7 +27,7 @@ export class EmpleadoController {
   }
 
   async getOne(req: Request, res: Response) {
-    const cuil = BigInt(req.params.cuil)
+    const cuil = req.params.cuil
     const empleado = await empleadoService.findByCuil(cuil)
     if (!empleado) {
       return res.status(404).json({ message: 'Empleado no encontrado' })
@@ -36,13 +36,13 @@ export class EmpleadoController {
   }
 
   async update(req: Request, res: Response) {
-    const cuil = BigInt(req.params.cuil)
+    const cuil = req.params.cuil
     const empleado = await empleadoService.update(cuil, req.body)
     res.json(empleado)
   }
 
   async remove(req: Request, res: Response) {
-    const cuil = BigInt(req.params.cuil)
+    const cuil = req.params.cuil
     const empleado = await empleadoService.remove(cuil)
     res.json(empleado)
   }
