@@ -1,114 +1,119 @@
-import * as v from 'valibot'
+import {
+  object,
+  string,
+  number,
+  maxLength,
+  minValue,
+  picklist,
+  optional,
+  pipe,
+  integer,
+  isoDateTime,
+  isoDate,
+  type InferInput,
+} from 'valibot'
 
-// Schema base para visita
-const visitaBaseSchema = v.object({
-  cod_obra: v.pipe(
-    v.number(),
-    v.integer(),
-    v.minValue(1, 'El código de obra debe ser un número positivo'),
+// Estados de visita
+const ESTADOS_VISITA = [
+  'PROGRAMADA',
+  'EN CURSO',
+  'COMPLETADA',
+  'CANCELADA',
+  'REPROGRAMADA',
+] as const
+
+// Motivos de visita
+const MOTIVOS_VISITA = [
+  'MEDICION',
+  'RE-MEDICION',
+  'REPARACION',
+  'ASESORAMIENTO',
+  'VISITA INICIAL',
+] as const
+
+export const createVisitaSchema = object({
+  fecha_hora_visita: pipe(
+    string('La fecha y hora de visita es obligatoria'),
+    isoDateTime('Debe ser una fecha y hora válida en formato ISO'),
   ),
-  cod_postal: v.pipe(
-    v.number(),
-    v.integer(),
-    v.minValue(1, 'El código postal debe ser un número positivo'),
-  ),
-  motivo_visita: v.pipe(
-    v.string(),
-    v.nonEmpty('El motivo de visita es requerido'),
-    v.maxLength(50, 'El motivo no puede exceder 50 caracteres'),
-  ),
-  estado: v.pipe(
-    v.string(),
-    v.nonEmpty('El estado es requerido'),
-    v.maxLength(50, 'El estado no puede exceder 50 caracteres'),
-  ),
-  observaciones: v.optional(
-    v.pipe(
-      v.string(),
-      v.maxLength(500, 'Las observaciones no pueden exceder 500 caracteres'),
+  cod_obra: optional(
+    pipe(
+      number('El código de obra debe ser un número válido'),
+      integer('El código de obra debe ser un número entero'),
+      minValue(1, 'El código de obra debe ser un número positivo'),
     ),
   ),
-  direccion_visita: v.optional(
-    v.pipe(
-      v.string(),
-      v.maxLength(500, 'La dirección no puede exceder 500 caracteres'),
+  cod_postal: optional(
+    pipe(
+      number('El código postal debe ser un número válido'),
+      integer('El código postal debe ser un número entero'),
+      minValue(1, 'El código postal debe ser un número positivo'),
+    ),
+  ),
+  motivo_visita: picklist(
+    MOTIVOS_VISITA,
+    'Seleccione un motivo de visita válido',
+  ),
+  estado: picklist(ESTADOS_VISITA, 'Seleccione un estado válido'),
+  observaciones: optional(
+    pipe(
+      string('Las observaciones deben ser texto válido'),
+      maxLength(500, 'Las observaciones no pueden exceder 500 caracteres'),
+    ),
+  ),
+  direccion_visita: optional(
+    pipe(
+      string('La dirección debe ser texto válido'),
+      maxLength(500, 'La dirección no puede exceder 500 caracteres'),
     ),
   ),
 })
 
-// Schema para crear visita
-export const createVisitaSchema = v.object({
-  ...visitaBaseSchema.entries,
-  fecha_hora_visita: v.union([
-    v.pipe(v.string(), v.isoDateTime('Debe ser una fecha y hora válida')),
-    v.date(),
-  ]),
-})
-
-// Schema para actualizar visita
-export const updateVisitaSchema = v.object({
-  cod_obra: v.optional(
-    v.pipe(
-      v.number(),
-      v.integer(),
-      v.minValue(1, 'El código de obra debe ser un número positivo'),
+export const updateVisitaSchema = object({
+  fecha_hora_visita: optional(
+    pipe(
+      string('La fecha y hora de visita debe ser texto válido'),
+      isoDateTime('Debe ser una fecha y hora válida en formato ISO'),
     ),
   ),
-  cod_postal: v.optional(
-    v.pipe(
-      v.number(),
-      v.integer(),
-      v.minValue(1, 'El código postal debe ser un número positivo'),
+  cod_obra: optional(
+    pipe(
+      number('El código de obra debe ser un número válido'),
+      integer('El código de obra debe ser un número entero'),
+      minValue(1, 'El código de obra debe ser un número positivo'),
     ),
   ),
-  motivo_visita: v.optional(
-    v.pipe(
-      v.string(),
-      v.nonEmpty('El motivo de visita es requerido'),
-      v.maxLength(50, 'El motivo no puede exceder 50 caracteres'),
+  cod_postal: optional(
+    pipe(
+      number('El código postal debe ser un número válido'),
+      integer('El código postal debe ser un número entero'),
+      minValue(1, 'El código postal debe ser un número positivo'),
     ),
   ),
-  estado: v.optional(
-    v.pipe(
-      v.string(),
-      v.nonEmpty('El estado es requerido'),
-      v.maxLength(50, 'El estado no puede exceder 50 caracteres'),
+  motivo_visita: optional(
+    picklist(MOTIVOS_VISITA, 'Seleccione un motivo de visita válido'),
+  ),
+  estado: optional(picklist(ESTADOS_VISITA, 'Seleccione un estado válido')),
+  observaciones: optional(
+    pipe(
+      string('Las observaciones deben ser texto válido'),
+      maxLength(500, 'Las observaciones no pueden exceder 500 caracteres'),
     ),
   ),
-  observaciones: v.optional(
-    v.pipe(
-      v.string(),
-      v.maxLength(500, 'Las observaciones no pueden exceder 500 caracteres'),
+  direccion_visita: optional(
+    pipe(
+      string('La dirección debe ser texto válido'),
+      maxLength(500, 'La dirección no puede exceder 500 caracteres'),
     ),
   ),
-  direccion_visita: v.optional(
-    v.pipe(
-      v.string(),
-      v.maxLength(500, 'La dirección no puede exceder 500 caracteres'),
+  fecha_cancelacion: optional(
+    pipe(
+      string('La fecha de cancelación debe ser texto válido'),
+      isoDate('Debe ser una fecha válida en formato ISO'),
     ),
-  ),
-  fecha_cancelacion: v.optional(
-    v.union([
-      v.pipe(v.string(), v.isoDate('Debe ser una fecha válida')),
-      v.date(),
-    ]),
   ),
 })
 
-// Schema para parámetros de ruta
-export const visitaParamsSchema = v.object({
-  fecha_hora_visita: v.pipe(
-    v.string(),
-    v.isoDateTime('Debe ser una fecha y hora válida'),
-  ),
-  cod_obra: v.pipe(
-    v.string(),
-    v.regex(/^\d+$/, 'Debe ser un número válido'),
-    v.transform(Number),
-  ),
-})
-
-// Tipos TypeScript inferidos
-export type CreateVisitaInput = v.InferInput<typeof createVisitaSchema>
-export type UpdateVisitaInput = v.InferInput<typeof updateVisitaSchema>
-export type VisitaParams = v.InferInput<typeof visitaParamsSchema>
+// Tipos TypeScript derivados de los schemas
+export type CreateVisitaInput = InferInput<typeof createVisitaSchema>
+export type UpdateVisitaInput = InferInput<typeof updateVisitaSchema>
