@@ -27,7 +27,6 @@ export const createParametroSchema = object({
     string('La hora de cambio es obligatoria'),
     regex(TIME_REGEX, 'Formato de hora inválido. Use HH:MM:SS o HH:MM:SS.sss'),
     transform(value => {
-      // Crear fecha con la hora especificada
       const today = new Date().toISOString().split('T')[0]
       return new Date(`${today}T${value}Z`)
     }),
@@ -46,6 +45,7 @@ export const createParametroSchema = object({
 })
 
 export const updateParametroSchema = object({
+  cod_parametro: number('El identificador del parámetro es obligatorio'),
   fecha_cambio: optional(
     pipe(
       string('La fecha de cambio debe ser válida'),

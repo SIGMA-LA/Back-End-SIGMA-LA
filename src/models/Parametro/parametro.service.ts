@@ -25,16 +25,6 @@ export class ParametroService {
    * @returns El parámetro creado.
    */
   async create(data: Prisma.parametroCreateInput): Promise<parametro> {
-    const existingParametro = await this.repository.findByFecha(
-      data.fecha_cambio as Date,
-      data.hora_cambio as Date,
-    )
-    if (existingParametro) {
-      throw new Error(
-        'Ya existe un parámetro con la misma fecha y hora de cambio.',
-      )
-    }
-
     return await this.repository.create(data)
   }
 
@@ -52,11 +42,8 @@ export class ParametroService {
    * @param hora_cambio La hora del cambio.
    * @returns El parámetro encontrado o null si no existe.
    */
-  async findById(
-    fecha_cambio: Date,
-    hora_cambio: Date,
-  ): Promise<parametro | null> {
-    return await this.repository.findByFecha(fecha_cambio, hora_cambio)
+  async findById(id: number): Promise<parametro | null> {
+    return await this.repository.findOne(id)
   }
 
   /**
@@ -67,19 +54,15 @@ export class ParametroService {
    * @returns El parámetro actualizado.
    */
   async update(
-    fecha_cambio: Date,
-    hora_cambio: Date,
+    id: number,
     data: Prisma.parametroUpdateInput,
   ): Promise<parametro> {
-    const existingParametro = await this.repository.findByFecha(
-      fecha_cambio,
-      hora_cambio,
-    )
+    const existingParametro = await this.repository.findOne(id)
     if (!existingParametro) {
       throw new Error('Parametro no encontrado.')
     }
 
-    return await this.repository.update(fecha_cambio, hora_cambio, data)
+    return await this.repository.update(id, data)
   }
 
   /**
@@ -88,15 +71,12 @@ export class ParametroService {
    * @param hora_cambio La hora del cambio del parámetro a eliminar.
    * @returns El parámetro eliminado.
    */
-  async remove(fecha_cambio: Date, hora_cambio: Date): Promise<parametro> {
-    const existingParametro = await this.repository.findByFecha(
-      fecha_cambio,
-      hora_cambio,
-    )
+  async remove(id: number): Promise<parametro> {
+    const existingParametro = await this.repository.findOne(id)
     if (!existingParametro) {
-      throw new Error('Empleado no encontrado')
+      throw new Error('Parametro no encontrado.')
     }
 
-    return await this.repository.delete(fecha_cambio, hora_cambio)
+    return await this.repository.delete(id)
   }
 }

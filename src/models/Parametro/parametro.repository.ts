@@ -15,17 +15,9 @@ export class ParametroRepository {
   }
 
   // Obtener parametro por fecha y hora de cambio
-  async findByFecha(
-    fecha_cambio: Date,
-    hora_cambio: Date,
-  ): Promise<parametro | null> {
+  async findOne(id: number): Promise<parametro | null> {
     return await this.prisma.parametro.findUnique({
-      where: {
-        fecha_cambio_hora_cambio: {
-          fecha_cambio,
-          hora_cambio,
-        },
-      },
+      where: { cod_parametro: id },
     })
   }
 
@@ -38,35 +30,28 @@ export class ParametroRepository {
 
   // Actualizar parametro
   async update(
-    fecha_cambio: Date,
-    hora_cambio: Date,
+    id: number,
     data: Prisma.parametroUpdateInput,
   ): Promise<parametro> {
     return await this.prisma.parametro.update({
       where: {
-        fecha_cambio_hora_cambio: {
-          fecha_cambio,
-          hora_cambio,
-        },
+        cod_parametro: id,
       },
       data,
     })
   }
 
   // Eliminar parametro
-  async delete(fecha_cambio: Date, hora_cambio: Date): Promise<parametro> {
+  async delete(id: number): Promise<parametro> {
     return await this.prisma.parametro.delete({
       where: {
-        fecha_cambio_hora_cambio: {
-          fecha_cambio,
-          hora_cambio,
-        },
+        cod_parametro: id,
       },
     })
   }
 
   // Contar total de parametros
   async count(): Promise<number> {
-    return await this.prisma.localidad.count()
+    return await this.prisma.parametro.count()
   }
 }
