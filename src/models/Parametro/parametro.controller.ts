@@ -26,11 +26,8 @@ export class ParametroController {
   }
 
   async getOne(req: Request, res: Response) {
-    const { fecha_cambio, hora_cambio } = req.params
-    const parametro = await parametroService.findById(
-      new Date(fecha_cambio),
-      new Date(hora_cambio),
-    )
+    const { id } = req.params
+    const parametro = await parametroService.findById(Number(id))
     if (!parametro) {
       return res.status(404).json({ message: 'Parametro no encontrado' })
     }
@@ -38,21 +35,14 @@ export class ParametroController {
   }
 
   async update(req: Request, res: Response) {
-    const { fecha_cambio, hora_cambio } = req.params
-    const parametro = await parametroService.update(
-      new Date(fecha_cambio),
-      new Date(hora_cambio),
-      req.body,
-    )
+    const { id } = req.params
+    const parametro = await parametroService.update(Number(id), req.body)
     res.json(parametro)
   }
 
   async remove(req: Request, res: Response) {
-    const { fecha_cambio, hora_cambio } = req.params
-    const parametro = await parametroService.remove(
-      new Date(fecha_cambio),
-      new Date(hora_cambio),
-    )
+    const { id } = req.params
+    const parametro = await parametroService.remove(Number(id))
     res.json(parametro)
   }
 }

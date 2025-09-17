@@ -21,19 +21,19 @@ parametroRouter.post(
   },
 )
 
-parametroRouter.get('/:fecha/:hora', (req, res) => {
+parametroRouter.get('/:id', (req, res) => {
   parametroController.getOne(req, res)
 })
 
 parametroRouter.put(
-  '/:fecha/:hora',
+  '/:id',
   validate({ body: updateParametroSchema }),
   (req, res) => {
     parametroController.update(req, res)
   },
 )
 
-parametroRouter.delete('/:fecha/:hora', (req, res) => {
+parametroRouter.delete('/:id', (req, res) => {
   parametroController.remove(req, res)
 })
 
