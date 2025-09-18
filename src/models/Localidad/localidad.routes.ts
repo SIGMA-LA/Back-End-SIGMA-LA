@@ -4,8 +4,8 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createLocalidadSchema,
   updateLocalidadSchema,
-} from '../../schemas/localidad.schema.js'
-import { idParamsSchema } from '../../schemas/common.schema.js'
+  idParamsSchema,
+} from '@SIGMA-LA/schemas'
 
 const localidadController = new LocalidadController()
 const localidadRouter = Router()

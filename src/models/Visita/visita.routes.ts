@@ -4,8 +4,8 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createVisitaSchema,
   updateVisitaSchema,
-} from '../../schemas/visita.schema.js'
-import { idParamsSchema } from '../../schemas/common.schema.js'
+  idParamsSchema,
+} from '@SIGMA-LA/schemas'
 
 const visitaController = new VisitaController()
 const visitaRouter = Router()

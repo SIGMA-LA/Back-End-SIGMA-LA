@@ -4,9 +4,8 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createEmpleadoSchema,
   updateEmpleadoSchema,
-} from '../../schemas/empleado.schema.js'
-import { cuilParamsSchema } from '../../schemas/common.schema.js'
-
+  cuilParamsSchema,
+} from '@SIGMA-LA/schemas'
 const empleadoController = new EmpleadoController()
 const empleadoRouter = Router()
 

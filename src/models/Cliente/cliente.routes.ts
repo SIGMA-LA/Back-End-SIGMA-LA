@@ -4,8 +4,8 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createClienteSchema,
   updateClienteSchema,
-} from '../../schemas/cliente.schema.js'
-import { cuilParamsSchema } from '../../schemas/common.schema.js'
+  cuilParamsSchema,
+} from '@SIGMA-LA/schemas'
 
 const clienteController = new ClienteController()
 const clienteRouter = Router()

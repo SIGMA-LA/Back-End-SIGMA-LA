@@ -4,8 +4,8 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createMaquinariaSchema,
   updateMaquinariaSchema,
-} from '../../schemas/maquinaria.schema.js'
-import { idParamsSchema } from '../../schemas/common.schema.js'
+  idParamsSchema,
+} from '@SIGMA-LA/schemas'
 
 const maquinariaController = new MaquinariaController()
 const maquinariaRouter = Router()

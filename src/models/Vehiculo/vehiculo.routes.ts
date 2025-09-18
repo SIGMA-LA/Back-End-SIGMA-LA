@@ -4,9 +4,8 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createVehiculoSchema,
   updateVehiculoSchema,
-} from '../../schemas/vehiculo.schema.js'
-import { idParamsSchema } from '../../schemas/common.schema.js'
-
+  idParamsSchema,
+} from '@SIGMA-LA/schemas'
 const vehiculoController = new VehiculoController()
 const vehiculoRouter = Router()
 

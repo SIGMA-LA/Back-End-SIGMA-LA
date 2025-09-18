@@ -1,10 +1,7 @@
 import { Router } from 'express'
 import { ParametroController } from './parametro.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
-import {
-  createParametroSchema,
-  updateParametroSchema,
-} from '../../schemas/parametro.schema.js'
+import { createParametroSchema, updateParametroSchema } from '@SIGMA-LA/schemas'
 
 const parametroController = new ParametroController()
 const parametroRouter = Router()
