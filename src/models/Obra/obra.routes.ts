@@ -4,8 +4,8 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createObraSchema,
   updateObraSchema,
-} from '../../schemas/obra.schemas.js'
-import { idParamsSchema } from '../../schemas/common.schema.js'
+  idParamsSchema,
+} from '@SIGMA-LA/schemas'
 
 const obraController = new ObraController()
 const obraRouter = Router()
