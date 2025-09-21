@@ -40,6 +40,7 @@ import parametroRouter from '../../models/Parametro/parametro.routes.js'
 import obraRouter from '../../models/Obra/obra.routes.js'
 
 import authRouter from '../../models/Auth/auth.routes.js'
+import routeMid from '../../models/midlewareTest/mid.routes.js'
 
 router.use('/api/auth', authRouter)
 
@@ -50,6 +51,7 @@ router.use('/api/localidades', localidadRouter)
 router.use('/api/maquinarias', maquinariaRouter)
 router.use('/api/parametros', parametroRouter)
 router.use('/api/obras', obraRouter)
+router.use('/api/test/', routeMid)
 
 router.use((req, res) => {
   res.status(404).json({

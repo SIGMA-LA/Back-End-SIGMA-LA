@@ -111,11 +111,11 @@ model pago {
 }
 
 model parametro {
-  cod_parametro       Int      @id @default(autoincrement())
   fecha_cambio        DateTime @db.Date
   hora_cambio         DateTime @db.Time(6)
   dias_vigencia_presu Int
   viatico_dia_persona Float?
+  cod_parametro       Int      @id @default(autoincrement())
 }
 
 model presupuesto {
