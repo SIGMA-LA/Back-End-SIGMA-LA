@@ -18,14 +18,14 @@ router.post('/', validate({ body: createPresupuestoSchema }), (req, res) => {
 })
 
 router.put(
-  '/:fecha_emision:cod_obra',
+  '/:nro_presupuesto',
   validate({ body: updatePresupuestoSchema }),
   (req, res) => {
     controller.update(req, res)
   },
 )
 
-router.delete('/:fecha_emision:cod_obra', (req, res) => {
+router.delete('/:nro_presupuesto', (req, res) => {
   controller.remove(req, res)
 })
 
