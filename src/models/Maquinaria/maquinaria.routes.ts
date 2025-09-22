@@ -5,7 +5,7 @@ import {
   createMaquinariaSchema,
   updateMaquinariaSchema,
   idParamsSchema,
-} from '@SIGMA-LA/schemas'
+} from 'sigma-la-schemas'
 
 const maquinariaController = new MaquinariaController()
 const maquinariaRouter = Router()

@@ -5,7 +5,7 @@ import {
   createClienteSchema,
   updateClienteSchema,
   cuilParamsSchema,
-} from '@SIGMA-LA/schemas'
+} from 'sigma-la-schemas'
 
 const clienteController = new ClienteController()
 const clienteRouter = Router()

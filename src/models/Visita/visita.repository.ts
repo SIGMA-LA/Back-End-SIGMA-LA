@@ -14,11 +14,7 @@ export class VisitaRepository {
       include: {
         obra: true,
         localidad: true,
-        empleado_visita: {
-          include: {
-            empleado: true,
-          },
-        },
+        empleado_visita: true,
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
@@ -37,11 +33,7 @@ export class VisitaRepository {
       include: {
         obra: true,
         localidad: true,
-        empleado_visita: {
-          include: {
-            empleado: true,
-          },
-        },
+        empleado_visita: true,
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
@@ -58,11 +50,7 @@ export class VisitaRepository {
       include: {
         obra: true,
         localidad: true,
-        empleado_visita: {
-          include: {
-            empleado: true,
-          },
-        },
+        empleado_visita: true,
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
@@ -85,11 +73,7 @@ export class VisitaRepository {
       include: {
         obra: true,
         localidad: true,
-        empleado_visita: {
-          include: {
-            empleado: true,
-          },
-        },
+        empleado_visita: true,
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
@@ -116,11 +100,7 @@ export class VisitaRepository {
       include: {
         obra: true,
         localidad: true,
-        empleado_visita: {
-          include: {
-            empleado: true,
-          },
-        },
+        empleado_visita: true,
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
@@ -138,11 +118,7 @@ export class VisitaRepository {
       include: {
         obra: true,
         localidad: true,
-        empleado_visita: {
-          include: {
-            empleado: true,
-          },
-        },
+        empleado_visita: true,
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,

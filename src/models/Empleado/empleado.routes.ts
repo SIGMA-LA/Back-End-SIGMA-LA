@@ -5,7 +5,7 @@ import {
   createEmpleadoSchema,
   updateEmpleadoSchema,
   cuilParamsSchema,
-} from '@SIGMA-LA/schemas'
+} from 'sigma-la-schemas'
 const empleadoController = new EmpleadoController()
 const empleadoRouter = Router()
 

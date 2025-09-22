@@ -36,6 +36,7 @@ model empleado_visita {
 }
 
 model entrega {
+  cod_entrega        Int      @id @default(autoincrement())
   cod_obra           Int
   fecha_hora_entrega DateTime @db.Timestamp(6)
   estado             String   @db.VarChar(50)
@@ -43,17 +44,18 @@ model entrega {
   detalle            String   @db.VarChar(50)
   obra               obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([cod_obra, fecha_hora_entrega])
+  entrega_empleado   entrega_empleado[]
 }
 
 model entrega_empleado {
-  fecha_hora_entrega DateTime @db.Timestamp(6)
-  cuil               String
-  cod_obra           Int
-  obra               obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-  empleado           empleado @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+  cod_entrega         Int
+  cuil                String
+  cod_obra            Int
+  obra                obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+  empleado            empleado @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+  entrega             entrega  @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([fecha_hora_entrega, cuil])
+  @@id([cod_entrega, cuil])
 }
 
 model localidad {
@@ -92,22 +94,20 @@ model obra {
 }
 
 model orden_de_produccion {
+  cod_op           Int      @id @default(autoincrement())
   cod_obra         Int
-  fecha_confeccion DateTime  @db.Date
+  fecha_confeccion DateTime @db.Date
   fecha_validacion DateTime? @db.Date
   url              String    @db.VarChar(255)
   obra             obra      @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([cod_obra, fecha_confeccion])
 }
 
 model pago {
+  cod_pago   Int      @id @default(autoincrement())
   fecha_pago DateTime @db.Date
   cod_obra   Int
   monto      Float
   obra       obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([fecha_pago, cod_obra])
 }
 
 model parametro {
@@ -119,13 +119,12 @@ model parametro {
 }
 
 model presupuesto {
-  fecha_emision    DateTime  @db.Date
-  cod_obra         Int
+  nro_presupuesto Int      @id @default(autoincrement())
+  fecha_emision   DateTime @db.Date
+  cod_obra        Int
   fecha_aceptacion DateTime? @db.Date
-  valor            Float
-  obra             obra      @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([fecha_emision, cod_obra])
+  valor           Float
+  obra            obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model uso_maquinaria {

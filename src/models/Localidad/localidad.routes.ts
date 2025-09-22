@@ -5,7 +5,7 @@ import {
   createLocalidadSchema,
   updateLocalidadSchema,
   idParamsSchema,
-} from '@SIGMA-LA/schemas'
+} from 'sigma-la-schemas'
 
 const localidadController = new LocalidadController()
 const localidadRouter = Router()
