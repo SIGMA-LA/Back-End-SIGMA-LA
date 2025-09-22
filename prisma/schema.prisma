@@ -12,25 +12,21 @@ model cliente {
   razon_social String @db.VarChar(50)
   telefono     String @db.VarChar(20)
   mail         String @db.VarChar(100)
-  obra         obra[]
 }
 
 model empleado {
-  cuil             String             @id
-  nombre           String             @db.VarChar(50)
-  apellido         String             @db.VarChar(50)
-  rol_actual       String             @db.VarChar(50)
-  area_trabajo     String             @db.VarChar(50)
-  contrasenia      String?            @db.VarChar(50)
-  empleado_visita  empleado_visita[]
-  entrega_empleado entrega_empleado[]
+  cuil         String  @id
+  nombre       String  @db.VarChar(50)
+  apellido     String  @db.VarChar(50)
+  rol_actual   String  @db.VarChar(50)
+  area_trabajo String  @db.VarChar(50)
+  contrasenia  String? @db.VarChar(50)
 }
 
 model empleado_visita {
   cuil       String
   cod_visita Int
-  visita     visita   @relation(fields: [cod_visita], references: [cod_visita], onDelete: NoAction, onUpdate: NoAction)
-  empleado   empleado @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+  visita     visita @relation(fields: [cod_visita], references: [cod_visita], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([cuil, cod_visita])
 }
@@ -48,10 +44,9 @@ model entrega {
 
 model entrega_empleado {
   fecha_hora_entrega DateTime @db.Timestamp(6)
-  cuil               String
+  cuil               BigInt
   cod_obra           Int
   obra               obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-  empleado           empleado @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([fecha_hora_entrega, cuil])
 }
@@ -73,7 +68,7 @@ model maquinaria {
 model obra {
   cod_obra             Int                    @id @default(autoincrement())
   cod_postal           Int
-  cuil                 String
+  cuil                 BigInt
   fecha_ini            DateTime               @db.Date
   estado               String                 @db.VarChar(50)
   fecha_cancelacion    DateTime?              @db.Date
@@ -82,7 +77,6 @@ model obra {
   entrega              entrega[]
   entrega_empleado     entrega_empleado[]
   localidad            localidad              @relation(fields: [cod_postal], references: [cod_postal], onDelete: NoAction, onUpdate: NoAction)
-  cliente              cliente                @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
   orden_de_produccion  orden_de_produccion[]
   pago                 pago[]
   presupuesto          presupuesto[]
@@ -111,11 +105,11 @@ model pago {
 }
 
 model parametro {
-  cod_parametro       Int      @id @default(autoincrement())
   fecha_cambio        DateTime @db.Date
   hora_cambio         DateTime @db.Time(6)
   dias_vigencia_presu Int
   viatico_dia_persona Float?
+  cod_parametro       Int      @id @default(autoincrement())
 }
 
 model presupuesto {
