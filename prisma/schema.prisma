@@ -94,7 +94,7 @@ model obra {
 }
 
 model orden_de_produccion {
-  cod_op           Int      @id @default(autoincrement())
+  cod_op           Int       @id @default(autoincrement())
   cod_obra         Int
   fecha_confeccion DateTime @db.Date
   fecha_validacion DateTime? @db.Date
@@ -123,8 +123,9 @@ model presupuesto {
   fecha_emision   DateTime @db.Date
   cod_obra        Int
   fecha_aceptacion DateTime? @db.Date
-  valor           Float
-  obra            obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+  valor            Float
+  nro_presupuesto  Int       @id @default(autoincrement())
+  obra             obra      @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model uso_maquinaria {
