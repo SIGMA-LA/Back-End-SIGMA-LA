@@ -27,17 +27,18 @@ export class CloudinaryUploader implements IUploadStrategy {
 
     // 3. Configurar el motor de almacenamiento para multer
     const storage = new CloudinaryStorage({
-      cloudinary: cloudinary,
-      params: {
-        folder: 'sigma-la-uploads', // Puedes hacerlo dinámico si quieres
-        allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'webp'],
-        // Puedes añadir transformaciones aquí para redimensionar imágenes, etc.
-        // transformation: [{ width: 500, height: 500, crop: 'limit' }],
-      } as any,
+      cloudinary,
+      params: async () => {
+        return {
+          folder: 'sigma-la-uploads',
+          allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'webp'],
+          transformation: [{ width: 500, height: 500, crop: 'limit' }],
+        }
+      },
     })
 
     // 4. Crear la instancia de Multer con el almacenamiento de Cloudinary
-    this.uploader = multer({ storage: storage })
+    this.uploader = multer({ storage })
   }
 
   /**
