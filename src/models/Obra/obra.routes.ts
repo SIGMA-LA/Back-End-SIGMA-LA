@@ -5,7 +5,7 @@ import {
   createObraSchema,
   updateObraSchema,
   idParamsSchema,
-} from '@SIGMA-LA/schemas'
+} from 'sigma-la-schemas'
 
 const obraController = new ObraController()
 const obraRouter = Router()

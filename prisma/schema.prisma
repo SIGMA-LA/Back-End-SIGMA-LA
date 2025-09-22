@@ -36,24 +36,27 @@ model empleado_visita {
 }
 
 model entrega {
-  cod_obra           Int
-  fecha_hora_entrega DateTime @db.Timestamp(6)
-  estado             String   @db.VarChar(50)
-  observaciones      String?  @db.VarChar(500)
-  detalle            String   @db.VarChar(50)
-  obra               obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([cod_obra, fecha_hora_entrega])
+  cod_obra             Int
+  fecha_hora_entrega   DateTime               @db.Timestamp(6)
+  estado               String                 @db.VarChar(50)
+  observaciones        String?                @db.VarChar(500)
+  detalle              String                 @db.VarChar(50)
+  cod_entrega          Int                    @id @default(autoincrement())
+  obra                 obra                   @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+  entrega_empleado     entrega_empleado[]
+  uso_maquinaria       uso_maquinaria[]
+  uso_vehiculo_entrega uso_vehiculo_entrega[]
 }
 
 model entrega_empleado {
-  fecha_hora_entrega DateTime @db.Timestamp(6)
-  cuil               String
-  cod_obra           Int
-  obra               obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-  empleado           empleado @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+  cuil        String
+  cod_obra    Int
+  cod_entrega Int
+  entrega     entrega  @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
+  obra        obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+  empleado    empleado @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([fecha_hora_entrega, cuil])
+  @@id([cod_entrega, cuil])
 }
 
 model localidad {
@@ -96,18 +99,16 @@ model orden_de_produccion {
   fecha_confeccion DateTime  @db.Date
   fecha_validacion DateTime? @db.Date
   url              String    @db.VarChar(255)
+  cod_op           Int       @id @default(autoincrement())
   obra             obra      @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([cod_obra, fecha_confeccion])
 }
 
 model pago {
   fecha_pago DateTime @db.Date
   cod_obra   Int
   monto      Float
+  cod_pago   Int      @id @default(autoincrement())
   obra       obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([fecha_pago, cod_obra])
 }
 
 model parametro {
@@ -123,50 +124,52 @@ model presupuesto {
   cod_obra         Int
   fecha_aceptacion DateTime? @db.Date
   valor            Float
+  nro_presupuesto  Int       @id @default(autoincrement())
   obra             obra      @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([fecha_emision, cod_obra])
 }
 
 model uso_maquinaria {
   cod_maquina         Int
-  fecha_hora_entrega  DateTime   @db.Timestamp(6)
   fecha_hora_ini_uso  DateTime   @db.Timestamp(6)
-  cod_obra            Int
   fecha_hora_fin_est  DateTime   @db.Timestamp(6)
   fecha_hora_fin_real DateTime?  @db.Timestamp(6)
   estado              String     @db.VarChar(50)
+  cod_entrega         Int
+  obraCod_obra        Int?
+  entrega             entrega    @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
   maquinaria          maquinaria @relation(fields: [cod_maquina], references: [cod_maquina], onDelete: NoAction, onUpdate: NoAction)
-  obra                obra       @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+  obra                obra?      @relation(fields: [obraCod_obra], references: [cod_obra])
 
-  @@id([cod_maquina, fecha_hora_entrega, fecha_hora_ini_uso, cod_obra])
+  @@id([cod_maquina, cod_entrega])
 }
 
 model uso_vehiculo_entrega {
   patente             String    @db.VarChar(10)
-  fecha_hora_entrega  DateTime  @db.Timestamp(6)
   fecha_hora_ini_uso  DateTime  @db.Timestamp(6)
-  cod_obra            Int
   fecha_hora_ini_est  DateTime  @db.Timestamp(6)
   fecha_hora_fin_real DateTime? @db.Timestamp(6)
   estado              String    @db.VarChar(50)
-  obra                obra      @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+  cod_entrega         Int
+  obraCod_obra        Int?
+  entrega             entrega   @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
+  obra                obra?     @relation(fields: [obraCod_obra], references: [cod_obra])
   vehiculo            vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([patente, fecha_hora_ini_uso, cod_obra])
+  @@id([patente, cod_entrega])
 }
 
 model uso_vehiculo_visita {
-  patente             String    @db.VarChar(10)
-  fecha_hora_ini_uso  DateTime  @db.Timestamp(6)
-  fecha_hora_fin_est  DateTime  @db.Timestamp(6)
-  fecha_hora_fin_real DateTime? @db.Timestamp(6)
-  estado              String    @db.VarChar(50)
-  cod_visita          Int
-  visita              visita    @relation(fields: [cod_visita], references: [cod_visita], onDelete: NoAction, onUpdate: NoAction)
-  vehiculo            vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)
+  patente                 String    @db.VarChar(10)
+  fecha_hora_ini_uso      DateTime  @db.Timestamp(6)
+  fecha_hora_fin_est      DateTime  @db.Timestamp(6)
+  fecha_hora_fin_real     DateTime? @db.Timestamp(6)
+  estado                  String    @db.VarChar(50)
+  cod_visita              Int
+  cod_uso_vehiculo_visita Int       @id @default(autoincrement())
+  visita                  visita    @relation(fields: [cod_visita], references: [cod_visita], onDelete: NoAction, onUpdate: NoAction)
+  vehiculo                vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([patente, cod_visita, fecha_hora_ini_uso])
+  @@unique([patente, fecha_hora_ini_uso])
 }
 
 model vehiculo {

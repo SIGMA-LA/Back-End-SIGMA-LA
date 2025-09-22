@@ -25,16 +25,6 @@ export class PresupuestoService {
    * @returns El presupuesto creado.
    */
   async create(data: Prisma.presupuestoCreateInput): Promise<presupuesto> {
-    const existingpresupuesto = await this.repository.findById(
-      data.fecha_emision as Date,
-      data.obra as number,
-    )
-    if (existingpresupuesto) {
-      throw new Error(
-        'Ya existe un presupuesto con la misma fecha y hora de cambio.',
-      )
-    }
-
     return await this.repository.create(data)
   }
 
@@ -52,11 +42,8 @@ export class PresupuestoService {
    * @param cod_obra codigo de obra.
    * @returns El presupuesto encontrado o null si no existe.
    */
-  async findById(
-    fecha_emision: Date,
-    cod_obra: number,
-  ): Promise<presupuesto | null> {
-    return await this.repository.findById(fecha_emision, cod_obra)
+  async findById(nro_presupuesto: number): Promise<presupuesto | null> {
+    return await this.repository.findById(nro_presupuesto)
   }
 
   /**
@@ -67,19 +54,14 @@ export class PresupuestoService {
    * @returns El presupuesto actualizado.
    */
   async update(
-    fecha_emision: Date,
-    cod_obra: number,
+    nro_presupuesto: number,
     data: Prisma.presupuestoUpdateInput,
   ): Promise<presupuesto> {
-    const existingpresupuesto = await this.repository.findById(
-      fecha_emision,
-      cod_obra,
-    )
+    const existingpresupuesto = await this.repository.findById(nro_presupuesto)
     if (!existingpresupuesto) {
       throw new Error('presupuesto no encontrado.')
     }
-
-    return await this.repository.update(fecha_emision, cod_obra, data)
+    return await this.repository.update(nro_presupuesto, data)
   }
 
   /**
@@ -88,15 +70,11 @@ export class PresupuestoService {
    * @param cod_obra codigo de obra del presupuesto a eliminar.
    * @returns El presupuesto eliminado.
    */
-  async remove(fecha_emision: Date, cod_obra: number): Promise<presupuesto> {
-    const existingpresupuesto = await this.repository.findById(
-      fecha_emision,
-      cod_obra,
-    )
+  async remove(nro_presupuesto: number): Promise<presupuesto> {
+    const existingpresupuesto = await this.repository.findById(nro_presupuesto)
     if (!existingpresupuesto) {
-      throw new Error('Empleado no encontrado')
+      throw new Error('Presupuesto no encontrado')
     }
-
-    return await this.repository.delete(fecha_emision, cod_obra)
+    return await this.repository.delete(nro_presupuesto)
   }
 }

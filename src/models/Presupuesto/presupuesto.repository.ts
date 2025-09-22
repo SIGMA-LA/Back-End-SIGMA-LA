@@ -14,17 +14,11 @@ export class PresupuestoRepository {
     })
   }
 
-  // Obtener presupuesto por fecha y hora de cambio
-  async findById(
-    fecha_emision: Date,
-    cod_obra: number,
-  ): Promise<presupuesto | null> {
+  // Obtener presupuesto por nro_presupuesto
+  async findById(nro_presupuesto: number): Promise<presupuesto | null> {
     return await this.prisma.presupuesto.findUnique({
       where: {
-        fecha_emision_cod_obra: {
-          fecha_emision,
-          cod_obra,
-        },
+        nro_presupuesto,
       },
     })
   }
@@ -38,29 +32,22 @@ export class PresupuestoRepository {
 
   // Actualizar presupuesto
   async update(
-    fecha_emision: Date,
-    cod_obra: number,
+    nro_presupuesto: number,
     data: Prisma.presupuestoUpdateInput,
   ): Promise<presupuesto> {
     return await this.prisma.presupuesto.update({
       where: {
-        fecha_emision_cod_obra: {
-          fecha_emision,
-          cod_obra,
-        },
+        nro_presupuesto,
       },
       data,
     })
   }
 
   // Eliminar presupuesto
-  async delete(fecha_emision: Date, cod_obra: number): Promise<presupuesto> {
+  async delete(nro_presupuesto: number): Promise<presupuesto> {
     return await this.prisma.presupuesto.delete({
       where: {
-        fecha_emision_cod_obra: {
-          fecha_emision,
-          cod_obra,
-        },
+        nro_presupuesto,
       },
     })
   }

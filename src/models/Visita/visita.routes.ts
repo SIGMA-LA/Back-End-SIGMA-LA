@@ -5,7 +5,7 @@ import {
   createVisitaSchema,
   updateVisitaSchema,
   idParamsSchema,
-} from '@SIGMA-LA/schemas'
+} from 'sigma-la-schemas'
 
 const visitaController = new VisitaController()
 const visitaRouter = Router()

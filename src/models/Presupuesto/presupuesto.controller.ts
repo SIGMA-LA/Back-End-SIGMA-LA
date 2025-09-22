@@ -15,34 +15,28 @@ export class PresupuestoController {
   }
 
   async getOne(req: Request, res: Response) {
-    const { fecha_emision, cod_obra } = req.params
-
-    const obra = await presupuestoService.findById(
-      new Date(fecha_emision),
-      parseInt(cod_obra),
+    const { nro_presupuesto } = req.params
+    const presupuesto = await presupuestoService.findById(
+      Number(nro_presupuesto),
     )
-    if (!obra) {
-      return res.status(404).json({ message: 'Obra no encontrada' })
+    if (!presupuesto) {
+      return res.status(404).json({ message: 'Presupuesto no encontrado' })
     }
-    res.json(obra)
+    res.json(presupuesto)
   }
 
   async update(req: Request, res: Response) {
-    const { fecha_emision, cod_obra } = req.params
-    const obra = await presupuestoService.update(
-      new Date(fecha_emision),
-      parseInt(cod_obra),
+    const { nro_presupuesto } = req.params
+    const presupuesto = await presupuestoService.update(
+      Number(nro_presupuesto),
       req.body,
     )
-    res.json(obra)
+    res.json(presupuesto)
   }
 
   async remove(req: Request, res: Response) {
-    const { fecha_emision, cod_obra } = req.params
-    const obra = await presupuestoService.remove(
-      new Date(fecha_emision),
-      parseInt(cod_obra),
-    )
-    res.json(obra)
+    const { nro_presupuesto } = req.params
+    const presupuesto = await presupuestoService.remove(Number(nro_presupuesto))
+    res.json(presupuesto)
   }
 }
