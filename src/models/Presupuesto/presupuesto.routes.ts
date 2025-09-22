@@ -4,7 +4,7 @@ import { validate } from '../../shared/middlewares/validateSchemas'
 import {
   createPresupuestoSchema,
   updatePresupuestoSchema,
-} from '@SIGMA-LA/schemas'
+} from 'sigma-la-schemas'
 
 const controller = new PresupuestoController()
 const router = Router()

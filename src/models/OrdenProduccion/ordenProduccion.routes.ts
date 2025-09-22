@@ -5,7 +5,7 @@ import {
   createOrdenProduccionSchema,
   updateOrdenProduccionSchema,
   idParamsSchema,
-} from '@SIGMA-LA/schemas'
+} from 'sigma-la-schemas'
 
 const ordenProduccionController = new OrdenProduccionController()
 const ordenProduccionRouter = Router()

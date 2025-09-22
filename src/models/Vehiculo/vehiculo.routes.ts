@@ -5,7 +5,7 @@ import {
   createVehiculoSchema,
   updateVehiculoSchema,
   idParamsSchema,
-} from '@SIGMA-LA/schemas'
+} from 'sigma-la-schemas'
 const vehiculoController = new VehiculoController()
 const vehiculoRouter = Router()
 
