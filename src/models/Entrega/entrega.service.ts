@@ -21,7 +21,11 @@ export class EntregaService {
   }
 
   async create(data: Prisma.entregaCreateInput): Promise<entrega> {
-    return this.entregaRepository.create(data)
+    const fechaISO = new Date(data.fecha_hora_entrega as string).toISOString()
+    return this.entregaRepository.create({
+      ...data,
+      fecha_hora_entrega: fechaISO,
+    })
   }
 
   async findAll(): Promise<entrega[]> {
@@ -36,6 +40,10 @@ export class EntregaService {
     cod_entrega: number,
     data: Prisma.entregaUpdateInput,
   ): Promise<entrega> {
+    if (data.fecha_hora_entrega) {
+      const fechaISO = new Date(data.fecha_hora_entrega as string).toISOString()
+      data.fecha_hora_entrega = fechaISO
+    }
     return this.entregaRepository.update(cod_entrega, data)
   }
 
