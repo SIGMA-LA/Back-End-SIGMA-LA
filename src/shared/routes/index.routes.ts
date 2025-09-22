@@ -39,6 +39,7 @@ import maquinariaRouter from '../../models/Maquinaria/maquinaria.routes.js'
 import parametroRouter from '../../models/Parametro/parametro.routes.js'
 import obraRouter from '../../models/Obra/obra.routes.js'
 import ordenProduccionRouter from '../../models/OrdenProduccion/ordenProduccion.routes.js'
+import entregaRouter from '../../models/Entrega/entrega.routes.js'
 
 import authRouter from '../../models/Auth/auth.routes.js'
 
@@ -52,6 +53,7 @@ router.use('/api/maquinarias', maquinariaRouter)
 router.use('/api/parametros', parametroRouter)
 router.use('/api/obras', obraRouter)
 router.use('/api/ordenes-produccion', ordenProduccionRouter)
+router.use('/api/entregas', entregaRouter)
 
 router.use((req, res) => {
   res.status(404).json({
