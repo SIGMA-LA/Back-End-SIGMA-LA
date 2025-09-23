@@ -144,17 +144,17 @@ model uso_maquinaria {
 }
 
 model uso_vehiculo_entrega {
-  patente             String    @db.VarChar(10)
-  fecha_hora_ini_uso  DateTime  @db.Timestamp(6)
-  fecha_hora_fin_est  DateTime  @db.Timestamp(6)
-  fecha_hora_fin_real DateTime? @db.Timestamp(6)
-  estado              String    @db.VarChar(50)
-  cod_entrega         Int
-  obraCod_obra        Int?
+  patente                  String    @db.VarChar(10)
+  fecha_hora_ini_uso       DateTime  @db.Timestamp(6)
+  fecha_hora_fin_real      DateTime? @db.Timestamp(6)
+  estado                   String    @db.VarChar(50)
+  cod_entrega              Int
+  obraCod_obra             Int?
   cod_uso_vehiculo_entrega Int       @id @default(autoincrement())
-  entrega             entrega   @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
-  obra                obra?     @relation(fields: [obraCod_obra], references: [cod_obra])
-  vehiculo            vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)
+  fecha_hora_fin_est       DateTime  @db.Timestamp(6)
+  entrega                  entrega   @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
+  obra                     obra?     @relation(fields: [obraCod_obra], references: [cod_obra])
+  vehiculo                 vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([patente, fecha_hora_ini_uso])
 }
