@@ -1,5 +1,6 @@
 import { EmpleadoRepository } from './empleado.repository.js'
 import { empleado } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 /**
  * Servicio para manejar la lógica de negocio de empleados.
@@ -27,13 +28,17 @@ export class EmpleadoService {
     apellido: string
     rol_actual: string
     area_trabajo: string
-    contrasenia?: string
+    contrasenia: string
   }): Promise<empleado> {
     const existingEmpleado = await this.empleadoRepository.findByCuil(data.cuil)
     if (existingEmpleado) {
       throw new Error('Ya existe un empleado con ese CUIL')
     }
-    return await this.empleadoRepository.create(data)
+    const hashedPassword = await bcrypt.hash(data.contrasenia, 10)
+    return await this.empleadoRepository.create({
+      ...data,
+      contrasenia: hashedPassword,
+    })
   }
 
   // Obtener todos los empleados
@@ -54,12 +59,15 @@ export class EmpleadoService {
       apellido: string
       rol_actual: string
       area_trabajo: string
-      contrasenia: string
+      contrasenia?: string
     }>,
   ): Promise<empleado> {
     const existingEmpleado = await this.empleadoRepository.findByCuil(cuil)
     if (!existingEmpleado) {
       throw new Error('Empleado no encontrado')
+    }
+    if (data.contrasenia) {
+      data.contrasenia = await bcrypt.hash(data.contrasenia, 10)
     }
     return await this.empleadoRepository.update(cuil, data)
   }
