@@ -33,6 +33,7 @@
     "sigma-la-schemas": "^1.0.7",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
+    "sigma-la-schemas": "^1.0.9",
     "valibot": "^1.1.0"
   },
   "devDependencies": {
