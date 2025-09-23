@@ -42,9 +42,12 @@ import ordenProduccionRouter from '../../models/OrdenProduccion/ordenProduccion.
 import entregaRouter from '../../models/Entrega/entrega.routes.js'
 import usoVehiculoVisitaRouter from '../../models/UsoVehiculoVisita/usoVehiculoVisita.routes.js'
 import pagoRouter from '../../models/Pago/pago.routes.js'
+import usoVehiculoEntregaRouter from '../../models/UsoVehiculoEntrega/usoVehiculoEntrega.routes.js'
+
 
 import authRouter from '../../models/Auth/auth.routes.js'
 import routeMid from '../../models/midlewareTest/mid.routes.js'
+import usoMaquinariaRouter from '../../models/UsoMaquinaria/usoMaquinaria.routes.js'
 
 router.use('/api/auth', authRouter)
 
@@ -58,8 +61,11 @@ router.use('/api/obras', obraRouter)
 router.use('/api/ordenes-produccion', ordenProduccionRouter)
 router.use('/api/entregas', entregaRouter)
 router.use('/api/uso-vehiculo-visitas', usoVehiculoVisitaRouter)
+router.use('/api/uso-vehiculo-entregas', usoVehiculoEntregaRouter)
 router.use('/api/test/mid/', routeMid)
 router.use('/api/pagos', pagoRouter)
+router.use('/api/uso-maquinaria', usoMaquinariaRouter)
+
 
 router.use((req, res) => {
   res.status(404).json({
