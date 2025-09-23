@@ -99,3 +99,4 @@ public/uploads/
 .dockerignore
 
 /src/shared/prisma/prisma
+pnpm-lock.yaml
