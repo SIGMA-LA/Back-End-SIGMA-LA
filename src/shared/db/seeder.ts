@@ -88,7 +88,7 @@ async function seed() {
     contrasenia: 'test1234',
   })
 
-  // Maquinarias (usar estados válidos)
+  // Maquinarias
   await post(`${API_URL}/api/maquinarias`, {
     cod_maquina: 1,
     descripcion: 'Excavadora',
@@ -105,7 +105,7 @@ async function seed() {
     estado: 'MANTENIMIENTO',
   })
 
-  // Vehiculos (usar tipos y estados válidos, patentes válidas)
+  // Vehiculos
   await post(`${API_URL}/api/vehiculos`, {
     patente: 'ABC123',
     tipo_vehiculo: 'CAMIONETA',
@@ -122,7 +122,7 @@ async function seed() {
     estado: 'MANTENIMIENTO',
   })
 
-  // Obras (estado: cualquier string no vacío, fecha_ini formato YYYY-MM-DD)
+  // Obras
   await post(`${API_URL}/api/obras`, {
     cod_obra: 1,
     cod_postal: 1000,
@@ -160,6 +160,221 @@ async function seed() {
     nota_fabrica: 'Nota 4',
   })
 
+  // Entregas
+  await post(`${API_URL}/api/entregas`, {
+    cod_obra: 1,
+    fecha_hora_entrega: '2025-09-05T09:00',
+    estado: 'PENDIENTE',
+    detalle: 'Entrega inicial',
+    observaciones: 'Preparar documentación',
+  })
+  await post(`${API_URL}/api/entregas`, {
+    cod_obra: 1,
+    fecha_hora_entrega: '2025-09-10T14:00',
+    estado: 'EN CURSO',
+    detalle: 'Entrega parcial',
+    observaciones: 'Faltan accesorios',
+  })
+  await post(`${API_URL}/api/entregas`, {
+    cod_obra: 2,
+    fecha_hora_entrega: '2025-09-12T11:30',
+    estado: 'ENTREGADO',
+    detalle: 'Entrega completa',
+    observaciones: 'Todo conforme',
+  })
+  await post(`${API_URL}/api/entregas`, {
+    cod_obra: 2,
+    fecha_hora_entrega: '2025-09-15T16:00',
+    estado: 'CANCELADO',
+    detalle: 'Entrega cancelada',
+    observaciones: 'Cliente ausente',
+  })
+  await post(`${API_URL}/api/entregas`, {
+    cod_obra: 3,
+    fecha_hora_entrega: '2025-09-18T10:00',
+    estado: 'PENDIENTE',
+    detalle: 'Entrega inicial',
+    observaciones: 'Requiere revisión previa',
+  })
+  await post(`${API_URL}/api/entregas`, {
+    cod_obra: 3,
+    fecha_hora_entrega: '2025-09-20T13:00',
+    estado: 'EN CURSO',
+    detalle: 'Entrega parcial',
+    observaciones: 'Faltan herrajes',
+  })
+  await post(`${API_URL}/api/entregas`, {
+    cod_obra: 4,
+    fecha_hora_entrega: '2025-09-22T15:30',
+    estado: 'ENTREGADO',
+    detalle: 'Entrega completa',
+    observaciones: 'Sin observaciones',
+  })
+  await post(`${API_URL}/api/entregas`, {
+    cod_obra: 4,
+    fecha_hora_entrega: '2025-09-25T09:30',
+    estado: 'PENDIENTE',
+    detalle: 'Entrega adicional',
+    observaciones: 'Agregar manuales',
+  })
+  await post(`${API_URL}/api/entregas`, {
+    cod_obra: 1,
+    fecha_hora_entrega: '2025-09-28T11:00',
+    estado: 'EN CURSO',
+    detalle: 'Entrega parcial',
+    observaciones: 'Cliente solicita cambio',
+  })
+  await post(`${API_URL}/api/entregas`, {
+    cod_obra: 2,
+    fecha_hora_entrega: '2025-09-30T17:00',
+    estado: 'ENTREGADO',
+    detalle: 'Entrega final',
+    observaciones: 'Entrega exitosa',
+  })
+
+  // Visitas
+  await post(`${API_URL}/api/visitas`, {
+    fecha_hora_visita: '2025-09-06T10:00',
+    cod_obra: 1,
+    motivo_visita: 'MEDICION',
+    estado: 'PROGRAMADA',
+    observaciones: 'Primera medición',
+    direccion_visita: 'Calle 1',
+  })
+  await post(`${API_URL}/api/visitas`, {
+    fecha_hora_visita: '2025-09-07T11:30',
+    cod_obra: 2,
+    motivo_visita: 'RE-MEDICION',
+    estado: 'EN CURSO',
+    observaciones: 'Ajuste de medidas',
+    direccion_visita: 'Calle 2',
+  })
+  await post(`${API_URL}/api/visitas`, {
+    fecha_hora_visita: '2025-09-08T09:00',
+    cod_obra: 3,
+    motivo_visita: 'REPARACION',
+    estado: 'COMPLETADA',
+    observaciones: 'Reparación de marco',
+    direccion_visita: 'Calle 3',
+  })
+  await post(`${API_URL}/api/visitas`, {
+    fecha_hora_visita: '2025-09-09T15:00',
+    cod_obra: 4,
+    motivo_visita: 'ASESORAMIENTO',
+    estado: 'CANCELADA',
+    observaciones: 'Cliente canceló',
+    direccion_visita: 'Calle 4',
+  })
+  await post(`${API_URL}/api/visitas`, {
+    fecha_hora_visita: '2025-09-10T13:00',
+    cod_obra: 1,
+    motivo_visita: 'VISITA INICIAL',
+    estado: 'REPROGRAMADA',
+    observaciones: 'Reprogramada por lluvia',
+    direccion_visita: 'Calle 1',
+  })
+  await post(`${API_URL}/api/visitas`, {
+    fecha_hora_visita: '2025-09-11T14:30',
+    cod_obra: 2,
+    motivo_visita: 'MEDICION',
+    estado: 'PROGRAMADA',
+    observaciones: 'Medición adicional',
+    direccion_visita: 'Calle 2',
+  })
+  await post(`${API_URL}/api/visitas`, {
+    fecha_hora_visita: '2025-09-12T16:00',
+    cod_obra: 3,
+    motivo_visita: 'RE-MEDICION',
+    estado: 'EN CURSO',
+    observaciones: 'Verificar cambios',
+    direccion_visita: 'Calle 3',
+  })
+  await post(`${API_URL}/api/visitas`, {
+    fecha_hora_visita: '2025-09-13T12:00',
+    cod_obra: 4,
+    motivo_visita: 'REPARACION',
+    estado: 'COMPLETADA',
+    observaciones: 'Reparación finalizada',
+    direccion_visita: 'Calle 4',
+  })
+  await post(`${API_URL}/api/visitas`, {
+    fecha_hora_visita: '2025-09-14T10:30',
+    cod_obra: 1,
+    motivo_visita: 'ASESORAMIENTO',
+    estado: 'CANCELADA',
+    observaciones: 'Cliente no disponible',
+    direccion_visita: 'Calle 1',
+  })
+  await post(`${API_URL}/api/visitas`, {
+    fecha_hora_visita: '2025-09-15T09:30',
+    cod_obra: 2,
+    motivo_visita: 'VISITA INICIAL',
+    estado: 'REPROGRAMADA',
+    observaciones: 'Reprogramada por feriado',
+    direccion_visita: 'Calle 2',
+  })
+  // Ordenes de Producción
+  await post(`${API_URL}/api/ordenes-produccion`, {
+    cod_obra: 1,
+    fecha_confeccion: '2025-09-05',
+    fecha_validacion: '2025-09-06',
+    url: 'https://docs.luhmann.com/op1.pdf',
+  })
+  await post(`${API_URL}/api/ordenes-produccion`, {
+    cod_obra: 1,
+    fecha_confeccion: '2025-09-10',
+    fecha_validacion: '2025-09-11',
+    url: 'https://docs.luhmann.com/op2.pdf',
+  })
+  await post(`${API_URL}/api/ordenes-produccion`, {
+    cod_obra: 2,
+    fecha_confeccion: '2025-09-12',
+    fecha_validacion: '2025-09-13',
+    url: 'https://docs.luhmann.com/op3.pdf',
+  })
+  await post(`${API_URL}/api/ordenes-produccion`, {
+    cod_obra: 2,
+    fecha_confeccion: '2025-09-15',
+    fecha_validacion: '2025-09-16',
+    url: 'https://docs.luhmann.com/op4.pdf',
+  })
+  await post(`${API_URL}/api/ordenes-produccion`, {
+    cod_obra: 3,
+    fecha_confeccion: '2025-09-18',
+    fecha_validacion: '2025-09-19',
+    url: 'https://docs.luhmann.com/op5.pdf',
+  })
+  await post(`${API_URL}/api/ordenes-produccion`, {
+    cod_obra: 3,
+    fecha_confeccion: '2025-09-20',
+    fecha_validacion: '2025-09-21',
+    url: 'https://docs.luhmann.com/op6.pdf',
+  })
+  await post(`${API_URL}/api/ordenes-produccion`, {
+    cod_obra: 4,
+    fecha_confeccion: '2025-09-22',
+    fecha_validacion: '2025-09-23',
+    url: 'https://docs.luhmann.com/op7.pdf',
+  })
+  await post(`${API_URL}/api/ordenes-produccion`, {
+    cod_obra: 4,
+    fecha_confeccion: '2025-09-25',
+    fecha_validacion: '2025-09-26',
+    url: 'https://docs.luhmann.com/op8.pdf',
+  })
+  await post(`${API_URL}/api/ordenes-produccion`, {
+    cod_obra: 1,
+    fecha_confeccion: '2025-09-28',
+    fecha_validacion: '2025-09-29',
+    url: 'https://docs.luhmann.com/op9.pdf',
+  })
+  await post(`${API_URL}/api/ordenes-produccion`, {
+    cod_obra: 2,
+    fecha_confeccion: '2025-09-30',
+    fecha_validacion: '2025-10-01',
+    url: 'https://docs.luhmann.com/op10.pdf',
+  })
+
   // Parámetros
   await post(`${API_URL}/api/parametros`, {
     cod_parametro: 1,
@@ -174,13 +389,6 @@ async function seed() {
     hora_cambio: '09:00:00',
     dias_vigencia_presu: 20,
     viatico_dia_persona: 800,
-  })
-  await post(`${API_URL}/api/parametros`, {
-    cod_parametro: 3,
-    fecha_cambio: '2025-09-03',
-    hora_cambio: '10:00:00',
-    dias_vigencia_presu: 15,
-    viatico_dia_persona: 500,
   })
 }
 

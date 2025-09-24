@@ -45,6 +45,7 @@ import pagoRouter from '../../models/Pago/pago.routes.js'
 import usoVehiculoEntregaRouter from '../../models/UsoVehiculoEntrega/usoVehiculoEntrega.routes.js'
 import presupuestoRouter from '../../models/Presupuesto/presupuesto.routes.js'
 import usoMaquinariaRouter from '../../models/UsoMaquinaria/usoMaquinaria.routes.js'
+import visitaRouter from '../../models/Visita/visita.routes.js'
 
 import authRouter from '../../models/Auth/auth.routes.js'
 import routeMid from '../../models/midlewareTest/mid.routes.js'
@@ -66,6 +67,7 @@ router.use('/api/test/mid/', routeMid)
 router.use('/api/pagos', pagoRouter)
 router.use('/api/uso-maquinaria', usoMaquinariaRouter)
 router.use('/api/presupuestos', presupuestoRouter)
+router.use('/api/visitas', visitaRouter)
 
 router.use((req, res) => {
   res.status(404).json({
