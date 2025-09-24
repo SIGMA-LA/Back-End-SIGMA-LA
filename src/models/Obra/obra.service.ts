@@ -20,6 +20,12 @@ export class ObraService {
   }
 
   async create(data: Prisma.obraCreateInput): Promise<obra> {
+    if (
+      typeof data.fecha_ini === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_ini)
+    ) {
+      data.fecha_ini = new Date(data.fecha_ini + 'T00:00:00.000Z')
+    }
     return await this.repository.create(data)
   }
 

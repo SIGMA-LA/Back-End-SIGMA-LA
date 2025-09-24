@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { PresupuestoController } from './presupuesto.controller'
-import { validate } from '../../shared/middlewares/validateSchemas'
+import { PresupuestoController } from './presupuesto.controller.js'
+import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createPresupuestoSchema,
   updatePresupuestoSchema,
