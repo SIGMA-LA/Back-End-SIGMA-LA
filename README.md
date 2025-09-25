@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Back-End SIGMA LA
 
-## Getting Started
+Este proyecto es el backend de un sistema de gestión hecho a medida para la empresa Luhmann Aberturas para menjar entidades como:obras, clientes, empleados, maquinarias y más.
+Desarrollado en Node.js con Express, Prisma y TypeScript.
 
-First, run the development server:
+## Scripts principales
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- `pnpm run start:dev`  
+  Inicia el servidor en modo desarrollo con recarga automática.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- `pnpm run build`  
+  Compila el proyecto TypeScript a JavaScript en la carpeta `dist`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `pnpm run start:prod`  
+  Inicia el servidor en modo producción usando los archivos compilados.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `pnpm run db:migrate`  
+  Aplica las migraciones de Prisma en desarrollo.
 
-## Learn More
+- `pnpm run db:studio`  
+  Abre Prisma Studio para explorar la base de datos.
 
-To learn more about Next.js, take a look at the following resources:
+- `pnpm run seed`  
+  **Resetea la base de datos** (elimina todo y aplica migraciones) y ejecuta el seeder para poblarla con datos de ejemplo.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Cómo levantar el proyecto
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Instalar dependencias:
 
-## Deploy on Vercel
+   ```bash
+   pnpm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. Configurar las variables de entorno en `.env`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. Ejecutar migraciones y seed:
+
+   ```bash
+   pnpm run seed
+   ```
+
+4. Iniciar el servidor:
+   ```bash
+   pnpm run start:dev
+   ```
+
+---

@@ -1,11 +1,11 @@
 import { Router } from 'express'
-import { UsoMaquinariaController } from './usoMaquinaria.controller'
+import { UsoMaquinariaController } from './usoMaquinaria.controller.js'
 import {
   createUsoMaquinariaSchema,
   updateUsoMaquinariaSchema,
   idParamsSchema,
 } from 'sigma-la-schemas'
-import { validate } from '../../shared/middlewares/validateSchemas'
+import { validate } from '../../shared/middlewares/validateSchemas.js'
 
 const controller = new UsoMaquinariaController()
 const usoMaquinariaRouter = Router()
@@ -23,7 +23,7 @@ usoMaquinariaRouter.post(
 )
 
 usoMaquinariaRouter.get(
-  '/:cod_maquina:cod_entrega',
+  '/:cod_maquina/:cod_entrega',
   validate({ params: idParamsSchema }),
   (req, res) => {
     controller.getOne(req, res)
@@ -31,7 +31,7 @@ usoMaquinariaRouter.get(
 )
 
 usoMaquinariaRouter.put(
-  '/:cod_maquina:cod_entrega',
+  '/:cod_maquina/:cod_entrega',
   validate({
     params: idParamsSchema,
     body: updateUsoMaquinariaSchema,
@@ -42,7 +42,7 @@ usoMaquinariaRouter.put(
 )
 
 usoMaquinariaRouter.delete(
-  '/:cod_maquina:cod_entrega',
+  '/:cod_maquina/:cod_entrega',
   validate({ params: idParamsSchema }),
   (req, res) => {
     controller.remove(req, res)

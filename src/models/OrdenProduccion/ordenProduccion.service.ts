@@ -22,6 +22,18 @@ export class OrdenProduccionService {
   async create(
     data: Prisma.orden_de_produccionCreateInput,
   ): Promise<orden_de_produccion> {
+    if (
+      typeof data.fecha_confeccion === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_confeccion)
+    ) {
+      data.fecha_confeccion = new Date(data.fecha_confeccion + 'T00:00:00.000Z')
+    }
+    if (
+      typeof data.fecha_validacion === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_validacion as string)
+    ) {
+      data.fecha_validacion = new Date(data.fecha_validacion + 'T00:00:00.000Z')
+    }
     return await this.repository.create(data)
   }
 

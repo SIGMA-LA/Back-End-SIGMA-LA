@@ -1,4 +1,4 @@
-import { UsoMaquinariaService } from './usoMaquinaria.service'
+import { UsoMaquinariaService } from './usoMaquinaria.service.js'
 import { Request, Response } from 'express'
 
 const usoService = new UsoMaquinariaService()

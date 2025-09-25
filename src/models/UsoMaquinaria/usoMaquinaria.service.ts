@@ -1,4 +1,4 @@
-import { UsoMaquinariaRepository } from './usoMaquinaria.repository'
+import { UsoMaquinariaRepository } from './usoMaquinaria.repository.js'
 import { uso_maquinaria, Prisma } from '@prisma/client'
 
 /**
