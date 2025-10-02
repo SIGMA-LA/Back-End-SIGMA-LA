@@ -17,6 +17,50 @@ export class EntregaRepository {
     return this.prisma.entrega.findMany()
   }
 
+  async getByEmpleadoEstado(
+    cuil_empleado: string,
+    estado: string,
+  ): Promise<entrega[]> {
+    return this.prisma.entrega.findMany({
+      where: {
+        AND: [
+          { estado: estado },
+          {
+            entrega_empleado: {
+              some: {
+                cuil: cuil_empleado,
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        entrega_empleado: {
+          include: {
+            empleado: {
+              select: {
+                cuil: true,
+                nombre: true,
+                apellido: true,
+              },
+            },
+          },
+        },
+        obra: {
+          select: {
+            cod_obra: true,
+            direccion: true,
+            cliente: {
+              select: {
+                razon_social: true,
+              },
+            },
+          },
+        },
+      },
+    })
+  }
+
   async findById(cod_entrega: number): Promise<entrega | null> {
     return this.prisma.entrega.findUnique({
       where: { cod_entrega },

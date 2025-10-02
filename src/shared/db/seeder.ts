@@ -58,9 +58,8 @@ async function seed() {
     mail: 'cuatro@cliente.com',
   })
 
-  // Empleados
-  const roles = ['ADMIN', 'COORDINACION', 'ENCARGADO', 'VISITADOR', 'VENTAS']
-  const areas = ['COORDINACION', 'VENTAS', 'PRODUCCION', 'CORTE', 'MECANIZADO']
+  const roles = ['ADMIN', 'COORDINACION', 'VISITADOR', 'VENTAS']
+  const areas = ['COORDINACION', 'VENTAS', 'PRODUCCION', 'VISITAS', 'ADMIN']
   for (let i = 0; i < roles.length; i++) {
     await post(`${API_URL}/api/empleados`, {
       cuil: `2099999999${i}`,
@@ -71,22 +70,34 @@ async function seed() {
       contrasenia: 'test1234',
     })
   }
-  await post(`${API_URL}/api/empleados`, {
-    cuil: `20999999997`,
-    nombre: 'Extra',
-    apellido: 'Empleado',
-    rol_actual: 'ADMIN',
-    area_trabajo: 'ALMACEN',
-    contrasenia: 'test1234',
-  })
-  await post(`${API_URL}/api/empleados`, {
-    cuil: `20999999998`,
-    nombre: 'Adicional',
-    apellido: 'Empleado',
-    rol_actual: 'VENTAS',
-    area_trabajo: 'ATENCION_CLIENTE',
-    contrasenia: 'test1234',
-  })
+
+  // Varios empleados de PLANTA
+  const nombresPlanta = ['Carlos', 'Miguel', 'Roberto', 'Fernando', 'Diego']
+  const apellidosPlanta = [
+    'Martinez',
+    'Lopez',
+    'Garcia',
+    'Rodriguez',
+    'Gonzalez',
+  ]
+  const areasPlanta = [
+    'MECANIZADO',
+    'CORTE',
+    'DEPOSITO',
+    'ENSAMBLE',
+    'CONTROL_CALIDAD',
+  ]
+
+  for (let i = 0; i < 5; i++) {
+    await post(`${API_URL}/api/empleados`, {
+      cuil: `209999999${10 + i}`,
+      nombre: nombresPlanta[i],
+      apellido: apellidosPlanta[i],
+      rol_actual: 'PLANTA',
+      area_trabajo: areasPlanta[i],
+      contrasenia: 'test1234',
+    })
+  }
 
   // Maquinarias
   await post(`${API_URL}/api/maquinarias`, {
@@ -374,6 +385,181 @@ async function seed() {
     fecha_validacion: '2025-10-01',
     url: 'https://docs.luhmann.com/op10.pdf',
   })
+  const relacionesEntregaEmpleado = [
+    // Entrega 1 - Visitador liderando con equipo de planta
+    {
+      cuil: '20999999992', // Visitador
+      cod_entrega: 1,
+      cod_obra: 1,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999910', // Planta Carlos
+      cod_entrega: 1,
+      cod_obra: 1,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999911', // Planta Miguel
+      cod_entrega: 1,
+      cod_obra: 1,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+
+    // Entrega 2 - Planta como encargado
+    {
+      cuil: '20999999912', // Planta Roberto
+      cod_entrega: 2,
+      cod_obra: 1,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999913', // Planta Fernando
+      cod_entrega: 2,
+      cod_obra: 1,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+
+    // Entrega 3 - Visitador solo
+    {
+      cuil: '20999999992', // Visitador
+      cod_entrega: 3,
+      cod_obra: 2,
+      rol_entrega: 'ENCARGADO',
+    },
+
+    // Entrega 4 - Planta liderando equipo
+    {
+      cuil: '20999999910', // Planta Carlos
+      cod_entrega: 4,
+      cod_obra: 2,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999914', // Planta Diego
+      cod_entrega: 4,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999911', // Planta Miguel
+      cod_entrega: 4,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+
+    // Entrega 5 - Visitador con equipo grande
+    {
+      cuil: '20999999992', // Visitador
+      cod_entrega: 5,
+      cod_obra: 3,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999912', // Planta Roberto
+      cod_entrega: 5,
+      cod_obra: 3,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999913', // Planta Fernando
+      cod_entrega: 5,
+      cod_obra: 3,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+
+    // Entrega 6 - Planta liderando con apoyo
+    {
+      cuil: '20999999911', // Planta Miguel
+      cod_entrega: 6,
+      cod_obra: 3,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999914', // Planta Diego
+      cod_entrega: 6,
+      cod_obra: 3,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+
+    // Entrega 7 - Planta con visitador de apoyo
+    {
+      cuil: '20999999913', // Planta Fernando
+      cod_entrega: 7,
+      cod_obra: 4,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999910', // Planta Carlos
+      cod_entrega: 7,
+      cod_obra: 4,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999992', // Visitador
+      cod_entrega: 7,
+      cod_obra: 4,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+
+    // Entrega 8 - Planta solo
+    {
+      cuil: '20999999914', // Planta Diego
+      cod_entrega: 8,
+      cod_obra: 4,
+      rol_entrega: 'ENCARGADO',
+    },
+
+    // Entrega 9 - Visitador con un acompañante
+    {
+      cuil: '20999999992', // Visitador
+      cod_entrega: 9,
+      cod_obra: 1,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999912', // Planta Roberto
+      cod_entrega: 9,
+      cod_obra: 1,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+
+    // Entrega 10 - Equipo completo de planta
+    {
+      cuil: '20999999910', // Planta Carlos
+      cod_entrega: 10,
+      cod_obra: 2,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999911', // Planta Miguel
+      cod_entrega: 10,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999912', // Planta Roberto
+      cod_entrega: 10,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999913', // Planta Fernando
+      cod_entrega: 10,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999914', // Planta Diego
+      cod_entrega: 10,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+  ]
+  // Crear todas las relaciones empleado_entrega
+  for (const relacion of relacionesEntregaEmpleado) {
+    await post(`${API_URL}/api/entrega-empleado`, relacion)
+  }
 
   // Parámetros
   await post(`${API_URL}/api/parametros`, {
