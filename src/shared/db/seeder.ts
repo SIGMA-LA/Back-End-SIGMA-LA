@@ -58,9 +58,9 @@ async function seed() {
     mail: 'cuatro@cliente.com',
   })
 
-  // Empleados
-  const roles = ['ADMIN', 'COORDINACION', 'ENCARGADO', 'VISITADOR', 'VENTAS']
-  const areas = ['COORDINACION', 'VENTAS', 'PRODUCCION', 'CORTE', 'MECANIZADO']
+  // Empleados - Roles únicos
+  const roles = ['ADMIN', 'COORDINACION', 'VISITADOR', 'VENTAS']
+  const areas = ['COORDINACION', 'VENTAS', 'PRODUCCION', 'ATENCION_CLIENTE']
   for (let i = 0; i < roles.length; i++) {
     await post(`${API_URL}/api/empleados`, {
       cuil: `2099999999${i}`,
@@ -71,22 +71,34 @@ async function seed() {
       contrasenia: 'test1234',
     })
   }
-  await post(`${API_URL}/api/empleados`, {
-    cuil: `20999999997`,
-    nombre: 'Extra',
-    apellido: 'Empleado',
-    rol_actual: 'ADMIN',
-    area_trabajo: 'ALMACEN',
-    contrasenia: 'test1234',
-  })
-  await post(`${API_URL}/api/empleados`, {
-    cuil: `20999999998`,
-    nombre: 'Adicional',
-    apellido: 'Empleado',
-    rol_actual: 'VENTAS',
-    area_trabajo: 'ATENCION_CLIENTE',
-    contrasenia: 'test1234',
-  })
+
+  // Empleados de PLANTA
+  const nombresPlanta = ['Carlos', 'Miguel', 'Roberto', 'Fernando', 'Diego']
+  const apellidosPlanta = [
+    'Martinez',
+    'Lopez',
+    'Garcia',
+    'Rodriguez',
+    'Gonzalez',
+  ]
+  const areasPlanta = [
+    'MECANIZADO',
+    'CORTE',
+    'ALMACEN',
+    'ENSAMBLE',
+    'PRODUCCION',
+  ]
+
+  for (let i = 0; i < 5; i++) {
+    await post(`${API_URL}/api/empleados`, {
+      cuil: `209999999${10 + i}`,
+      nombre: nombresPlanta[i],
+      apellido: apellidosPlanta[i],
+      rol_actual: 'PLANTA',
+      area_trabajo: areasPlanta[i],
+      contrasenia: 'test1234',
+    })
+  }
 
   // Maquinarias
   await post(`${API_URL}/api/maquinarias`, {
@@ -105,7 +117,7 @@ async function seed() {
     estado: 'MANTENIMIENTO',
   })
 
-  // Vehiculos
+  // Vehículos
   await post(`${API_URL}/api/vehiculos`, {
     patente: 'ABC123',
     tipo_vehiculo: 'CAMIONETA',
@@ -313,7 +325,8 @@ async function seed() {
     observaciones: 'Reprogramada por feriado',
     direccion_visita: 'Calle 2',
   })
-  // Ordenes de Producción
+
+  // Órdenes de Producción
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 1,
     fecha_confeccion: '2025-09-05',
@@ -375,6 +388,164 @@ async function seed() {
     url: 'https://docs.luhmann.com/op10.pdf',
   })
 
+  // Relaciones Empleado-Entrega
+  const relacionesEntregaEmpleado = [
+    {
+      cuil: '20999999992',
+      cod_entrega: 1,
+      cod_obra: 1,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999910',
+      cod_entrega: 1,
+      cod_obra: 1,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999911',
+      cod_entrega: 1,
+      cod_obra: 1,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999912',
+      cod_entrega: 2,
+      cod_obra: 1,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999913',
+      cod_entrega: 2,
+      cod_obra: 1,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999992',
+      cod_entrega: 3,
+      cod_obra: 2,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999910',
+      cod_entrega: 4,
+      cod_obra: 2,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999914',
+      cod_entrega: 4,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999911',
+      cod_entrega: 4,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999992',
+      cod_entrega: 5,
+      cod_obra: 3,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999912',
+      cod_entrega: 5,
+      cod_obra: 3,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999913',
+      cod_entrega: 5,
+      cod_obra: 3,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999911',
+      cod_entrega: 6,
+      cod_obra: 3,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999914',
+      cod_entrega: 6,
+      cod_obra: 3,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999913',
+      cod_entrega: 7,
+      cod_obra: 4,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999910',
+      cod_entrega: 7,
+      cod_obra: 4,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999992',
+      cod_entrega: 7,
+      cod_obra: 4,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999914',
+      cod_entrega: 8,
+      cod_obra: 4,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999992',
+      cod_entrega: 9,
+      cod_obra: 1,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999912',
+      cod_entrega: 9,
+      cod_obra: 1,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999910',
+      cod_entrega: 10,
+      cod_obra: 2,
+      rol_entrega: 'ENCARGADO',
+    },
+    {
+      cuil: '20999999911',
+      cod_entrega: 10,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999912',
+      cod_entrega: 10,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999913',
+      cod_entrega: 10,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+    {
+      cuil: '20999999914',
+      cod_entrega: 10,
+      cod_obra: 2,
+      rol_entrega: 'ACOMPAÑANTE',
+    },
+  ]
+
+  for (const relacion of relacionesEntregaEmpleado) {
+    await post(`${API_URL}/api/entrega-empleado`, relacion)
+  }
+
   // Parámetros
   await post(`${API_URL}/api/parametros`, {
     cod_parametro: 1,
@@ -393,5 +564,5 @@ async function seed() {
 }
 
 seed()
-  .then(() => console.log('Seed completado con fetch'))
+  .then(() => console.log('Seed completado con éxito'))
   .catch(e => console.error('Error en seed:', e))

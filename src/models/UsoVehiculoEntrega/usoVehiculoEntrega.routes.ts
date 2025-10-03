@@ -4,7 +4,6 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createUsoVehiculoEntregaSchema,
   updateUsoVehiculoEntregaSchema,
-  idParamsSchema,
 } from 'sigma-la-schemas'
 
 const usoVehiculoEntregaController = new UsoVehiculoEntregaController()
@@ -22,18 +21,13 @@ usoVehiculoEntregaRouter.post(
   },
 )
 
-usoVehiculoEntregaRouter.get(
-  '/:id',
-  validate({ params: idParamsSchema }),
-  (req, res) => {
-    usoVehiculoEntregaController.getOne(req, res)
-  },
-)
+usoVehiculoEntregaRouter.get('/:cod_entrega/:cod_vehiculo', (req, res) => {
+  usoVehiculoEntregaController.getOne(req, res)
+})
 
 usoVehiculoEntregaRouter.put(
-  '/:id',
+  '/:cod_entrega/:cod_vehiculo',
   validate({
-    params: idParamsSchema,
     body: updateUsoVehiculoEntregaSchema,
   }),
   (req, res) => {
@@ -41,12 +35,8 @@ usoVehiculoEntregaRouter.put(
   },
 )
 
-usoVehiculoEntregaRouter.delete(
-  '/:id',
-  validate({ params: idParamsSchema }),
-  (req, res) => {
-    usoVehiculoEntregaController.remove(req, res)
-  },
-)
+usoVehiculoEntregaRouter.delete('/:cod_entrega/:cod_vehiculo', (req, res) => {
+  usoVehiculoEntregaController.remove(req, res)
+})
 
 export default usoVehiculoEntregaRouter

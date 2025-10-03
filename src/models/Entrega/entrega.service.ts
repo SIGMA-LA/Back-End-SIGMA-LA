@@ -50,4 +50,11 @@ export class EntregaService {
   async delete(cod_entrega: number): Promise<entrega> {
     return this.entregaRepository.delete(cod_entrega)
   }
+
+  async getByEmpleadoEstado(
+    cuil_empleado: string,
+    estado: string,
+  ): Promise<entrega[]> {
+    return this.entregaRepository.getByEmpleadoEstado(cuil_empleado, estado)
+  }
 }

@@ -46,4 +46,13 @@ export class EntregaController {
     const entrega = await entregaService.delete(cod_entrega)
     res.json(entrega)
   }
+
+  async getEntregasByEmpleadoEstado(req: Request, res: Response) {
+    const { cuil_empleado, estado } = req.params
+    const entregas = await entregaService.getByEmpleadoEstado(
+      cuil_empleado,
+      estado,
+    )
+    res.json(entregas)
+  }
 }
