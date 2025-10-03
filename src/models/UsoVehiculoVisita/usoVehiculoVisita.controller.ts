@@ -47,7 +47,7 @@ export class UsoVehiculoVisitaController {
   async remove(req: Request, res: Response) {
     const cod_visita = parseInt(req.params.cod_visita, 10)
     const patente = req.params.patente
-    const uso = await usoService.remove(cod_visita, patente)
+    const uso = await usoService.delete(cod_visita, patente)
     res.json(uso)
   }
 }
