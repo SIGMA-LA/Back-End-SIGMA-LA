@@ -33,7 +33,7 @@ export class UsoVehiculoVisitaService {
     cod_visita: number,
     patente: string,
   ): Promise<uso_vehiculo_visita | null> {
-    return await this.repository.findById(cod_visita, patente)
+    return await this.repository.findById(patente, cod_visita)
   }
 
   async update(
@@ -41,17 +41,17 @@ export class UsoVehiculoVisitaService {
     patente: string,
     data: Prisma.uso_vehiculo_visitaUpdateInput,
   ): Promise<uso_vehiculo_visita> {
-    return await this.repository.update(cod_visita, patente, data)
+    return await this.repository.update(patente, cod_visita, data)
   }
 
-  async remove(
+  async delete(
     cod_visita: number,
     patente: string,
   ): Promise<uso_vehiculo_visita> {
-    const existingUso = await this.repository.findById(cod_visita, patente)
+    const existingUso = await this.repository.findById(patente, cod_visita)
     if (!existingUso) {
-      throw new Error('Uso de vehículo por visita no encontrado')
+      throw new Error('Uso de vehículo en visita no encontrado')
     }
-    return await this.repository.delete(cod_visita, patente)
+    return await this.repository.delete(patente, cod_visita)
   }
 }
