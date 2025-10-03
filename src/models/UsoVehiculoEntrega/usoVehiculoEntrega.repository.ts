@@ -21,28 +21,46 @@ export class UsoVehiculoEntregaRepository {
   }
 
   async findById(
-    cod_uso_vehiculo_entrega: number,
+    cod_entrega: number,
+    patente: string,
   ): Promise<uso_vehiculo_entrega | null> {
     return await this.prisma.uso_vehiculo_entrega.findUnique({
-      where: { cod_uso_vehiculo_entrega },
+      where: {
+        patente_cod_entrega: {
+          patente: patente,
+          cod_entrega: cod_entrega,
+        },
+      },
     })
   }
 
   async update(
-    cod_uso_vehiculo_entrega: number,
+    cod_entrega: number,
+    patente: string,
     data: Prisma.uso_vehiculo_entregaUpdateInput,
   ): Promise<uso_vehiculo_entrega> {
     return await this.prisma.uso_vehiculo_entrega.update({
-      where: { cod_uso_vehiculo_entrega },
+      where: {
+        patente_cod_entrega: {
+          patente: patente,
+          cod_entrega: cod_entrega,
+        },
+      },
       data,
     })
   }
 
   async delete(
-    cod_uso_vehiculo_entrega: number,
+    cod_entrega: number,
+    patente: string,
   ): Promise<uso_vehiculo_entrega> {
     return await this.prisma.uso_vehiculo_entrega.delete({
-      where: { cod_uso_vehiculo_entrega },
+      where: {
+        patente_cod_entrega: {
+          patente: patente,
+          cod_entrega: cod_entrega,
+        },
+      },
     })
   }
 }

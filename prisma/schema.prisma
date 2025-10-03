@@ -166,11 +166,10 @@ model uso_vehiculo_visita {
   fecha_hora_fin_real     DateTime? @db.Timestamp(6)
   estado                  String    @db.VarChar(50)
   cod_visita              Int
-  cod_uso_vehiculo_visita Int       @id @default(autoincrement())
   visita                  visita    @relation(fields: [cod_visita], references: [cod_visita], onDelete: NoAction, onUpdate: NoAction)
   vehiculo                vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)
 
-  @@unique([patente, fecha_hora_ini_uso])
+  @@id([patente, cod_visita])
 }
 
 model vehiculo {

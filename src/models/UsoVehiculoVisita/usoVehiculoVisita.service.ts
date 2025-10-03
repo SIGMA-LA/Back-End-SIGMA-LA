@@ -30,23 +30,28 @@ export class UsoVehiculoVisitaService {
   }
 
   async findById(
-    cod_uso_vehiculo_visita: number,
+    cod_visita: number,
+    patente: string,
   ): Promise<uso_vehiculo_visita | null> {
-    return await this.repository.findById(cod_uso_vehiculo_visita)
+    return await this.repository.findById(cod_visita, patente)
   }
 
   async update(
-    cod_uso_vehiculo_visita: number,
+    cod_visita: number,
+    patente: string,
     data: Prisma.uso_vehiculo_visitaUpdateInput,
   ): Promise<uso_vehiculo_visita> {
-    return await this.repository.update(cod_uso_vehiculo_visita, data)
+    return await this.repository.update(cod_visita, patente, data)
   }
 
-  async remove(cod_uso_vehiculo_visita: number): Promise<uso_vehiculo_visita> {
-    const existingUso = await this.repository.findById(cod_uso_vehiculo_visita)
+  async remove(
+    cod_visita: number,
+    patente: string,
+  ): Promise<uso_vehiculo_visita> {
+    const existingUso = await this.repository.findById(cod_visita, patente)
     if (!existingUso) {
       throw new Error('Uso de vehículo por visita no encontrado')
     }
-    return await this.repository.delete(cod_uso_vehiculo_visita)
+    return await this.repository.delete(cod_visita, patente)
   }
 }

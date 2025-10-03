@@ -15,8 +15,9 @@ export class UsoVehiculoEntregaController {
   }
 
   async getOne(req: Request, res: Response) {
-    const id = Number(req.params.id)
-    const uso = await usoService.findById(id)
+    const cod_entrega = Number(req.params.cod_entrega)
+    const patente = req.params.patente
+    const uso = await usoService.findById(cod_entrega, patente)
     if (!uso) {
       return res
         .status(404)
@@ -26,14 +27,16 @@ export class UsoVehiculoEntregaController {
   }
 
   async update(req: Request, res: Response) {
-    const id = Number(req.params.id)
-    const uso = await usoService.update(id, req.body)
+    const cod_entrega = Number(req.params.cod_entrega)
+    const patente = req.params.patente
+    const uso = await usoService.update(cod_entrega, patente, req.body)
     res.json(uso)
   }
 
   async remove(req: Request, res: Response) {
-    const id = Number(req.params.id)
-    const uso = await usoService.remove(id)
+    const cod_entrega = Number(req.params.cod_entrega)
+    const patente = req.params.patente
+    const uso = await usoService.remove(cod_entrega, patente)
     res.json(uso)
   }
 }

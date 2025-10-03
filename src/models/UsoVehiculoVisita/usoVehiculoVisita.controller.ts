@@ -26,8 +26,9 @@ export class UsoVehiculoVisitaController {
   }
 
   async getOne(req: Request, res: Response) {
-    const cod_uso = parseInt(req.params.cod_uso, 10)
-    const uso = await usoService.findById(cod_uso)
+    const cod_visita = parseInt(req.params.cod_visita, 10)
+    const patente = req.params.patente
+    const uso = await usoService.findById(cod_visita, patente)
     if (!uso) {
       return res
         .status(404)
@@ -37,14 +38,16 @@ export class UsoVehiculoVisitaController {
   }
 
   async update(req: Request, res: Response) {
-    const cod_uso = parseInt(req.params.cod_uso, 10)
-    const uso = await usoService.update(cod_uso, req.body)
+    const cod_visita = parseInt(req.params.cod_visita, 10)
+    const patente = req.params.patente
+    const uso = await usoService.update(cod_visita, patente, req.body)
     res.json(uso)
   }
 
   async remove(req: Request, res: Response) {
-    const cod_uso = parseInt(req.params.cod_uso, 10)
-    const uso = await usoService.remove(cod_uso)
+    const cod_visita = parseInt(req.params.cod_visita, 10)
+    const patente = req.params.patente
+    const uso = await usoService.remove(cod_visita, patente)
     res.json(uso)
   }
 }
