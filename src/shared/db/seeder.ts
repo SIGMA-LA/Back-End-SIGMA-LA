@@ -162,7 +162,7 @@ async function seed() {
     fecha_ini: '2025-09-01',
     estado: 'ACTIVA',
     direccion: 'Av. Pellegrini 1250, Rosario',
-    nota_fabrica: 'Edificio residencial de 12 pisos - Torre Pellegrini',
+    nota_fabrica: null,
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 2,
@@ -171,7 +171,7 @@ async function seed() {
     fecha_ini: '2025-09-02',
     estado: 'ACTIVA',
     direccion: 'Av. San Martín 850, San Lorenzo',
-    nota_fabrica: 'Complejo habitacional - 40 unidades',
+    nota_fabrica: null,
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 3,
@@ -180,7 +180,7 @@ async function seed() {
     fecha_ini: '2025-09-03',
     estado: 'ACTIVA',
     direccion: 'Bv. Gálvez 1680, Santa Fe',
-    nota_fabrica: 'Centro comercial - 3 plantas',
+    nota_fabrica: null,
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 4,
@@ -189,7 +189,7 @@ async function seed() {
     fecha_ini: '2025-09-04',
     estado: 'ACTIVA',
     direccion: 'Calle 7 entre 47 y 48, La Plata',
-    nota_fabrica: 'Edificio de oficinas - 8 pisos',
+    nota_fabrica: null,
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 5,
@@ -198,7 +198,7 @@ async function seed() {
     fecha_ini: '2025-09-05',
     estado: 'ACTIVA',
     direccion: 'Av. Colón 4500, Córdoba',
-    nota_fabrica: 'Complejo de viviendas - Barrio Cerro de las Rosas',
+    nota_fabrica: null,
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 6,
@@ -207,7 +207,7 @@ async function seed() {
     fecha_ini: '2025-09-06',
     estado: 'ACTIVA',
     direccion: 'Av. Aconquija 1200, San Miguel de Tucumán',
-    nota_fabrica: 'Torres gemelas residenciales - 15 pisos c/u',
+    nota_fabrica: null,
   })
 
   // Entregas
