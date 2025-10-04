@@ -383,56 +383,56 @@ async function seed() {
     fecha_confeccion: '2025-09-05',
     fecha_validacion: '2025-09-06',
     url: 'https://docs.sigma-la.com/op-rosario-pellegrini-001.pdf',
-    public_id: '',
+    public_id: ' ',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 1,
     fecha_confeccion: '2025-09-10',
     fecha_validacion: '2025-09-11',
     url: 'https://docs.sigma-la.com/op-rosario-pellegrini-002.pdf',
-    public_id: '',
+    public_id: ' ',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 2,
     fecha_confeccion: '2025-09-12',
     fecha_validacion: '2025-09-13',
     url: 'https://docs.sigma-la.com/op-sanlorenzo-sanmartin-001.pdf',
-    public_id: '',
+    public_id: ' ',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 3,
     fecha_confeccion: '2025-09-15',
     fecha_validacion: '2025-09-16',
     url: 'https://docs.sigma-la.com/op-santafe-galvez-001.pdf',
-    public_id: '',
+    public_id: ' ',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 4,
     fecha_confeccion: '2025-09-18',
     fecha_validacion: '2025-09-19',
     url: 'https://docs.sigma-la.com/op-laplata-calle7-001.pdf',
-    public_id: '',
+    public_id: ' ',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 5,
     fecha_confeccion: '2025-09-20',
     fecha_validacion: '2025-09-21',
     url: 'https://docs.sigma-la.com/op-cordoba-colon-001.pdf',
-    public_id: '',
+    public_id: ' ',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 5,
     fecha_confeccion: '2025-09-22',
     fecha_validacion: '2025-09-23',
     url: 'https://docs.sigma-la.com/op-cordoba-colon-002.pdf',
-    public_id: '',
+    public_id: ' ',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 6,
     fecha_confeccion: '2025-09-25',
     fecha_validacion: '2025-09-26',
     url: 'https://docs.sigma-la.com/op-tucuman-aconquija-001.pdf',
-    public_id: '',
+    public_id: ' ',
   })
   const relacionesVisitaEmpleado = [
     { cuil: '20999999992', cod_visita: 1 },
@@ -630,14 +630,14 @@ async function seed() {
   // Parámetros
   await post(`${API_URL}/api/parametros`, {
     cod_parametro: 1,
-    fecha_cambio: '2025-09-01',
+    fecha_cambio: '2025-01-01',
     hora_cambio: '08:00:00',
     dias_vigencia_presu: 30,
     viatico_dia_persona: 1000,
   })
   await post(`${API_URL}/api/parametros`, {
     cod_parametro: 2,
-    fecha_cambio: '2025-09-02',
+    fecha_cambio: '2025-02-01',
     hora_cambio: '09:00:00',
     dias_vigencia_presu: 20,
     viatico_dia_persona: 800,

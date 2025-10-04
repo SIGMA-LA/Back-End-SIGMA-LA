@@ -25,34 +25,32 @@ export class ParametroService {
    * @returns El parámetro creado.
    */
   async create(data: Prisma.parametroCreateInput): Promise<parametro> {
+    // Ajuste para fecha_cambio
+    if (
+      typeof data.fecha_cambio === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_cambio)
+    ) {
+      data.fecha_cambio = new Date(data.fecha_cambio + 'T00:00:00.000Z')
+    }
+    // Ajuste para hora_cambio
+    if (
+      typeof data.hora_cambio === 'string' &&
+      /^\d{2}:\d{2}:\d{2}$/.test(data.hora_cambio)
+    ) {
+      // Usar una fecha dummy y la hora recibida
+      data.hora_cambio = new Date('1970-01-01T' + data.hora_cambio + '.000Z')
+    }
     return await this.repository.create(data)
   }
 
-  /**
-   * Obtiene todos los registros de parámetros.
-   * @returns Una lista de todos los parámetros.
-   */
   async findAll(): Promise<parametro[]> {
     return await this.repository.findAll()
   }
 
-  /**
-   * Busca un parámetro específico por su clave primaria compuesta (fecha_cambio y hora_cambio).
-   * @param fecha_cambio La fecha del cambio.
-   * @param hora_cambio La hora del cambio.
-   * @returns El parámetro encontrado o null si no existe.
-   */
   async findById(id: number): Promise<parametro | null> {
     return await this.repository.findOne(id)
   }
 
-  /**
-   * Actualiza un registro de parámetro existente.
-   * @param fecha_cambio La fecha del cambio del parámetro a actualizar.
-   * @param hora_cambio La hora del cambio del parámetro a actualizar.
-   * @param data Los nuevos datos para el parámetro.
-   * @returns El parámetro actualizado.
-   */
   async update(
     id: number,
     data: Prisma.parametroUpdateInput,
@@ -62,15 +60,17 @@ export class ParametroService {
       throw new Error('Parametro no encontrado.')
     }
 
+    // Ajuste también para update si es necesario
+    if (
+      typeof data.fecha_cambio === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_cambio)
+    ) {
+      data.fecha_cambio = new Date(data.fecha_cambio + 'T00:00:00.000Z')
+    }
+
     return await this.repository.update(id, data)
   }
 
-  /**
-   * Elimina un registro de parámetro.
-   * @param fecha_cambio La fecha del cambio del parámetro a eliminar.
-   * @param hora_cambio La hora del cambio del parámetro a eliminar.
-   * @returns El parámetro eliminado.
-   */
   async remove(id: number): Promise<parametro> {
     const existingParametro = await this.repository.findOne(id)
     if (!existingParametro) {
