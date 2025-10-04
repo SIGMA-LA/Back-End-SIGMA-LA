@@ -53,6 +53,8 @@ export class EntregaRepository {
             cliente: {
               select: {
                 razon_social: true,
+                telefono: true,
+                mail: true,
               },
             },
           },
