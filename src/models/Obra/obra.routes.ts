@@ -18,17 +18,14 @@ obraRouter.post('/', validate({ body: createObraSchema }), (req, res) => {
   obraController.create(req, res)
 })
 
-obraRouter.get(
-  '/:cod_obra',
-  validate({ params: idParamsSchema }),
-  (req, res) => {
-    obraController.getOne(req, res)
-  },
-)
+obraRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
+  obraController.getOne(req, res)
+})
 
 obraRouter.put(
-  '/:cod_obra',
+  '/:id',
   validate({
+    params: idParamsSchema,
     body: updateObraSchema,
   }),
   (req, res) => {
@@ -36,7 +33,8 @@ obraRouter.put(
   },
 )
 
-obraRouter.delete('/:cod_obra', (req, res) => {
+obraRouter.delete('/:id', (req, res) => {
+  validate({ params: idParamsSchema })(req, res, () => {})
   obraController.remove(req, res)
 })
 
