@@ -45,8 +45,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0(cloudinary@2.7.0)
       sigma-la-schemas:
-        specifier: git+https://github.com/SIGMA-LA/sigma-la-schemas.git
-        version: git+https://github.com/SIGMA-LA/sigma-la-schemas.git#cd2a1888dc78d7f13078931c94f7ebe859d1df78(typescript@5.9.2)
+        specifier: ^1.0.14
+        version: 1.0.14(typescript@5.9.2)
       valibot:
         specifier: ^1.1.0
         version: 1.1.0(typescript@5.9.2)
@@ -2084,9 +2084,8 @@ packages:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
     engines: {node: '>= 0.4'}
 
-  sigma-la-schemas@git+https://github.com/SIGMA-LA/sigma-la-schemas.git#cd2a1888dc78d7f13078931c94f7ebe859d1df78:
-    resolution: {commit: cd2a1888dc78d7f13078931c94f7ebe859d1df78, repo: https://github.com/SIGMA-LA/sigma-la-schemas.git, type: git}
-    version: 1.0.10
+  sigma-la-schemas@1.0.14:
+    resolution: {integrity: sha512-eL2UhXjmQ4doTMf7mXmQhshzm4qwIXIXyGUFVNWPOZJ9GmoiXWUZjdQw9qCHsidCH5AY5/yFDLDjbMYWRE/Nsg==}
 
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
@@ -4762,7 +4761,7 @@ snapshots:
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
 
-  sigma-la-schemas@git+https://github.com/SIGMA-LA/sigma-la-schemas.git#cd2a1888dc78d7f13078931c94f7ebe859d1df78(typescript@5.9.2):
+  sigma-la-schemas@1.0.14(typescript@5.9.2):
     dependencies:
       valibot: 1.1.0(typescript@5.9.2)
     transitivePeerDependencies:

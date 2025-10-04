@@ -13,7 +13,6 @@ entregaRouter.get('/', (req, res) => {
   entregaController.getAll(req, res)
 })
 
-// Falta validador de los params con estado y cuil
 entregaRouter.get('/:cuil_empleado/:estado', (req, res) => {
   entregaController.getEntregasByEmpleadoEstado(req, res)
 })
