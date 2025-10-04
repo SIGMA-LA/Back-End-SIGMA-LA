@@ -71,9 +71,30 @@ export class VisitaRepository {
       },
       data,
       include: {
-        obra: true,
+        obra: {
+          include: {
+            cliente: {
+              select: {
+                razon_social: true,
+                telefono: true,
+                mail: true,
+              },
+            },
+          },
+        },
         localidad: true,
-        empleado_visita: true,
+        empleado_visita: {
+          include: {
+            empleado: {
+              select: {
+                cuil: true,
+                nombre: true,
+                apellido: true,
+                rol_actual: true,
+              },
+            },
+          },
+        },
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
