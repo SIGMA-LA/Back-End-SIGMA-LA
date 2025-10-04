@@ -24,9 +24,9 @@ export class ObraRepository {
     })
   }
 
-  async findById(cod_obra: number): Promise<obra | null> {
+  async findById(id: number): Promise<obra | null> {
     return await this.prisma.obra.findUnique({
-      where: { cod_obra },
+      where: { cod_obra: id },
       include: {
         cliente: true,
         localidad: true,
@@ -34,16 +34,16 @@ export class ObraRepository {
     })
   }
 
-  async update(cod_obra: number, data: Prisma.obraUpdateInput): Promise<obra> {
+  async update(id: number, data: Prisma.obraUpdateInput): Promise<obra> {
     return await this.prisma.obra.update({
-      where: { cod_obra },
+      where: { cod_obra: id },
       data,
     })
   }
 
-  async delete(cod_obra: number): Promise<obra> {
+  async delete(id: number): Promise<obra> {
     return await this.prisma.obra.delete({
-      where: { cod_obra },
+      where: { cod_obra: id },
     })
   }
 }

@@ -42,11 +42,11 @@ export class ObraService {
     return this.repository.findAll()
   }
 
-  async findById(cod_obra: number): Promise<obra | null> {
-    return await this.repository.findById(cod_obra)
+  async findById(id: number): Promise<obra | null> {
+    return await this.repository.findById(id)
   }
 
-  async update(cod_obra: number, data: Prisma.obraUpdateInput): Promise<obra> {
+  async update(id: number, data: Prisma.obraUpdateInput): Promise<obra> {
     if (
       typeof data.fecha_ini === 'string' &&
       /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_ini)
@@ -63,14 +63,14 @@ export class ObraService {
       )
     }
 
-    return await this.repository.update(cod_obra, data)
+    return await this.repository.update(id, data)
   }
 
-  async remove(cod_obra: number): Promise<obra> {
-    const existingObra = await this.repository.findById(cod_obra)
+  async remove(id: number): Promise<obra> {
+    const existingObra = await this.repository.findById(id)
     if (!existingObra) {
       throw new Error('No existe una obra con el código proporcionado.')
     }
-    return await this.repository.delete(cod_obra)
+    return await this.repository.delete(id)
   }
 }
