@@ -16,8 +16,8 @@ async function post(url: string, data: Record<string, unknown>) {
 async function seed() {
   // Localidades
   await post(`${API_URL}/api/localidades`, {
-    cod_postal: 1000,
-    nombre_localidad: 'Ciudad Uno',
+    cod_postal: 2000,
+    nombre_localidad: 'Rosario',
   })
   await post(`${API_URL}/api/localidades`, {
     cod_postal: 2200,
@@ -25,37 +25,57 @@ async function seed() {
   })
   await post(`${API_URL}/api/localidades`, {
     cod_postal: 3000,
-    nombre_localidad: 'Ciudad Tres',
+    nombre_localidad: 'Santa Fe',
+  })
+  await post(`${API_URL}/api/localidades`, {
+    cod_postal: 1900,
+    nombre_localidad: 'La Plata',
+  })
+  await post(`${API_URL}/api/localidades`, {
+    cod_postal: 5000,
+    nombre_localidad: 'Córdoba',
   })
   await post(`${API_URL}/api/localidades`, {
     cod_postal: 4000,
-    nombre_localidad: 'Ciudad Cuatro',
+    nombre_localidad: 'San Miguel de Tucumán',
   })
 
   // Clientes
   await post(`${API_URL}/api/clientes`, {
     cuil: '20111111111',
-    razon_social: 'Cliente Uno',
+    razon_social: 'Constructora San Martín S.A.',
     telefono: '+54 9 11 1234 5678',
-    mail: 'uno@cliente.com',
+    mail: 'contacto@constructorasanmartin.com.ar',
   })
   await post(`${API_URL}/api/clientes`, {
     cuil: '20222222222',
-    razon_social: 'Cliente Dos',
-    telefono: '+54 9 11 2345 6789',
-    mail: 'dos@cliente.com',
+    razon_social: 'Edificaciones del Litoral S.R.L.',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'ventas@edificacionesdellitoral.com.ar',
   })
   await post(`${API_URL}/api/clientes`, {
     cuil: '20333333333',
-    razon_social: 'Cliente Tres',
-    telefono: '+54 9 11 3456 7890',
-    mail: 'tres@cliente.com',
+    razon_social: 'Desarrollos Urbanos Santa Fe S.A.',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'proyectos@desarrollosurbanos.com.ar',
   })
   await post(`${API_URL}/api/clientes`, {
     cuil: '20444444444',
-    razon_social: 'Cliente Cuatro',
-    telefono: '+54 9 11 4567 8901',
-    mail: 'cuatro@cliente.com',
+    razon_social: 'Inmobiliaria La Plata S.A.',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'info@inmobiliarialaplata.com.ar',
+  })
+  await post(`${API_URL}/api/clientes`, {
+    cuil: '20555555555',
+    razon_social: 'Construcciones Córdoba Norte S.R.L.',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'administracion@cordobanorte.com.ar',
+  })
+  await post(`${API_URL}/api/clientes`, {
+    cuil: '20666666666',
+    razon_social: 'Grupo Constructor Tucumán S.A.',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'gerencia@constructortucuman.com.ar',
   })
 
   // Empleados - Roles únicos
@@ -137,12 +157,12 @@ async function seed() {
   // Obras
   await post(`${API_URL}/api/obras`, {
     cod_obra: 1,
-    cod_postal: 1000,
+    cod_postal: 2000,
     cuil: '20111111111',
     fecha_ini: '2025-09-01',
     estado: 'ACTIVA',
-    direccion: 'Calle 1',
-    nota_fabrica: 'Nota 1',
+    direccion: 'Av. Pellegrini 1250, Rosario',
+    nota_fabrica: 'Edificio residencial de 12 pisos - Torre Pellegrini',
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 2,
@@ -150,8 +170,8 @@ async function seed() {
     cuil: '20222222222',
     fecha_ini: '2025-09-02',
     estado: 'ACTIVA',
-    direccion: 'Calle 2',
-    nota_fabrica: 'Nota 2',
+    direccion: 'Av. San Martín 850, San Lorenzo',
+    nota_fabrica: 'Complejo habitacional - 40 unidades',
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 3,
@@ -159,17 +179,35 @@ async function seed() {
     cuil: '20333333333',
     fecha_ini: '2025-09-03',
     estado: 'ACTIVA',
-    direccion: 'Calle 3',
-    nota_fabrica: 'Nota 3',
+    direccion: 'Bv. Gálvez 1680, Santa Fe',
+    nota_fabrica: 'Centro comercial - 3 plantas',
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 4,
-    cod_postal: 4000,
+    cod_postal: 1900,
     cuil: '20444444444',
     fecha_ini: '2025-09-04',
     estado: 'ACTIVA',
-    direccion: 'Calle 4',
-    nota_fabrica: 'Nota 4',
+    direccion: 'Calle 7 entre 47 y 48, La Plata',
+    nota_fabrica: 'Edificio de oficinas - 8 pisos',
+  })
+  await post(`${API_URL}/api/obras`, {
+    cod_obra: 5,
+    cod_postal: 5000,
+    cuil: '20555555555',
+    fecha_ini: '2025-09-05',
+    estado: 'ACTIVA',
+    direccion: 'Av. Colón 4500, Córdoba',
+    nota_fabrica: 'Complejo de viviendas - Barrio Cerro de las Rosas',
+  })
+  await post(`${API_URL}/api/obras`, {
+    cod_obra: 6,
+    cod_postal: 4000,
+    cuil: '20666666666',
+    fecha_ini: '2025-09-06',
+    estado: 'ACTIVA',
+    direccion: 'Av. Aconquija 1200, San Miguel de Tucumán',
+    nota_fabrica: 'Torres gemelas residenciales - 15 pisos c/u',
   })
 
   // Entregas
@@ -177,153 +215,152 @@ async function seed() {
     cod_obra: 1,
     fecha_hora_entrega: '2025-09-05T09:00',
     estado: 'PENDIENTE',
-    detalle: 'Entrega inicial',
-    observaciones: 'Preparar documentación',
+    detalle: 'Entrega de aberturas piso 1-3',
+    observaciones: 'Verificar medidas antes de instalación',
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 1,
     fecha_hora_entrega: '2025-09-10T14:00',
     estado: 'EN CURSO',
-    detalle: 'Entrega parcial',
-    observaciones: 'Faltan accesorios',
+    detalle: 'Entrega parcial piso 4-6',
+    observaciones: 'Faltan herrajes de seguridad',
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 2,
     fecha_hora_entrega: '2025-09-12T11:30',
     estado: 'ENTREGADO',
-    detalle: 'Entrega completa',
-    observaciones: 'Todo conforme',
+    detalle: 'Entrega completa bloques A y B',
+    observaciones: 'Entrega conforme - documentación firmada',
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 2,
     fecha_hora_entrega: '2025-09-15T16:00',
     estado: 'CANCELADO',
-    detalle: 'Entrega cancelada',
-    observaciones: 'Cliente ausente',
+    detalle: 'Entrega bloque C',
+    observaciones: 'Obra suspendida temporalmente por cliente',
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 3,
     fecha_hora_entrega: '2025-09-18T10:00',
     estado: 'PENDIENTE',
-    detalle: 'Entrega inicial',
-    observaciones: 'Requiere revisión previa',
+    detalle: 'Aberturas planta baja comercial',
+    observaciones: 'Requiere coordinación con electricista',
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 3,
     fecha_hora_entrega: '2025-09-20T13:00',
     estado: 'EN CURSO',
-    detalle: 'Entrega parcial',
-    observaciones: 'Faltan herrajes',
+    detalle: 'Mamparas divisorias primer piso',
+    observaciones: 'Pendiente entrega de vidrios templados',
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 4,
     fecha_hora_entrega: '2025-09-22T15:30',
     estado: 'ENTREGADO',
-    detalle: 'Entrega completa',
-    observaciones: 'Sin observaciones',
+    detalle: 'Ventanales fachada principal',
+    observaciones: 'Instalación perfecta - cliente satisfecho',
   })
   await post(`${API_URL}/api/entregas`, {
-    cod_obra: 4,
+    cod_obra: 5,
     fecha_hora_entrega: '2025-09-25T09:30',
     estado: 'PENDIENTE',
-    detalle: 'Entrega adicional',
-    observaciones: 'Agregar manuales',
+    detalle: 'Puertas principales casas 1-20',
+    observaciones: 'Coordinar con paisajista para accesos',
   })
   await post(`${API_URL}/api/entregas`, {
-    cod_obra: 1,
+    cod_obra: 5,
     fecha_hora_entrega: '2025-09-28T11:00',
     estado: 'EN CURSO',
-    detalle: 'Entrega parcial',
-    observaciones: 'Cliente solicita cambio',
+    detalle: 'Ventanas casas 21-40',
+    observaciones: 'Modificación en color solicitada por cliente',
   })
   await post(`${API_URL}/api/entregas`, {
-    cod_obra: 2,
+    cod_obra: 6,
     fecha_hora_entrega: '2025-09-30T17:00',
     estado: 'ENTREGADO',
-    detalle: 'Entrega final',
-    observaciones: 'Entrega exitosa',
+    detalle: 'Cerramiento integral Torre A',
+    observaciones: 'Proyecto finalizado exitosamente',
   })
-
   // Visitas
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-06T10:00',
     cod_obra: 1,
     motivo_visita: 'MEDICION',
     estado: 'PROGRAMADA',
-    observaciones: 'Primera medición',
-    direccion_visita: 'Calle 1',
+    observaciones: 'Medición inicial para aberturas piso 1-3',
+    direccion_visita: 'Av. Pellegrini 1250, Rosario',
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-07T11:30',
     cod_obra: 2,
     motivo_visita: 'RE-MEDICION',
     estado: 'EN CURSO',
-    observaciones: 'Ajuste de medidas',
-    direccion_visita: 'Calle 2',
+    observaciones: 'Ajuste medidas bloque B por modificación estructural',
+    direccion_visita: 'Av. San Martín 850, San Lorenzo',
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-08T09:00',
     cod_obra: 3,
     motivo_visita: 'REPARACION',
     estado: 'COMPLETADA',
-    observaciones: 'Reparación de marco',
-    direccion_visita: 'Calle 3',
+    observaciones: 'Reparación marco puerta principal - resuelto',
+    direccion_visita: 'Bv. Gálvez 1680, Santa Fe',
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-09T15:00',
     cod_obra: 4,
     motivo_visita: 'ASESORAMIENTO',
     estado: 'CANCELADA',
-    observaciones: 'Cliente canceló',
-    direccion_visita: 'Calle 4',
+    observaciones: 'Cliente reprogramó para próxima semana',
+    direccion_visita: 'Calle 7 entre 47 y 48, La Plata',
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-10T13:00',
-    cod_obra: 1,
+    cod_obra: 2,
     motivo_visita: 'VISITA INICIAL',
     estado: 'REPROGRAMADA',
-    observaciones: 'Reprogramada por lluvia',
-    direccion_visita: 'Calle 1',
+    observaciones: 'Acceso complicado por lluvia - reagendar',
+    direccion_visita: 'Av. Colón 4500, Córdoba',
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-11T14:30',
-    cod_obra: 2,
+    cod_obra: 6,
     motivo_visita: 'MEDICION',
     estado: 'PROGRAMADA',
-    observaciones: 'Medición adicional',
-    direccion_visita: 'Calle 2',
+    observaciones: 'Medición para cerramiento Torre A',
+    direccion_visita: 'Av. Aconquija 1200, San Miguel de Tucumán',
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-12T16:00',
-    cod_obra: 3,
+    cod_obra: 1,
     motivo_visita: 'RE-MEDICION',
     estado: 'EN CURSO',
-    observaciones: 'Verificar cambios',
-    direccion_visita: 'Calle 3',
+    observaciones: 'Verificar cambios solicitados piso 4-6',
+    direccion_visita: 'Av. Pellegrini 1250, Rosario',
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-13T12:00',
-    cod_obra: 4,
+    cod_obra: 2,
     motivo_visita: 'REPARACION',
     estado: 'COMPLETADA',
-    observaciones: 'Reparación finalizada',
-    direccion_visita: 'Calle 4',
+    observaciones: 'Ajuste marcos bloque A - trabajo finalizado',
+    direccion_visita: 'Av. San Martín 850, San Lorenzo',
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-14T10:30',
-    cod_obra: 1,
+    cod_obra: 3,
     motivo_visita: 'ASESORAMIENTO',
     estado: 'CANCELADA',
-    observaciones: 'Cliente no disponible',
-    direccion_visita: 'Calle 1',
+    observaciones: 'Arquitecto no disponible - reprogramar',
+    direccion_visita: 'Bv. Gálvez 1680, Santa Fe',
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-15T09:30',
-    cod_obra: 2,
+    cod_obra: 4,
     motivo_visita: 'VISITA INICIAL',
     estado: 'REPROGRAMADA',
-    observaciones: 'Reprogramada por feriado',
-    direccion_visita: 'Calle 2',
+    observaciones: 'Feriado local - nueva fecha coordinada',
+    direccion_visita: 'Calle 7 entre 47 y 48, La Plata',
   })
 
   // Órdenes de Producción
@@ -331,61 +368,49 @@ async function seed() {
     cod_obra: 1,
     fecha_confeccion: '2025-09-05',
     fecha_validacion: '2025-09-06',
-    url: 'https://docs.luhmann.com/op1.pdf',
+    url: 'https://docs.sigma-la.com/op-rosario-pellegrini-001.pdf',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 1,
     fecha_confeccion: '2025-09-10',
     fecha_validacion: '2025-09-11',
-    url: 'https://docs.luhmann.com/op2.pdf',
+    url: 'https://docs.sigma-la.com/op-rosario-pellegrini-002.pdf',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 2,
     fecha_confeccion: '2025-09-12',
     fecha_validacion: '2025-09-13',
-    url: 'https://docs.luhmann.com/op3.pdf',
+    url: 'https://docs.sigma-la.com/op-sanlorenzo-sanmartin-001.pdf',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 2,
+    cod_obra: 3,
     fecha_confeccion: '2025-09-15',
     fecha_validacion: '2025-09-16',
-    url: 'https://docs.luhmann.com/op4.pdf',
+    url: 'https://docs.sigma-la.com/op-santafe-galvez-001.pdf',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 3,
+    cod_obra: 4,
     fecha_confeccion: '2025-09-18',
     fecha_validacion: '2025-09-19',
-    url: 'https://docs.luhmann.com/op5.pdf',
+    url: 'https://docs.sigma-la.com/op-laplata-calle7-001.pdf',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 3,
+    cod_obra: 5,
     fecha_confeccion: '2025-09-20',
     fecha_validacion: '2025-09-21',
-    url: 'https://docs.luhmann.com/op6.pdf',
+    url: 'https://docs.sigma-la.com/op-cordoba-colon-001.pdf',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 4,
+    cod_obra: 5,
     fecha_confeccion: '2025-09-22',
     fecha_validacion: '2025-09-23',
-    url: 'https://docs.luhmann.com/op7.pdf',
+    url: 'https://docs.sigma-la.com/op-cordoba-colon-002.pdf',
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 4,
+    cod_obra: 6,
     fecha_confeccion: '2025-09-25',
     fecha_validacion: '2025-09-26',
-    url: 'https://docs.luhmann.com/op8.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 1,
-    fecha_confeccion: '2025-09-28',
-    fecha_validacion: '2025-09-29',
-    url: 'https://docs.luhmann.com/op9.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 2,
-    fecha_confeccion: '2025-09-30',
-    fecha_validacion: '2025-10-01',
-    url: 'https://docs.luhmann.com/op10.pdf',
+    url: 'https://docs.sigma-la.com/op-tucuman-aconquija-001.pdf',
   })
   const relacionesVisitaEmpleado = [
     { cuil: '20999999992', cod_visita: 1 },
