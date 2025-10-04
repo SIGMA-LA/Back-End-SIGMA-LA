@@ -41,4 +41,18 @@ visitaRouter.delete(
   },
 )
 
+visitaRouter.get('/empleado/:cuil/:estado', (req, res) => {
+  visitaController.getVisitasByEmpleadoAndEstado(req, res)
+})
+
+// GET /api/visitas/empleado/:cuil - Todas las visitas de un empleado
+visitaRouter.get('/empleado/:cuil', (req, res) => {
+  visitaController.getVisitasByEmpleado(req, res)
+})
+
+// GET /api/visitas/obra/:cod_obra - Visitas asociadas a una obra
+visitaRouter.get('/obra/:cod_obra', (req, res) => {
+  visitaController.getVisitasByObra(req, res)
+})
+
 export default visitaRouter

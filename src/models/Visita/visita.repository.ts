@@ -127,6 +127,104 @@ export class VisitaRepository {
       },
     })
   }
+  async findByEmpleadoAndEstado(
+    cuil: string,
+    estado: string,
+  ): Promise<visita[]> {
+    return await this.prisma.visita.findMany({
+      where: {
+        estado: estado,
+        empleado_visita: {
+          some: {
+            cuil: cuil,
+          },
+        },
+      },
+      include: {
+        obra: {
+          select: {
+            cod_obra: true,
+            direccion: true,
+            cliente: {
+              select: {
+                razon_social: true,
+                telefono: true,
+                mail: true,
+              },
+            },
+          },
+        },
+        empleado_visita: {
+          include: {
+            empleado: {
+              select: {
+                cuil: true,
+                nombre: true,
+                apellido: true,
+                rol_actual: true,
+              },
+            },
+          },
+        },
+        localidad: {
+          select: {
+            cod_postal: true,
+            nombre_localidad: true,
+          },
+        },
+      },
+      orderBy: {
+        fecha_hora_visita: 'desc',
+      },
+    })
+  }
+
+  // Obtener todas las visitas de un empleado
+  async findByEmpleado(cuil: string): Promise<visita[]> {
+    return await this.prisma.visita.findMany({
+      where: {
+        empleado_visita: {
+          some: {
+            cuil: cuil,
+          },
+        },
+      },
+      include: {
+        obra: {
+          select: {
+            cod_obra: true,
+            direccion: true,
+            cliente: {
+              select: {
+                razon_social: true,
+              },
+            },
+          },
+        },
+        empleado_visita: {
+          include: {
+            empleado: {
+              select: {
+                cuil: true,
+                nombre: true,
+                apellido: true,
+                rol_actual: true,
+              },
+            },
+          },
+        },
+        localidad: {
+          select: {
+            cod_postal: true,
+            nombre_localidad: true,
+          },
+        },
+      },
+      orderBy: {
+        fecha_hora_visita: 'desc',
+      },
+    })
+  }
 }
 
 export const visitaRepository = new VisitaRepository()
