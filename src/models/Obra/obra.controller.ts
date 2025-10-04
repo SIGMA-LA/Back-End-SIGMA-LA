@@ -45,4 +45,9 @@ export class ObraController {
     const obra = await obraService.remove(id)
     res.json(obra)
   }
+
+  async getObrasConNotaSinOrden(req: Request, res: Response) {
+    const obras = await obraService.findWithNotaFabricaSinOrden()
+    res.json(obras)
+  }
 }

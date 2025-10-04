@@ -46,4 +46,21 @@ export class ObraRepository {
       where: { cod_obra: id },
     })
   }
+  async findWithNotaFabricaSinOrden(): Promise<obra[]> {
+    return await this.prisma.obra.findMany({
+      where: {
+        nota_fabrica: {
+          not: null, // Tiene nota de fábrica
+        },
+        orden_de_produccion: {
+          none: {}, // NO tiene ninguna orden de producción
+        },
+      },
+      orderBy: { fecha_ini: 'desc' },
+      include: {
+        cliente: true,
+        localidad: true,
+      },
+    })
+  }
 }
