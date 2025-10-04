@@ -20,8 +20,8 @@ async function seed() {
     nombre_localidad: 'Ciudad Uno',
   })
   await post(`${API_URL}/api/localidades`, {
-    cod_postal: 2000,
-    nombre_localidad: 'Ciudad Dos',
+    cod_postal: 2200,
+    nombre_localidad: 'San Lorenzo',
   })
   await post(`${API_URL}/api/localidades`, {
     cod_postal: 3000,
@@ -146,7 +146,7 @@ async function seed() {
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 2,
-    cod_postal: 2000,
+    cod_postal: 2200,
     cuil: '20222222222',
     fecha_ini: '2025-09-02',
     estado: 'ACTIVA',
@@ -387,6 +387,40 @@ async function seed() {
     fecha_validacion: '2025-10-01',
     url: 'https://docs.luhmann.com/op10.pdf',
   })
+  const relacionesVisitaEmpleado = [
+    { cuil: '20999999992', cod_visita: 1 },
+    { cuil: '20999999910', cod_visita: 1 },
+
+    { cuil: '20999999992', cod_visita: 2 },
+    { cuil: '20999999911', cod_visita: 2 },
+
+    { cuil: '20999999912', cod_visita: 3 },
+    { cuil: '20999999913', cod_visita: 3 },
+
+    { cuil: '20999999992', cod_visita: 4 },
+
+    { cuil: '20999999910', cod_visita: 5 },
+    { cuil: '20999999914', cod_visita: 5 },
+
+    { cuil: '20999999992', cod_visita: 6 },
+    { cuil: '20999999911', cod_visita: 6 },
+
+    { cuil: '20999999913', cod_visita: 7 },
+    { cuil: '20999999912', cod_visita: 7 },
+
+    { cuil: '20999999914', cod_visita: 8 },
+    { cuil: '20999999910', cod_visita: 8 },
+
+    { cuil: '20999999992', cod_visita: 9 },
+
+    { cuil: '20999999911', cod_visita: 10 },
+    { cuil: '20999999913', cod_visita: 10 },
+  ]
+
+  // Crear relaciones empleado-visita
+  for (const relacion of relacionesVisitaEmpleado) {
+    await post(`${API_URL}/api/empleado-visita`, relacion)
+  }
 
   // Relaciones Empleado-Entrega
   const relacionesEntregaEmpleado = [
