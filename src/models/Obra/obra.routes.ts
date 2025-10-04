@@ -29,7 +29,6 @@ obraRouter.get(
 obraRouter.put(
   '/:cod_obra',
   validate({
-    params: idParamsSchema,
     body: updateObraSchema,
   }),
   (req, res) => {
@@ -37,12 +36,8 @@ obraRouter.put(
   },
 )
 
-obraRouter.delete(
-  '/:cod_obra',
-  validate({ params: idParamsSchema }),
-  (req, res) => {
-    obraController.remove(req, res)
-  },
-)
+obraRouter.delete('/:cod_obra', (req, res) => {
+  obraController.remove(req, res)
+})
 
 export default obraRouter

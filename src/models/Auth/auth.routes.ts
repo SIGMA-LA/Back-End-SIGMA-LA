@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { AuthController } from './auth.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
 import { registerSchema, loginSchema } from './auth.schemas.js'
+import { authenticateJWT } from './auth.middleware.js'
 
 /**
  
@@ -15,6 +16,10 @@ router.post('/register', validate({ body: registerSchema }), (req, res) =>
 )
 router.post('/login', validate({ body: loginSchema }), (req, res) =>
   authController.login(req, res),
+)
+
+router.get('/profile', authenticateJWT, (req, res) =>
+  authController.getProfile(req, res),
 )
 
 export default router

@@ -49,4 +49,22 @@ export class AuthController {
       res.status(401).json({ error: message })
     }
   }
+
+  /**
+   * Endpoint para obtener el perfil del usuario autenticado.
+   * @param {Request} req - Express request
+   * @param {Response} res - Express response
+   */
+  async getProfile(req: Request, res: Response) {
+    try {
+      // @ts-expect-error: req.user es añadido por el middleware authenticateJWT
+      const cuil = req.user.cuil
+      const empleado = await this.authService.getProfile(cuil)
+      res.status(200).json(empleado)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(404).json({ error: message })
+    }
+  }
 }

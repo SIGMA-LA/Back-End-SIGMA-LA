@@ -26,6 +26,15 @@ export class ObraService {
     ) {
       data.fecha_ini = new Date(data.fecha_ini + 'T00:00:00.000Z')
     }
+
+    if (
+      typeof data.fecha_cancelacion === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_cancelacion)
+    ) {
+      data.fecha_cancelacion = new Date(
+        data.fecha_cancelacion + 'T00:00:00.000Z',
+      )
+    }
     return await this.repository.create(data)
   }
 
@@ -38,6 +47,22 @@ export class ObraService {
   }
 
   async update(cod_obra: number, data: Prisma.obraUpdateInput): Promise<obra> {
+    if (
+      typeof data.fecha_ini === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_ini)
+    ) {
+      data.fecha_ini = new Date(data.fecha_ini + 'T00:00:00.000Z')
+    }
+
+    if (
+      typeof data.fecha_cancelacion === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_cancelacion)
+    ) {
+      data.fecha_cancelacion = new Date(
+        data.fecha_cancelacion + 'T00:00:00.000Z',
+      )
+    }
+
     return await this.repository.update(cod_obra, data)
   }
 

@@ -92,4 +92,19 @@ export class AuthService {
       { expiresIn: JWT_EXPIRES_IN },
     )
   }
+
+  /**
+   * Obtiene los datos de un empleado por su CUIL (sin la contraseña).
+   * @param {string} cuil - CUIL del empleado a buscar.
+   * @returns {Promise<Omit<empleado, 'contrasenia'>>} - Datos del empleado.
+   */
+  async getProfile(cuil: string): Promise<Omit<empleado, 'contrasenia'>> {
+    const empleado = await this.empleadoRepository.findByCuil(cuil)
+    if (!empleado) {
+      throw new Error('Usuario no encontrado')
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { contrasenia, ...empleadoSinContrasenia } = empleado
+    return empleadoSinContrasenia
+  }
 }

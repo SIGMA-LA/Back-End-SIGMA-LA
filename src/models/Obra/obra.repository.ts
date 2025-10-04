@@ -17,12 +17,20 @@ export class ObraRepository {
   async findAll(): Promise<obra[]> {
     return await this.prisma.obra.findMany({
       orderBy: { cod_obra: 'desc' },
+      include: {
+        cliente: true,
+        localidad: true,
+      },
     })
   }
 
   async findById(cod_obra: number): Promise<obra | null> {
     return await this.prisma.obra.findUnique({
       where: { cod_obra },
+      include: {
+        cliente: true,
+        localidad: true,
+      },
     })
   }
 
