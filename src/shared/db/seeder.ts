@@ -180,8 +180,8 @@ async function seed() {
     fecha_ini: '2025-09-02',
     estado: 'ACTIVA',
     direccion: 'Av. San Martín 850, San Lorenzo',
-    nota_fabrica: '',
-    nota_fabrica_pid: '',
+    nota_fabrica: null,
+    nota_fabrica_pid: null,
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 3,
@@ -190,8 +190,8 @@ async function seed() {
     fecha_ini: '2025-09-03',
     estado: 'ACTIVA',
     direccion: 'Bv. Gálvez 1680, Santa Fe',
-    nota_fabrica: '',
-    nota_fabrica_pid: '',
+    nota_fabrica: null,
+    nota_fabrica_pid: null,
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 4,
@@ -200,8 +200,8 @@ async function seed() {
     fecha_ini: '2025-09-04',
     estado: 'ACTIVA',
     direccion: 'Calle 7 entre 47 y 48, La Plata',
-    nota_fabrica: '',
-    nota_fabrica_pid: '',
+    nota_fabrica: null,
+    nota_fabrica_pid: null,
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 5,
@@ -210,8 +210,9 @@ async function seed() {
     fecha_ini: '2025-09-05',
     estado: 'ACTIVA',
     direccion: 'Av. Colón 4500, Córdoba',
-    nota_fabrica: '',
-    nota_fabrica_pid: '',
+    nota_fabrica:
+      'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
+    nota_fabrica_pid: 'MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx',
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 6,
@@ -220,8 +221,9 @@ async function seed() {
     fecha_ini: '2025-09-06',
     estado: 'ACTIVA',
     direccion: 'Av. Aconquija 1200, San Miguel de Tucumán',
-    nota_fabrica: '',
-    nota_fabrica_pid: '',
+    nota_fabrica:
+      'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
+    nota_fabrica_pid: 'MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx',
   })
 
   // Entregas
@@ -383,57 +385,37 @@ async function seed() {
     fecha_confeccion: '2025-09-05',
     fecha_validacion: '2025-09-06',
     url: 'https://docs.sigma-la.com/op-rosario-pellegrini-001.pdf',
-    public_id: ' ',
+    public_id: null,
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 1,
     fecha_confeccion: '2025-09-10',
     fecha_validacion: '2025-09-11',
     url: 'https://docs.sigma-la.com/op-rosario-pellegrini-002.pdf',
-    public_id: ' ',
+    public_id: null,
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 2,
     fecha_confeccion: '2025-09-12',
     fecha_validacion: '2025-09-13',
     url: 'https://docs.sigma-la.com/op-sanlorenzo-sanmartin-001.pdf',
-    public_id: ' ',
+    public_id: null,
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 3,
     fecha_confeccion: '2025-09-15',
     fecha_validacion: '2025-09-16',
     url: 'https://docs.sigma-la.com/op-santafe-galvez-001.pdf',
-    public_id: ' ',
+    public_id: null,
   })
   await post(`${API_URL}/api/ordenes-produccion`, {
     cod_obra: 4,
     fecha_confeccion: '2025-09-18',
     fecha_validacion: '2025-09-19',
     url: 'https://docs.sigma-la.com/op-laplata-calle7-001.pdf',
-    public_id: ' ',
+    public_id: null,
   })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 5,
-    fecha_confeccion: '2025-09-20',
-    fecha_validacion: '2025-09-21',
-    url: 'https://docs.sigma-la.com/op-cordoba-colon-001.pdf',
-    public_id: ' ',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 5,
-    fecha_confeccion: '2025-09-22',
-    fecha_validacion: '2025-09-23',
-    url: 'https://docs.sigma-la.com/op-cordoba-colon-002.pdf',
-    public_id: ' ',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 6,
-    fecha_confeccion: '2025-09-25',
-    fecha_validacion: '2025-09-26',
-    url: 'https://docs.sigma-la.com/op-tucuman-aconquija-001.pdf',
-    public_id: ' ',
-  })
+
   const relacionesVisitaEmpleado = [
     { cuil: '20999999992', cod_visita: 1 },
     { cuil: '20999999910', cod_visita: 1 },
