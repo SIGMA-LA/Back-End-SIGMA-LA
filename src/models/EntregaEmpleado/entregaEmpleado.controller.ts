@@ -30,7 +30,7 @@ export class EntregaEmpleadoController {
 
   async getOne(req: Request, res: Response) {
     try {
-      const cod_entrega = Number(req.params.cod_entrega)
+      const cod_entrega = Number(req.params.id)
       const cuil = req.params.cuil
       const relacion = await entregaEmpleadoService.findById(cod_entrega, cuil)
 
@@ -51,7 +51,7 @@ export class EntregaEmpleadoController {
 
   async update(req: Request, res: Response) {
     try {
-      const cod_entrega = Number(req.params.cod_entrega)
+      const cod_entrega = Number(req.params.id)
       const cuil = req.params.cuil
       const relacion = await entregaEmpleadoService.update(
         cod_entrega,
@@ -69,7 +69,7 @@ export class EntregaEmpleadoController {
 
   async remove(req: Request, res: Response) {
     try {
-      const cod_entrega = Number(req.params.cod_entrega)
+      const cod_entrega = Number(req.params.id)
       const cuil = req.params.cuil
       const relacion = await entregaEmpleadoService.delete(cod_entrega, cuil)
       res.json(relacion)

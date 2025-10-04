@@ -27,7 +27,7 @@ export class EntregaController {
   }
 
   async getOne(req: Request, res: Response) {
-    const cod_entrega = parseInt(req.params.cod_entrega)
+    const cod_entrega = parseInt(req.params.id)
     const entrega = await entregaService.findById(cod_entrega)
     if (!entrega) {
       return res.status(404).json({ message: 'Entrega no encontrada' })
@@ -36,13 +36,13 @@ export class EntregaController {
   }
 
   async update(req: Request, res: Response) {
-    const cod_entrega = parseInt(req.params.cod_entrega)
+    const cod_entrega = parseInt(req.params.id)
     const entrega = await entregaService.update(cod_entrega, req.body)
     res.json(entrega)
   }
 
   async remove(req: Request, res: Response) {
-    const cod_entrega = parseInt(req.params.cod_entrega)
+    const cod_entrega = parseInt(req.params.id)
     const entrega = await entregaService.delete(cod_entrega)
     res.json(entrega)
   }
