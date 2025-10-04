@@ -4,7 +4,7 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createEntregaSchema,
   updateEntregaSchema,
-  cuilParamsSchema,
+  idParamsSchema,
 } from 'sigma-la-schemas'
 const entregaController = new EntregaController()
 const entregaRouter = Router()
@@ -22,18 +22,14 @@ entregaRouter.post('/', validate({ body: createEntregaSchema }), (req, res) => {
   entregaController.create(req, res)
 })
 
-entregaRouter.get(
-  '/:cod_entrega',
-  validate({ params: cuilParamsSchema }),
-  (req, res) => {
-    entregaController.getOne(req, res)
-  },
-)
+entregaRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
+  entregaController.getOne(req, res)
+})
 
 entregaRouter.put(
-  '/:cod_entrega',
+  '/:id',
   validate({
-    params: cuilParamsSchema,
+    params: idParamsSchema,
     body: updateEntregaSchema,
   }),
   (req, res) => {
@@ -42,8 +38,8 @@ entregaRouter.put(
 )
 
 entregaRouter.delete(
-  '/:cod_entrega',
-  validate({ params: cuilParamsSchema }),
+  '/:id',
+  validate({ params: idParamsSchema }),
   (req, res) => {
     entregaController.remove(req, res)
   },

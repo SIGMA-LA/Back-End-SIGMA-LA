@@ -44,6 +44,57 @@ export class VisitaController {
     const visita = await visitaService.remove(Number(id))
     res.json(visita)
   }
+
+  async getVisitasByEmpleadoAndEstado(req: Request, res: Response) {
+    try {
+      const cuil = req.params.cuil
+      const estado = req.params.estado as
+        | 'PROGRAMADA'
+        | 'EN CURSO'
+        | 'CANCELADA'
+        | 'REPROGRAMADA'
+        | 'COMPLETADA'
+
+      const visitas = await visitaService.getVisitasByEmpleadoAndEstado(
+        cuil,
+        estado,
+      )
+      res.status(200).json(visitas)
+    } catch (error) {
+      res.status(500).json({
+        message: 'Error al obtener visitas por empleado y estado',
+        error: error instanceof Error ? error.message : 'Error desconocido',
+      })
+    }
+  }
+
+  // Obtener todas las visitas de un empleado
+  async getVisitasByEmpleado(req: Request, res: Response) {
+    try {
+      const cuil = req.params.cuil
+      const visitas = await visitaService.getVisitasByEmpleado(cuil)
+      res.status(200).json(visitas)
+    } catch (error) {
+      res.status(500).json({
+        message: 'Error al obtener visitas del empleado',
+        error: error instanceof Error ? error.message : 'Error desconocido',
+      })
+    }
+  }
+
+  // Obtener visitas por obra
+  async getVisitasByObra(req: Request, res: Response) {
+    try {
+      const cod_obra = Number(req.params.cod_obra)
+      const visitas = await visitaService.getVisitasByObra(cod_obra)
+      res.status(200).json(visitas)
+    } catch (error) {
+      res.status(500).json({
+        message: 'Error al obtener visitas de la obra',
+        error: error instanceof Error ? error.message : 'Error desconocido',
+      })
+    }
+  }
 }
 
 export const visitaController = new VisitaController()

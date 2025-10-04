@@ -9,6 +9,9 @@ import { visita, Prisma } from '@prisma/client'
  * @method findById - Obtiene una visita por su cod_visita.
  * @method update - Actualiza una visita existente verificando que existe.
  * @method remove - Elimina una visita por su cod_visita verificando que existe.
+ * @method getVisitasByEmpleadoAndEstado - Obtiene visitas de un empleado por estado específico.
+ * @method getVisitasByEmpleado - Obtiene todas las visitas de un empleado.
+ * @method getVisitasByObra - Obtiene visitas asociadas a una obra.
  * @returns {Promise<visita | visita[] | null>} - Resultado de la operación.
  * @throws {Error} - Si ocurre un error durante la operación.
  */
@@ -141,6 +144,27 @@ export class VisitaService {
 
   // Obtener visitas por obra
   async findByObra(cod_obra: number): Promise<visita[]> {
+    return await this.visitaRepository.findByObra(cod_obra)
+  }
+  async getVisitasByEmpleadoAndEstado(
+    cuil: string,
+    estado:
+      | 'PROGRAMADA'
+      | 'EN CURSO'
+      | 'CANCELADA'
+      | 'REPROGRAMADA'
+      | 'COMPLETADA',
+  ): Promise<visita[]> {
+    return await this.visitaRepository.findByEmpleadoAndEstado(cuil, estado)
+  }
+
+  // Obtener todas las visitas de un empleado
+  async getVisitasByEmpleado(cuil: string): Promise<visita[]> {
+    return await this.visitaRepository.findByEmpleado(cuil)
+  }
+
+  // Obtener visitas asociadas a una obra (usando el método existente con nombre más específico)
+  async getVisitasByObra(cod_obra: number): Promise<visita[]> {
     return await this.visitaRepository.findByObra(cod_obra)
   }
 }

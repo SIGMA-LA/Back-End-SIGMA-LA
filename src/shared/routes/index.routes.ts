@@ -47,6 +47,7 @@ import presupuestoRouter from '../../models/Presupuesto/presupuesto.routes.js'
 import usoMaquinariaRouter from '../../models/UsoMaquinaria/usoMaquinaria.routes.js'
 import visitaRouter from '../../models/Visita/visita.routes.js'
 import entregaEmpleadoRouter from '../../models/EntregaEmpleado/entregaEmpleado.routes.js'
+import visitaEmpleadoRouter from '../../models/VisitaEmpleado/visitaEmpleado.routes.js'
 
 import authRouter from '../../models/Auth/auth.routes.js'
 import routeMid from '../../models/midlewareTest/mid.routes.js'
@@ -70,6 +71,7 @@ router.use('/api/uso-maquinaria', usoMaquinariaRouter)
 router.use('/api/presupuestos', presupuestoRouter)
 router.use('/api/visitas', visitaRouter)
 router.use('/api/entrega-empleado', entregaEmpleadoRouter)
+router.use('/api/empleado-visita', visitaEmpleadoRouter)
 
 router.use((req, res) => {
   res.status(404).json({

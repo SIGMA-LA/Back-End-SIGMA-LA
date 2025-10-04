@@ -50,9 +50,14 @@ export class EntregaRepository {
           select: {
             cod_obra: true,
             direccion: true,
+            localidad: {
+              select: { cod_postal: true, nombre_localidad: true },
+            },
             cliente: {
               select: {
                 razon_social: true,
+                telefono: true,
+                mail: true,
               },
             },
           },
