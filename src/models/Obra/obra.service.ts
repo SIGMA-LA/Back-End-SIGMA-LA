@@ -26,6 +26,15 @@ export class ObraService {
     ) {
       data.fecha_ini = new Date(data.fecha_ini + 'T00:00:00.000Z')
     }
+
+    if (
+      typeof data.fecha_cancelacion === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_cancelacion)
+    ) {
+      data.fecha_cancelacion = new Date(
+        data.fecha_cancelacion + 'T00:00:00.000Z',
+      )
+    }
     return await this.repository.create(data)
   }
 
@@ -33,19 +42,35 @@ export class ObraService {
     return this.repository.findAll()
   }
 
-  async findById(cod_obra: number): Promise<obra | null> {
-    return await this.repository.findById(cod_obra)
+  async findById(id: number): Promise<obra | null> {
+    return await this.repository.findById(id)
   }
 
-  async update(cod_obra: number, data: Prisma.obraUpdateInput): Promise<obra> {
-    return await this.repository.update(cod_obra, data)
+  async update(id: number, data: Prisma.obraUpdateInput): Promise<obra> {
+    if (
+      typeof data.fecha_ini === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_ini)
+    ) {
+      data.fecha_ini = new Date(data.fecha_ini + 'T00:00:00.000Z')
+    }
+
+    if (
+      typeof data.fecha_cancelacion === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_cancelacion)
+    ) {
+      data.fecha_cancelacion = new Date(
+        data.fecha_cancelacion + 'T00:00:00.000Z',
+      )
+    }
+
+    return await this.repository.update(id, data)
   }
 
-  async remove(cod_obra: number): Promise<obra> {
-    const existingObra = await this.repository.findById(cod_obra)
+  async remove(id: number): Promise<obra> {
+    const existingObra = await this.repository.findById(id)
     if (!existingObra) {
       throw new Error('No existe una obra con el código proporcionado.')
     }
-    return await this.repository.delete(cod_obra)
+    return await this.repository.delete(id)
   }
 }

@@ -26,8 +26,8 @@ export class ObraController {
   }
 
   async getOne(req: Request, res: Response) {
-    const cod_obra = parseInt(req.params.cod_obra, 10)
-    const obra = await obraService.findById(cod_obra)
+    const id = parseInt(req.params.cod_obra, 10)
+    const obra = await obraService.findById(id)
     if (!obra) {
       return res.status(404).json({ message: 'Obra no encontrada' })
     }
@@ -35,14 +35,14 @@ export class ObraController {
   }
 
   async update(req: Request, res: Response) {
-    const cod_obra = parseInt(req.params.cod_obra, 10)
-    const obra = await obraService.update(cod_obra, req.body)
+    const id = parseInt(req.params.id, 10)
+    const obra = await obraService.update(id, req.body)
     res.json(obra)
   }
 
   async remove(req: Request, res: Response) {
-    const cod_obra = parseInt(req.params.cod_obra, 10)
-    const obra = await obraService.remove(cod_obra)
+    const id = parseInt(req.params.id, 10)
+    const obra = await obraService.remove(id)
     res.json(obra)
   }
 }
