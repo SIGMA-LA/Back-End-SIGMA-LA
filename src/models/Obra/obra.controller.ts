@@ -26,7 +26,7 @@ export class ObraController {
   }
 
   async getOne(req: Request, res: Response) {
-    const id = parseInt(req.params.cod_obra, 10)
+    const id = parseInt(req.params.id, 10)
     const obra = await obraService.findById(id)
     if (!obra) {
       return res.status(404).json({ message: 'Obra no encontrada' })

@@ -20,6 +20,7 @@ export class ObraRepository {
       include: {
         cliente: true,
         localidad: true,
+        presupuesto: true,
       },
     })
   }
@@ -30,6 +31,7 @@ export class ObraRepository {
       include: {
         cliente: true,
         localidad: true,
+        presupuesto: true,
       },
     })
   }
