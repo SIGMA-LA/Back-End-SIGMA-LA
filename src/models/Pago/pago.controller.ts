@@ -15,9 +15,12 @@ const pagoService = new PagoService()
  * @throws {Error} - Si ocurre un error durante la operación.
  */
 export class PagoController {
-  async create(req: Request, res: Response) {
-    const nuevo = await pagoService.create(req.body)
-    res.status(201).json(nuevo)
+  async createForObra(req: Request, res: Response) {
+    const nuevoPago = await pagoService.createForObra(
+      parseInt(req.params.cod_obra, 10),
+      req.body,
+    )
+    res.status(201).json(nuevoPago)
   }
 
   async getAll(req: Request, res: Response) {
@@ -25,8 +28,13 @@ export class PagoController {
     res.status(200).json(pagos)
   }
 
+  async create(req: Request, res: Response) {
+    const nuevo = await pagoService.createOne(req.body)
+    res.status(201).json(nuevo)
+  }
+
   async getOne(req: Request, res: Response) {
-    const cod_pago = parseInt(req.params.cod_pago, 10)
+    const cod_pago = parseInt(req.params.id, 10)
     const pago = await pagoService.findById(cod_pago)
     if (!pago) {
       return res.status(404).json({ message: 'Pago no encontrado' })
@@ -35,14 +43,20 @@ export class PagoController {
   }
 
   async update(req: Request, res: Response) {
-    const cod_pago = parseInt(req.params.cod_pago, 10)
+    const cod_pago = parseInt(req.params.id, 10)
     const pago = await pagoService.update(cod_pago, req.body)
     res.json(pago)
   }
 
   async remove(req: Request, res: Response) {
-    const cod_pago = parseInt(req.params.cod_pago, 10)
+    const cod_pago = parseInt(req.params.id, 10)
     const pago = await pagoService.remove(cod_pago)
     res.json(pago)
+  }
+
+  async getByObra(req: Request, res: Response) {
+    const cod_obra = parseInt(req.params.cod_obra, 10)
+    const pagos = await pagoService.findByObra(cod_obra)
+    res.status(200).json(pagos)
   }
 }

@@ -1,5 +1,6 @@
 import { PrismaClient, pago, Prisma } from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
+import { includes } from 'valibot'
 
 export class PagoRepository {
   private prisma: PrismaClient
@@ -8,15 +9,27 @@ export class PagoRepository {
     this.prisma = prisma
   }
 
-  async create(data: Prisma.pagoCreateInput): Promise<pago> {
-    return await this.prisma.pago.create({
-      data,
-    })
+  async createForObra(data: Prisma.pagoUncheckedCreateInput): Promise<pago> {
+    return await this.prisma.pago.create({ data })
   }
 
+  async createOne(data: Prisma.pagoCreateInput): Promise<pago> {
+    return await this.prisma.pago.create({ data })
+  }
   async findAll(): Promise<pago[]> {
     return await this.prisma.pago.findMany({
-      orderBy: { cod_pago: 'desc' },
+      orderBy: { fecha_pago: 'desc' },
+      include: {
+        obra: {
+          include: {
+            cliente: {
+              select: {
+                razon_social: true,
+              },
+            },
+          },
+        },
+      },
     })
   }
 
@@ -36,6 +49,13 @@ export class PagoRepository {
   async delete(cod_pago: number): Promise<pago> {
     return await this.prisma.pago.delete({
       where: { cod_pago },
+    })
+  }
+
+  async findManyByObra(cod_obra: number): Promise<pago[]> {
+    return await this.prisma.pago.findMany({
+      where: { cod_obra },
+      orderBy: { fecha_pago: 'desc' },
     })
   }
 }
