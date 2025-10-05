@@ -77,7 +77,12 @@ export class ObraService {
     }
     return await this.repository.delete(id)
   }
-  async findWithNotaFabricaSinOrden(): Promise<obra[]> {
-    return await this.repository.findWithNotaFabricaSinOrden()
+
+  async findNotasSinOrdenAprobada(): Promise<obra[]> {
+    return await this.repository.findNotasSinOrdenAprobada()
+  }
+
+  async findNotasConOrdenEnProceso(): Promise<obra[]> {
+    return await this.repository.findNotasConOrdenEnProceso()
   }
 }

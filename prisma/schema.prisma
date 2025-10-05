@@ -103,6 +103,7 @@ model orden_de_produccion {
   url              String    @db.VarChar(255)
   cod_op           Int       @id @default(autoincrement())
   public_id        String?   @db.VarChar(255)
+  estado           String    @default("PENDIENTE") @db.VarChar(255)
   obra             obra      @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
 }
 
