@@ -28,6 +28,47 @@ export class OrdenProduccionRepository {
     })
   }
 
+async findValidadas(): Promise<orden_de_produccion[]> {
+  return await this.prisma.orden_de_produccion.findMany({
+    where: {
+      estado: 'APROBADA',
+    },
+    orderBy: { fecha_validacion: 'desc' },
+    include: {
+      obra: {
+        include: {
+          cliente: true,
+          localidad: true,
+        },
+      },
+    },
+  })
+}
+
+async findEnProduccion(): Promise<orden_de_produccion[]> {
+  return await this.prisma.orden_de_produccion.findMany({
+    where: {
+      estado: 'EN PRODUCCION',
+    },
+    orderBy: { fecha_validacion: 'desc' },
+    include: {
+      obra: {
+        include: {
+          cliente: true,
+          localidad: true,
+        },
+      },
+    },
+  })
+}
+
+async findByObra(cod_obra: number): Promise<orden_de_produccion[]> {
+  return await this.prisma.orden_de_produccion.findMany({
+    where: { cod_obra },
+    orderBy: { fecha_confeccion: 'desc' },
+  })
+}
+
   async update(
     cod_op: number,
     data: Prisma.orden_de_produccionUpdateInput,

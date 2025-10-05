@@ -46,8 +46,13 @@ export class ObraController {
     res.json(obra)
   }
 
-  async getObrasConNotaSinOrden(req: Request, res: Response) {
-    const obras = await obraService.findWithNotaFabricaSinOrden()
+  async getNotasSinOrdenAprobada(req: Request, res: Response) {
+    const obras = await obraService.findNotasSinOrdenAprobada()
+    res.json(obras)
+  }
+
+  async getNotasConOrdenEnProceso(req: Request, res: Response) {
+    const obras = await obraService.findNotasConOrdenEnProceso()
     res.json(obras)
   }
 }

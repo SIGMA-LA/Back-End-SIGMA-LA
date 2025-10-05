@@ -1,11 +1,6 @@
 import { Router } from 'express'
 import { OrdenProduccionController } from './ordenProduccion.controller.js'
-import { validate } from '../../shared/middlewares/validateSchemas.js'
-import {
-  createOrdenProduccionSchema,
-  updateOrdenProduccionSchema,
-  idParamsSchema,
-} from 'sigma-la-schemas'
+import { upload } from '../../shared/middlewares/upload.middleware.js'
 
 const ordenProduccionController = new OrdenProduccionController()
 const ordenProduccionRouter = Router()
@@ -14,39 +9,43 @@ ordenProduccionRouter.get('/', (req, res) => {
   ordenProduccionController.getAll(req, res)
 })
 
-ordenProduccionRouter.post(
-  '/',
-  validate({ body: createOrdenProduccionSchema }),
+ordenProduccionRouter.get('/validadas', (req, res) => {
+  ordenProduccionController.getValidadas(req, res)
+})
+
+ordenProduccionRouter.get('/en-produccion', (req, res) => {
+  ordenProduccionController.getEnProduccion(req, res)
+})
+
+ordenProduccionRouter.post('/', 
+  upload.single('file'),
   (req, res) => {
     ordenProduccionController.create(req, res)
-  },
+  }
 )
 
-ordenProduccionRouter.get(
-  '/:cod_orden',
-  validate({ params: idParamsSchema }),
-  (req, res) => {
-    ordenProduccionController.getOne(req, res)
-  },
-)
+ordenProduccionRouter.get('/:cod_orden', (req, res) => {
+  ordenProduccionController.getOne(req, res)
+})
 
-ordenProduccionRouter.put(
-  '/:cod_orden',
-  validate({
-    params: idParamsSchema,
-    body: updateOrdenProduccionSchema,
-  }),
-  (req, res) => {
-    ordenProduccionController.update(req, res)
-  },
-)
+ordenProduccionRouter.put('/:cod_orden', (req, res) => {
+  ordenProduccionController.update(req, res)
+})
 
-ordenProduccionRouter.delete(
-  '/:cod_orden',
-  validate({ params: idParamsSchema }),
-  (req, res) => {
-    ordenProduccionController.remove(req, res)
-  },
-)
+ordenProduccionRouter.delete('/:cod_orden', (req, res) => {
+  ordenProduccionController.remove(req, res)
+})
+
+ordenProduccionRouter.get('/obra/:cod_obra', (req, res) => {
+  ordenProduccionController.getByObra(req, res)
+})
+
+ordenProduccionRouter.post('/:cod_op/iniciar', (req, res) => {
+  ordenProduccionController.iniciarProduccion(req, res)
+})
+
+ordenProduccionRouter.post('/:cod_op/finalizar', (req, res) => {
+  ordenProduccionController.finalizarProduccion(req, res)
+})
 
 export default ordenProduccionRouter
