@@ -25,6 +25,19 @@ export class PresupuestoService {
    * @returns El presupuesto creado.
    */
   async create(data: Prisma.presupuestoCreateInput): Promise<presupuesto> {
+    if (
+      typeof data.fecha_emision === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_emision)
+    ) {
+      data.fecha_emision = new Date(data.fecha_emision + 'T00:00:00.000Z')
+    }
+
+    if (
+      typeof data.fecha_aceptacion === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_aceptacion)
+    ) {
+      data.fecha_aceptacion = new Date(data.fecha_aceptacion + 'T00:00:00.000Z')
+    }
     return await this.repository.create(data)
   }
 
@@ -57,6 +70,19 @@ export class PresupuestoService {
     nro_presupuesto: number,
     data: Prisma.presupuestoUpdateInput,
   ): Promise<presupuesto> {
+    if (
+      typeof data.fecha_emision === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_emision)
+    ) {
+      data.fecha_emision = new Date(data.fecha_emision + 'T00:00:00.000Z')
+    }
+
+    if (
+      typeof data.fecha_aceptacion === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_aceptacion)
+    ) {
+      data.fecha_aceptacion = new Date(data.fecha_aceptacion + 'T00:00:00.000Z')
+    }
     const existingpresupuesto = await this.repository.findById(nro_presupuesto)
     if (!existingpresupuesto) {
       throw new Error('presupuesto no encontrado.')

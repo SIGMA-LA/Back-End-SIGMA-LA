@@ -35,6 +35,10 @@ export class ObraService {
         data.fecha_cancelacion + 'T00:00:00.000Z',
       )
     }
+
+    if (data.nota_fabrica === '' || data.nota_fabrica === null) {
+      delete data.nota_fabrica
+    }
     return await this.repository.create(data)
   }
 
