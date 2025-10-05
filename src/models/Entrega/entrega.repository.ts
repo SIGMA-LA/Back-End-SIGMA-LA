@@ -13,8 +13,27 @@ export class EntregaRepository {
     return this.prisma.entrega.create({ data })
   }
 
-  async findAll(): Promise<entrega[]> {
-    return this.prisma.entrega.findMany()
+  async findAll(): Promise<any[]> {
+    return this.prisma.entrega.findMany({
+      orderBy: { fecha_hora_entrega: 'desc' },
+      include: {
+        obra: {
+          include: {
+            cliente: true,
+          },
+        },
+        entrega_empleado: {
+          include: {
+            empleado: {
+              select: {
+                nombre: true,
+                apellido: true,
+              },
+            },
+          },
+        },
+      },
+    })
   }
 
   async getByEmpleadoEstado(

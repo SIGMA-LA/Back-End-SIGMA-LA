@@ -20,12 +20,34 @@ export class EntregaService {
     this.entregaRepository = new EntregaRepository()
   }
 
-  async create(data: Prisma.entregaCreateInput): Promise<entrega> {
-    const fechaISO = new Date(data.fecha_hora_entrega as string).toISOString()
-    return this.entregaRepository.create({
-      ...data,
-      fecha_hora_entrega: fechaISO,
-    })
+  async create(data: {
+    cod_obra: number
+    fecha_hora_entrega: string
+    detalle: string
+    estado: 'PENDIENTE'
+    observaciones?: string
+    empleados: { cuil: string; rol_entrega: 'ENCARGADO' | 'AYUDANTE' }[]
+  }): Promise<entrega> {
+
+    const { empleados, cod_obra, ...entregaData } = data
+
+    const fechaParaPrisma = new Date(data.fecha_hora_entrega)
+
+    const payload: Prisma.entregaCreateInput = {
+      ...entregaData,
+      fecha_hora_entrega: fechaParaPrisma,
+      obra: {
+        connect: { cod_obra: cod_obra },
+      },
+      entrega_empleado: {
+        create: empleados.map(emp => ({
+          rol_entrega: emp.rol_entrega,
+          empleado: { connect: { cuil: emp.cuil } },
+          obra: { connect: { cod_obra: cod_obra } },
+        })),
+      },
+    }
+    return this.entregaRepository.create(payload)
   }
 
   async findAll(): Promise<entrega[]> {

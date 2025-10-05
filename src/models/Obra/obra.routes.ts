@@ -14,8 +14,12 @@ obraRouter.get('/', (req, res) => {
   obraController.getAll(req, res)
 })
 
-obraRouter.get('/notas-sin-orden', (req, res) => {
-  obraController.getObrasConNotaSinOrden(req, res)
+obraRouter.get('/notas-sin-orden-aprobada', (req, res) => {
+  obraController.getNotasSinOrdenAprobada(req, res)
+})
+
+obraRouter.get('/notas-con-orden-proceso', (req, res) => {
+  obraController.getNotasConOrdenEnProceso(req, res)
 })
 
 obraRouter.post('/', validate({ body: createObraSchema }), (req, res) => {

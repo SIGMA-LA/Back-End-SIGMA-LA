@@ -27,7 +27,6 @@ export class ObraController {
 
   async getOne(req: Request, res: Response) {
     const id = parseInt(req.params.id, 10)
-    console.log('ID recibido en findById:', id)
     const obra = await obraService.findById(id)
     if (!obra) {
       return res.status(404).json({ message: 'Obra no encontrada' })
@@ -47,8 +46,13 @@ export class ObraController {
     res.json(obra)
   }
 
-  async getObrasConNotaSinOrden(req: Request, res: Response) {
-    const obras = await obraService.findWithNotaFabricaSinOrden()
+  async getNotasSinOrdenAprobada(req: Request, res: Response) {
+    const obras = await obraService.findNotasSinOrdenAprobada()
+    res.json(obras)
+  }
+
+  async getNotasConOrdenEnProceso(req: Request, res: Response) {
+    const obras = await obraService.findNotasConOrdenEnProceso()
     res.json(obras)
   }
 }

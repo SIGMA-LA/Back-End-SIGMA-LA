@@ -20,6 +20,7 @@ export class ObraRepository {
       include: {
         cliente: true,
         localidad: true,
+        presupuesto: true,
       },
     })
   }
@@ -30,6 +31,7 @@ export class ObraRepository {
       include: {
         cliente: true,
         localidad: true,
+        presupuesto: true,
       },
     })
   }
@@ -46,21 +48,54 @@ export class ObraRepository {
       where: { cod_obra: id },
     })
   }
-  async findWithNotaFabricaSinOrden(): Promise<obra[]> {
-    return await this.prisma.obra.findMany({
-      where: {
-        nota_fabrica: {
-          not: null, // Tiene nota de fábrica
-        },
-        orden_de_produccion: {
-          none: {}, // NO tiene ninguna orden de producción
+
+async findNotasSinOrdenAprobada(): Promise<obra[]> {
+  return await this.prisma.obra.findMany({
+    where: {
+      nota_fabrica: {
+        not: null,
+      },
+      estado: {
+        in: ['ACTIVA', 'EN PRODUCCION'],
+      },
+      orden_de_produccion: {
+        none: {
+          estado: {
+            in: ['APROBADA', 'EN PRODUCCION'],
+          },
         },
       },
-      orderBy: { fecha_ini: 'desc' },
-      include: {
-        cliente: true,
-        localidad: true,
+    },
+    orderBy: { fecha_ini: 'desc' },
+    include: {
+      cliente: true,
+      localidad: true,
+    },
+  })
+}
+
+async findNotasConOrdenEnProceso(): Promise<obra[]> {
+  return await this.prisma.obra.findMany({
+    where: {
+      nota_fabrica: {
+        not: null,
       },
-    })
-  }
+      estado: {
+            in: ['ACTIVA', 'EN PRODUCCION'],
+          },
+      orden_de_produccion: {
+        some: {
+          estado: {
+            in: ['APROBADA', 'EN PRODUCCION'],
+          },
+        },
+      },
+    },
+    orderBy: { fecha_ini: 'desc' },
+    include: {
+      cliente: true,
+      localidad: true,
+    },
+  })
+}
 }
