@@ -42,6 +42,8 @@ model entrega {
   observaciones        String?                @db.VarChar(500)
   detalle              String                 @db.VarChar(50)
   cod_entrega          Int                    @id @default(autoincrement())
+  dias_viaticos        Int?
+  fecha_cancelacion    DateTime?              @db.Date
   obra                 obra                   @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
   entrega_empleado     entrega_empleado[]
   uso_maquinaria       uso_maquinaria[]

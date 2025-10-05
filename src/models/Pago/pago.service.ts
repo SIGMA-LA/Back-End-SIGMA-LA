@@ -19,27 +19,63 @@ export class PagoService {
     this.repository = new PagoRepository()
   }
 
-  async create(data: Prisma.pagoCreateInput): Promise<pago> {
-    return await this.repository.create(data)
+  async createForObra(
+    cod_obra: number,
+    data: Omit<Prisma.pagoUncheckedCreateInput, 'cod_obra'>,
+  ): Promise<pago> {
+    let fecha_pago = data.fecha_pago
+    if (
+      typeof fecha_pago === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(fecha_pago)
+    ) {
+      fecha_pago = new Date(fecha_pago)
+    }
+    return await this.repository.createForObra({
+      ...data,
+      cod_obra,
+      fecha_pago,
+    })
+  }
+
+  async createOne(data: Prisma.pagoCreateInput): Promise<pago> {
+    let fecha_pago = data.fecha_pago
+    if (
+      typeof fecha_pago === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(fecha_pago)
+    ) {
+      fecha_pago = new Date(fecha_pago)
+    }
+    return await this.repository.createOne({ ...data, fecha_pago })
   }
 
   async findAll(): Promise<pago[]> {
-    return this.repository.findAll()
+    return await this.repository.findAll()
   }
 
-  async findById(cod_pago: number): Promise<pago | null> {
-    return await this.repository.findById(cod_pago)
+  async findById(id: number): Promise<pago | null> {
+    return await this.repository.findById(id)
   }
 
-  async update(cod_pago: number, data: Prisma.pagoUpdateInput): Promise<pago> {
-    return await this.repository.update(cod_pago, data)
+  async update(id: number, data: Prisma.pagoUpdateInput): Promise<pago> {
+    let fecha_pago = data.fecha_pago
+    if (
+      typeof fecha_pago === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(fecha_pago)
+    ) {
+      fecha_pago = new Date(fecha_pago)
+    }
+    return await this.repository.update(id, { ...data, fecha_pago })
   }
 
-  async remove(cod_pago: number): Promise<pago> {
-    const existingPago = await this.repository.findById(cod_pago)
+  async remove(id: number): Promise<pago> {
+    const existingPago = await this.repository.findById(id)
     if (!existingPago) {
       throw new Error('No existe un pago con el código proporcionado.')
     }
-    return await this.repository.delete(cod_pago)
+    return await this.repository.delete(id)
+  }
+
+  async findByObra(cod_obra: number): Promise<pago[]> {
+    return await this.repository.findManyByObra(cod_obra)
   }
 }
