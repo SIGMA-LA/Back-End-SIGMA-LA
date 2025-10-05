@@ -1,22 +1,18 @@
-#!/usr/bin/env sh
-
+cat > .husky/post-merge << 'EOF'
 echo "Ejecutando tareas post-merge..."
 
-# Verificar si package.json fue actualizado
 if git diff HEAD~1 HEAD --name-only | grep -q "package.json"; then
     echo "Dependencias actualizadas, ejecutando pnpm install..."
     pnpm install
     echo "Dependencias actualizadas exitosamente."
 fi
 
-# Verificar si el lock file fue actualizado
 if git diff HEAD~1 HEAD --name-only | grep -q "pnpm-lock.yaml"; then
     echo "Lock file actualizado, sincronizando dependencias..."
     pnpm install
     echo "Dependencias sincronizadas exitosamente."
 fi
 
-# Verificar si el schema de Prisma fue actualizado
 if git diff HEAD~1 HEAD --name-only | grep -q "prisma/schema.prisma"; then
     echo "Schema de Prisma actualizado, generando cliente..."
     pnpm prisma generate
@@ -24,13 +20,11 @@ if git diff HEAD~1 HEAD --name-only | grep -q "prisma/schema.prisma"; then
     echo "Cliente de Prisma regenerado exitosamente."
 fi
 
-# Verificar si se agregaron migraciones
 if git diff HEAD~1 HEAD --name-only | grep -q "prisma/migrations"; then
     echo "Nuevas migraciones detectadas."
     echo "ATENCION: Ejecutar 'pnpm db:migrate' para aplicarlas a la base de datos."
 fi
 
-# Verificar si muchos archivos fuente cambiaron
 CHANGED_TS_FILES=$(git diff HEAD~1 HEAD --name-only | grep -E '\.(ts|js)$' | wc -l)
 if [ "$CHANGED_TS_FILES" -gt 5 ]; then
     echo "Multiples archivos TypeScript modificados ($CHANGED_TS_FILES), reconstruyendo..."
@@ -38,10 +32,10 @@ if [ "$CHANGED_TS_FILES" -gt 5 ]; then
     echo "Build completado exitosamente."
 fi
 
-# Verificar si .env.example fue actualizado
 if git diff HEAD~1 HEAD --name-only | grep -q ".env.example"; then
     echo "Archivo .env.example actualizado."
     echo "ATENCION: Verificar si necesitas actualizar tu archivo .env con nuevas variables."
 fi
 
 echo "Tareas post-merge completadas."
+EOF
