@@ -66,6 +66,14 @@ async findByObra(cod_obra: number): Promise<orden_de_produccion[]> {
   return await this.prisma.orden_de_produccion.findMany({
     where: { cod_obra },
     orderBy: { fecha_confeccion: 'desc' },
+    include: {
+      obra: {
+        include: {
+          cliente: true,
+          localidad: true,
+        },
+      },
+    },
   })
 }
 

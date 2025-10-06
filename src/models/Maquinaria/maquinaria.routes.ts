@@ -20,6 +20,10 @@ maquinariaRouter.get('/', authenticateJWT, (req, res) => {
   maquinariaController.getAll(req, res)
 })
 
+maquinariaRouter.get('/disponibilidad', authenticateJWT, (req, res) => {
+  maquinariaController.getDisponibilidadPorFecha(req, res)
+})
+
 maquinariaRouter.post(
   '/',
   authenticateJWT,

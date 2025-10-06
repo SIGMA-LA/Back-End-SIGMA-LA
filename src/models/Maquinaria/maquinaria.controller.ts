@@ -37,6 +37,29 @@ export class MaquinariaController {
     }
   }
 
+  async getDisponibilidadPorFecha(req: Request, res: Response) {
+    try {
+      const { fecha_hora_inicio, fecha_hora_fin } = req.query
+
+      if (!fecha_hora_inicio || !fecha_hora_fin || typeof fecha_hora_inicio !== 'string' || typeof fecha_hora_fin !== 'string') {
+        return res.status(400).json({ error: 'Debe proporcionar fecha_hora_inicio y fecha_hora_fin como strings ISO.' })
+      }
+
+      const fechaInicio = new Date(fecha_hora_inicio)
+      const fechaFin = new Date(fecha_hora_fin)
+
+      if (isNaN(fechaInicio.getTime()) || isNaN(fechaFin.getTime())) {
+        return res.status(400).json({ error: 'Las fechas proporcionadas no son válidas.' })
+      }
+
+      const maquinas = await maquinariaService.findDisponibilidadPorFecha(fechaInicio, fechaFin)
+      res.json(maquinas)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error desconocido'
+      res.status(500).json({ error: message, code: 'FETCH_AVAILABILITY_ERROR' })
+    }
+  }
+
   async getOne(req: Request, res: Response) {
     try {
       const cod_maquina = parseInt(req.params.id, 10)

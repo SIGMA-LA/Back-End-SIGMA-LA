@@ -1,6 +1,10 @@
 import { Prisma, maquinaria } from '@prisma/client'
 import { MaquinariaRepository } from './maquinaria.repository.js'
 
+export type MaquinariaConDisponibilidad = maquinaria & {
+  isDisponibleEnFecha: boolean
+}
+
 /**
  * Servicio para manejar operaciones CRUD de maquinaria.
  * @class MaquinariaService
@@ -17,6 +21,15 @@ export class MaquinariaService {
 
   constructor() {
     this.repository = new MaquinariaRepository()
+  }
+
+  async findDisponibilidadPorFecha(fechaInicio: Date, fechaFin: Date): Promise<MaquinariaConDisponibilidad[]> {
+    const maquinariasConConflictos = await this.repository.findAllWithConflictingUsage(fechaInicio, fechaFin);
+    
+    return maquinariasConConflictos.map(maquina => ({
+      ...maquina,
+      isDisponibleEnFecha: maquina._count.uso_maquinaria === 0,
+    }));
   }
 
   async create(data: Prisma.maquinariaCreateInput): Promise<maquinaria> {

@@ -26,12 +26,22 @@ export class EntregaRepository {
           include: {
             empleado: {
               select: {
+                cuil: true,
                 nombre: true,
                 apellido: true,
               },
             },
           },
         },
+        uso_maquinaria: {
+          include: {
+            maquinaria: {
+              select: {
+                descripcion: true
+              }
+            }
+          }
+        }
       },
     })
   }
