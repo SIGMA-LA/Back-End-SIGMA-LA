@@ -16,3 +16,5 @@ switch (storageProvider.toLowerCase()) {
 
 // Exportamos el resultado de getUploader(), que es la instancia de Multer lista para usar.
 export const upload = uploadStrategy.getUploader()
+export const deleteUploadedFile = (publicId: string) =>
+  uploadStrategy.deleteFile(publicId)

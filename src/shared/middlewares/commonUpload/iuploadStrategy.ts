@@ -10,4 +10,5 @@ export interface IUploadStrategy {
    * específico del proveedor.
    */
   getUploader(): multer.Multer
+  deleteFile(publicId: string): Promise<void>
 }
