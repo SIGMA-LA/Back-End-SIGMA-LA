@@ -21,6 +21,20 @@ export class EmpleadoController {
     res.status(201).json(empleado)
   }
 
+  async getMe(req: Request, res: Response) {
+    const user = req.user
+    if (!user) {
+      return res.status(404).json({ message: 'Empleado no encontrado' })
+    }
+    const empleado = await empleadoService.findByCuil(
+      user.cuil ? user.cuil : '',
+    )
+    if (!empleado) {
+      return res.status(404).json({ message: 'Empleado no encontrado' })
+    }
+    res.json(empleado)
+  }
+
   async getAll(req: Request, res: Response) {
     const empleados = await empleadoService.findAll()
     res.json(empleados)

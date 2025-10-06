@@ -1,5 +1,6 @@
 import { PrismaClient, empleado, Prisma } from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
+import { EmpleadoPayload } from './empleado.service.js'
 
 export class EmpleadoRepository {
   private prisma: PrismaClient
@@ -7,13 +8,32 @@ export class EmpleadoRepository {
     this.prisma = prisma
   }
 
-  // Obtener todos los empleados
-  async findAll(): Promise<empleado[]> {
+  // Obtener todos los empleados (solo datos públicos)
+  async findAllPublic(): Promise<EmpleadoPayload[]> {
     return await this.prisma.empleado.findMany({
       orderBy: { nombre: 'asc' },
+      select: {
+        cuil: true,
+        nombre: true,
+        apellido: true,
+        rol_actual: true,
+        area_trabajo: true,
+      },
     })
   }
-
+  // Obtener empleado por CUIL (solo datos públicos)
+  async findByCuilPublic(cuil: string): Promise<EmpleadoPayload | null> {
+    return await this.prisma.empleado.findUnique({
+      where: { cuil: cuil },
+      select: {
+        cuil: true,
+        nombre: true,
+        apellido: true,
+        rol_actual: true,
+        area_trabajo: true,
+      },
+    })
+  }
   // Obtener empleado por CUIL
   async findByCuil(cuil: string): Promise<empleado | null> {
     return await this.prisma.empleado.findUnique({
