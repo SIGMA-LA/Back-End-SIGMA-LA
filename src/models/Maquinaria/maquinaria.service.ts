@@ -20,7 +20,12 @@ export class MaquinariaService {
   }
 
   async create(data: Prisma.maquinariaCreateInput): Promise<maquinaria> {
-    return await this.repository.create(data)
+    // Establecer estado por defecto si no se proporciona
+    const maquinariaData = {
+      ...data,
+      estado: data.estado || 'DISPONIBLE',
+    }
+    return await this.repository.create(maquinariaData)
   }
 
   async findAll(): Promise<maquinaria[]> {
@@ -31,11 +36,42 @@ export class MaquinariaService {
     return await this.repository.findById(cod_maquina)
   }
 
+  async findDisponibles(): Promise<maquinaria[]> {
+    return await this.repository.findByEstado('DISPONIBLE')
+  }
+
   async update(
     cod_maquina: number,
     data: Prisma.maquinariaUpdateInput,
   ): Promise<maquinaria> {
+    const existingMaquinaria = await this.repository.findById(cod_maquina)
+    if (!existingMaquinaria) {
+      throw new Error('No existe una maquinaria con el código proporcionado.')
+    }
     return await this.repository.update(cod_maquina, data)
+  }
+
+  async updateEstado(cod_maquina: number, estado: string): Promise<maquinaria> {
+    const existingMaquinaria = await this.repository.findById(cod_maquina)
+    if (!existingMaquinaria) {
+      throw new Error('No existe una maquinaria con el código proporcionado.')
+    }
+
+    // Validar estados permitidos
+    const estadosValidos = [
+      'DISPONIBLE',
+      'EN_USO',
+      'MANTENIMIENTO',
+      'REPARACION',
+      'FUERA_DE_SERVICIO',
+    ]
+    if (!estadosValidos.includes(estado)) {
+      throw new Error(
+        'Estado no válido. Estados permitidos: ' + estadosValidos.join(', '),
+      )
+    }
+
+    return await this.repository.update(cod_maquina, { estado })
   }
 
   async remove(cod_maquina: number): Promise<maquinaria> {

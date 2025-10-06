@@ -16,33 +16,98 @@ const maquinariaService = new MaquinariaService()
  */
 export class MaquinariaController {
   async create(req: Request, res: Response) {
-    const nueva = await maquinariaService.create(req.body)
-    res.status(201).json(nueva)
+    try {
+      const nueva = await maquinariaService.create(req.body)
+      res.status(201).json(nueva)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(400).json({ error: message, code: 'CREATE_ERROR' })
+    }
   }
 
   async getAll(req: Request, res: Response) {
-    const maquinas = await maquinariaService.findAll()
-    res.json(maquinas)
+    try {
+      const maquinas = await maquinariaService.findAll()
+      res.json(maquinas)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(500).json({ error: message, code: 'FETCH_ERROR' })
+    }
   }
 
   async getOne(req: Request, res: Response) {
-    const cod_maquina = parseInt(req.params.cod_maquina, 10)
-    const maquina = await maquinariaService.findById(cod_maquina)
-    if (!maquina) {
-      return res.status(404).json({ message: 'Maquinaria no encontrada' })
+    try {
+      const cod_maquina = parseInt(req.params.id, 10)
+      const maquina = await maquinariaService.findById(cod_maquina)
+      if (!maquina) {
+        return res
+          .status(404)
+          .json({ error: 'Maquinaria no encontrada', code: 'NOT_FOUND' })
+      }
+      res.json(maquina)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(500).json({ error: message, code: 'FETCH_ERROR' })
     }
-    res.json(maquina)
+  }
+
+  async getDisponibles(req: Request, res: Response) {
+    try {
+      const maquinasDisponibles = await maquinariaService.findDisponibles()
+      res.json(maquinasDisponibles)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(500).json({ error: message, code: 'FETCH_ERROR' })
+    }
   }
 
   async update(req: Request, res: Response) {
-    const cod_maquina = parseInt(req.params.cod_maquina, 10)
-    const maquina = await maquinariaService.update(cod_maquina, req.body)
-    res.json(maquina)
+    try {
+      const cod_maquina = parseInt(req.params.id, 10)
+      const maquina = await maquinariaService.update(cod_maquina, req.body)
+      res.json(maquina)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      if (message.includes('No existe una maquinaria')) {
+        return res.status(404).json({ error: message, code: 'NOT_FOUND' })
+      }
+      res.status(400).json({ error: message, code: 'UPDATE_ERROR' })
+    }
+  }
+
+  async updateEstado(req: Request, res: Response) {
+    try {
+      const cod_maquina = parseInt(req.params.id, 10)
+      const { estado } = req.body
+      const maquina = await maquinariaService.updateEstado(cod_maquina, estado)
+      res.json(maquina)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      if (message.includes('No existe una maquinaria')) {
+        return res.status(404).json({ error: message, code: 'NOT_FOUND' })
+      }
+      res.status(400).json({ error: message, code: 'UPDATE_ERROR' })
+    }
   }
 
   async remove(req: Request, res: Response) {
-    const cod_maquina = parseInt(req.params.cod_maquina, 10)
-    const maquina = await maquinariaService.remove(cod_maquina)
-    res.json(maquina)
+    try {
+      const cod_maquina = parseInt(req.params.id, 10)
+      await maquinariaService.remove(cod_maquina)
+      res.status(204).send()
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      if (message.includes('No existe una maquinaria')) {
+        return res.status(404).json({ error: message, code: 'NOT_FOUND' })
+      }
+      res.status(500).json({ error: message, code: 'DELETE_ERROR' })
+    }
   }
 }
