@@ -19,6 +19,10 @@ empleadoRouter.get('/me', authenticateJWT, (req, res) => {
   empleadoController.getMe(req, res)
 })
 
+  empleadoRouter.get('/disponibles-entrega', (req, res) => {
+  empleadoController.getDisponiblesParaEntrega(req, res)
+})
+
 empleadoRouter.post(
   '/',
   validate({ body: createEmpleadoSchema }),

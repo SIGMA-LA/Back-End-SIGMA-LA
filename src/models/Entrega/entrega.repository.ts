@@ -13,7 +13,7 @@ export class EntregaRepository {
     return this.prisma.entrega.create({ data })
   }
 
-  async findAll(): Promise<any[]> {
+  async findAll(): Promise<entrega[]> {
     return this.prisma.entrega.findMany({
       orderBy: { fecha_hora_entrega: 'desc' },
       include: {

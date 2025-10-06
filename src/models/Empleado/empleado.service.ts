@@ -60,6 +60,15 @@ export class EmpleadoService {
     return await this.empleadoRepository.findByCuilPublic(cuil)
   }
 
+  async findDisponiblesParaEntrega(): Promise<empleado[]> {
+    return await this.empleadoRepository.findByCriteria({
+      OR: [
+        { rol_actual: 'VISITADOR' },
+        { rol_actual: 'PLANTA' },
+      ],
+    })
+  }
+
   // Actualizar empleado
   async update(
     cuil: string,

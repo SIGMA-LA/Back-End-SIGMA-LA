@@ -21,6 +21,15 @@ export class ParametroRepository {
     })
   }
 
+  async findLatest(): Promise<parametro | null> {
+    return await this.prisma.parametro.findFirst({
+      orderBy: [
+        { fecha_cambio: 'desc' },
+        { hora_cambio: 'desc' },
+      ],
+    });
+  }
+
   // Crear nuevo parametro
   async create(data: Prisma.parametroCreateInput): Promise<parametro> {
     return await this.prisma.parametro.create({
