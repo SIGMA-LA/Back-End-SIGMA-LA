@@ -18,16 +18,20 @@ pagoRouter.post('/', validate({ body: createPagoSchema }), (req, res) => {
   pagoController.create(req, res)
 })
 
-pagoRouter.get(
-  '/:cod_pago',
-  validate({ params: idParamsSchema }),
-  (req, res) => {
-    pagoController.getOne(req, res)
-  },
-)
+pagoRouter.post('/obra/:cod_obra', (req, res) => {
+  pagoController.createForObra(req, res)
+})
+
+pagoRouter.get('/obra/:cod_obra', (req, res) => {
+  pagoController.getByObra(req, res)
+})
+
+pagoRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
+  pagoController.getOne(req, res)
+})
 
 pagoRouter.put(
-  '/:cod_pago',
+  '/:id',
   validate({
     params: idParamsSchema,
     body: updatePagoSchema,
@@ -37,12 +41,8 @@ pagoRouter.put(
   },
 )
 
-pagoRouter.delete(
-  '/:cod_pago',
-  validate({ params: idParamsSchema }),
-  (req, res) => {
-    pagoController.remove(req, res)
-  },
-)
+pagoRouter.delete('/:id', validate({ params: idParamsSchema }), (req, res) => {
+  pagoController.remove(req, res)
+})
 
 export default pagoRouter

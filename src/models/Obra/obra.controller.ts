@@ -25,6 +25,10 @@ export class ObraController {
     res.status(201).json(obras)
   }
 
+  async getOneById(id: number) {
+    return await obraService.findById(id)
+  }
+
   async getOne(req: Request, res: Response) {
     const id = parseInt(req.params.id, 10)
     const obra = await obraService.findById(id)
@@ -32,6 +36,21 @@ export class ObraController {
       return res.status(404).json({ message: 'Obra no encontrada' })
     }
     res.json(obra)
+  }
+
+  async subirNotaFabrica(req: Request, res: Response) {
+    const id = parseInt(req.params.id, 10)
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se ha subido ningún archivo' })
+    }
+    await obraService.subirNotaFabrica(id, req.file)
+    res.status(201).json({ message: 'Archivo subido correctamente' })
+  }
+
+  async deleteNotaFabrica(req: Request, res: Response) {
+    const id = parseInt(req.params.id, 10)
+    await obraService.deleteNotaFabrica(id)
+    res.json({ message: 'Nota de fábrica eliminada correctamente' })
   }
 
   async update(req: Request, res: Response) {
@@ -46,8 +65,13 @@ export class ObraController {
     res.json(obra)
   }
 
-  async getObrasConNotaSinOrden(req: Request, res: Response) {
-    const obras = await obraService.findWithNotaFabricaSinOrden()
+  async getNotasSinOrdenAprobada(req: Request, res: Response) {
+    const obras = await obraService.findNotasSinOrdenAprobada()
+    res.json(obras)
+  }
+
+  async getNotasConOrdenEnProceso(req: Request, res: Response) {
+    const obras = await obraService.findNotasConOrdenEnProceso()
     res.json(obras)
   }
 }

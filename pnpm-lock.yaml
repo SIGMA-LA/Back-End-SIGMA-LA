@@ -45,7 +45,7 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0(cloudinary@2.7.0)
       sigma-la-schemas:
-        specifier: 1.0.18
+        specifier: ^1.0.18
         version: 1.0.18(typescript@5.9.2)
       valibot:
         specifier: ^1.1.0

@@ -50,6 +50,17 @@ export class ObraService {
     return await this.repository.findById(id)
   }
 
+  async subirNotaFabrica(id: number, file: Express.Multer.File): Promise<void> {
+    await this.repository.subirNotaFabrica(id, file.path, file.filename)
+  }
+
+  async deleteNotaFabrica(id: number) {
+    await this.repository.update(id, {
+      nota_fabrica: null,
+      nota_fabrica_pid: null,
+    })
+  }
+
   async update(id: number, data: Prisma.obraUpdateInput): Promise<obra> {
     if (
       typeof data.fecha_ini === 'string' &&
@@ -77,7 +88,12 @@ export class ObraService {
     }
     return await this.repository.delete(id)
   }
-  async findWithNotaFabricaSinOrden(): Promise<obra[]> {
-    return await this.repository.findWithNotaFabricaSinOrden()
+
+  async findNotasSinOrdenAprobada(): Promise<obra[]> {
+    return await this.repository.findNotasSinOrdenAprobada()
+  }
+
+  async findNotasConOrdenEnProceso(): Promise<obra[]> {
+    return await this.repository.findNotasConOrdenEnProceso()
   }
 }

@@ -35,6 +35,19 @@ export class ObraRepository {
       },
     })
   }
+  async subirNotaFabrica(
+    id: number,
+    path: string,
+    filename: string,
+  ): Promise<void> {
+    await this.prisma.obra.update({
+      where: { cod_obra: id },
+      data: {
+        nota_fabrica: path,
+        nota_fabrica_pid: filename,
+      },
+    })
+  }
 
   async update(id: number, data: Prisma.obraUpdateInput): Promise<obra> {
     return await this.prisma.obra.update({
@@ -44,18 +57,54 @@ export class ObraRepository {
   }
 
   async delete(id: number): Promise<obra> {
-    return await this.prisma.obra.delete({
+    return await this.prisma.obra.update({
       where: { cod_obra: id },
+      data: {
+        estado: 'Eliminada',
+      },
     })
   }
-  async findWithNotaFabricaSinOrden(): Promise<obra[]> {
+
+  async findNotasSinOrdenAprobada(): Promise<obra[]> {
     return await this.prisma.obra.findMany({
       where: {
         nota_fabrica: {
-          not: null, // Tiene nota de fábrica
+          not: null,
+        },
+        estado: {
+          in: ['ACTIVA', 'EN PRODUCCION'],
         },
         orden_de_produccion: {
-          none: {}, // NO tiene ninguna orden de producción
+          none: {
+            estado: {
+              in: ['APROBADA', 'EN PRODUCCION'],
+            },
+          },
+        },
+      },
+      orderBy: { fecha_ini: 'desc' },
+      include: {
+        cliente: true,
+        localidad: true,
+      },
+    })
+  }
+
+  async findNotasConOrdenEnProceso(): Promise<obra[]> {
+    return await this.prisma.obra.findMany({
+      where: {
+        nota_fabrica: {
+          not: null,
+        },
+        estado: {
+          in: ['ACTIVA', 'EN PRODUCCION'],
+        },
+        orden_de_produccion: {
+          some: {
+            estado: {
+              in: ['APROBADA', 'EN PRODUCCION'],
+            },
+          },
         },
       },
       orderBy: { fecha_ini: 'desc' },

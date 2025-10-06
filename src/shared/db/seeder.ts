@@ -225,6 +225,25 @@ async function seed() {
       'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
     nota_fabrica_pid: 'MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx',
   })
+  // Pagos
+  const pagos = [
+    { cod_obra: 1, fecha_pago: '2025-09-10', monto: 150000 },
+    { cod_obra: 1, fecha_pago: '2025-09-20', monto: 80000 },
+    { cod_obra: 2, fecha_pago: '2025-09-12', monto: 120000 },
+    { cod_obra: 2, fecha_pago: '2025-09-22', monto: 95000 },
+    { cod_obra: 3, fecha_pago: '2025-09-15', monto: 180000 },
+    { cod_obra: 3, fecha_pago: '2025-09-25', monto: 110000 },
+    { cod_obra: 4, fecha_pago: '2025-09-18', monto: 95000 },
+    { cod_obra: 4, fecha_pago: '2025-09-28', monto: 70000 },
+    { cod_obra: 5, fecha_pago: '2025-09-20', monto: 210000 },
+    { cod_obra: 5, fecha_pago: '2025-09-30', monto: 120000 },
+    { cod_obra: 6, fecha_pago: '2025-09-22', monto: 175000 },
+    { cod_obra: 6, fecha_pago: '2025-10-02', monto: 90000 },
+  ]
+
+  for (const pago of pagos) {
+    await post(`${API_URL}/api/pagos`, pago)
+  }
 
   // Entregas
   await post(`${API_URL}/api/entregas`, {
