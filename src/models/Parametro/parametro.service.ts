@@ -51,6 +51,14 @@ export class ParametroService {
     return await this.repository.findOne(id)
   }
 
+  async findActualViatico(): Promise<{ viatico_dia_persona: number } | null> {
+    const ultimoParametro = await this.repository.findLatest();
+    if (!ultimoParametro) {
+      return null;
+    }
+    return { viatico_dia_persona: ultimoParametro.viatico_dia_persona ?? 0 };
+  }
+
   async update(
     id: number,
     data: Prisma.parametroUpdateInput,
