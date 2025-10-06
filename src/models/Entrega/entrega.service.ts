@@ -26,16 +26,18 @@ export class EntregaService {
     detalle: string
     estado: 'PENDIENTE'
     observaciones?: string
+    dias_viaticos?: number
     empleados: { cuil: string; rol_entrega: 'ENCARGADO' | 'AYUDANTE' }[]
   }): Promise<entrega> {
-
     const { empleados, cod_obra, ...entregaData } = data
-
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
 
     const payload: Prisma.entregaCreateInput = {
-      ...entregaData,
+      detalle: entregaData.detalle,
+      estado: entregaData.estado,
       fecha_hora_entrega: fechaParaPrisma,
+      ...(entregaData.observaciones && { observaciones: entregaData.observaciones }),
+      ...(data.dias_viaticos !== undefined && { dias_viaticos: data.dias_viaticos }),
       obra: {
         connect: { cod_obra: cod_obra },
       },
@@ -47,6 +49,8 @@ export class EntregaService {
         })),
       },
     }
+
+    console.log('--- Payload final enviado a Prisma ---', JSON.stringify(payload, null, 2));
     return this.entregaRepository.create(payload)
   }
 

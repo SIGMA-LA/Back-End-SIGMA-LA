@@ -34,6 +34,14 @@ export class ParametroController {
     res.json(parametro)
   }
 
+  async getActualViatico(req: Request, res: Response) {
+    const viatico = await parametroService.findActualViatico();
+    if (!viatico) {
+      return res.status(404).json({ message: 'No se encontraron parámetros de viáticos configurados.' });
+    }
+    res.json(viatico);
+  }
+
   async update(req: Request, res: Response) {
     const { id } = req.params
     const parametro = await parametroService.update(Number(id), req.body)

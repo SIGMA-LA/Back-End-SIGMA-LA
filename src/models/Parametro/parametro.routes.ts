@@ -18,6 +18,10 @@ parametroRouter.post(
   },
 )
 
+parametroRouter.get('/actual/viatico', (req, res) => {
+  parametroController.getActualViatico(req, res);
+})
+
 parametroRouter.get('/:id', (req, res) => {
   parametroController.getOne(req, res)
 })

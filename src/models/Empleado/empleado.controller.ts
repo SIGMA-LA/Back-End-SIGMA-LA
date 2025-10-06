@@ -35,6 +35,11 @@ export class EmpleadoController {
     res.json(empleado)
   }
 
+  async getDisponiblesParaEntrega(req: Request, res: Response) {
+    const empleados = await empleadoService.findDisponiblesParaEntrega()
+    res.json(empleados)
+  }
+
   async update(req: Request, res: Response) {
     const cuil = req.params.cuil
     const empleado = await empleadoService.update(cuil, req.body)
