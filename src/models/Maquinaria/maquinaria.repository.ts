@@ -26,6 +26,13 @@ export class MaquinariaRepository {
     })
   }
 
+  async findByEstado(estado: string): Promise<maquinaria[]> {
+    return await this.prisma.maquinaria.findMany({
+      where: { estado },
+      orderBy: { descripcion: 'asc' },
+    })
+  }
+
   async update(
     cod_maquina: number,
     data: Prisma.maquinariaUpdateInput,

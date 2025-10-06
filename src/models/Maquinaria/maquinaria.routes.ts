@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { MaquinariaController } from './maquinaria.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
+import { authenticateJWT } from '../Auth/auth.middleware.js'
 import {
   createMaquinariaSchema,
   updateMaquinariaSchema,
@@ -10,12 +11,18 @@ import {
 const maquinariaController = new MaquinariaController()
 const maquinariaRouter = Router()
 
-maquinariaRouter.get('/', (req, res) => {
+// GET /api/maquinarias/disponibles - debe ir antes de /:cod_maquina
+maquinariaRouter.get('/disponibles', authenticateJWT, (req, res) => {
+  maquinariaController.getDisponibles(req, res)
+})
+
+maquinariaRouter.get('/', authenticateJWT, (req, res) => {
   maquinariaController.getAll(req, res)
 })
 
 maquinariaRouter.post(
   '/',
+  authenticateJWT,
   validate({ body: createMaquinariaSchema }),
   (req, res) => {
     maquinariaController.create(req, res)
@@ -23,7 +30,8 @@ maquinariaRouter.post(
 )
 
 maquinariaRouter.get(
-  '/:cod_maquina',
+  '/:id',
+  authenticateJWT,
   validate({ params: idParamsSchema }),
   (req, res) => {
     maquinariaController.getOne(req, res)
@@ -31,7 +39,8 @@ maquinariaRouter.get(
 )
 
 maquinariaRouter.put(
-  '/:cod_maquina',
+  '/:id',
+  authenticateJWT,
   validate({
     params: idParamsSchema,
     body: updateMaquinariaSchema,
@@ -41,8 +50,19 @@ maquinariaRouter.put(
   },
 )
 
+// PATCH /api/maquinarias/:id/estado
+maquinariaRouter.patch(
+  '/:id/estado',
+  authenticateJWT,
+  validate({ params: idParamsSchema }),
+  (req, res) => {
+    maquinariaController.updateEstado(req, res)
+  },
+)
+
 maquinariaRouter.delete(
-  '/:cod_maquina',
+  '/:id',
+  authenticateJWT,
   validate({ params: idParamsSchema }),
   (req, res) => {
     maquinariaController.remove(req, res)
