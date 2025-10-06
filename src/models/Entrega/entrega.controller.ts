@@ -17,8 +17,6 @@ const entregaService = new EntregaService()
 
 export class EntregaController {
   async create(req: Request, res: Response) {
-    console.log('=== DATOS RECIBIDOS EN CONTROLLER ===');
-    console.log('Raw body:', JSON.stringify(req.body, null, 2));
     const entrega = await entregaService.create(req.body)
     res.status(201).json(entrega)
   }
