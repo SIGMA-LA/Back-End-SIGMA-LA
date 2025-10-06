@@ -14,6 +14,15 @@ import bcrypt from 'bcryptjs'
  * @returns {Promise<empleado | empleado[] | number | null>} - Resultado de la operación.
  * @throws {Error} - Si ocurre un error durante la operación.
  */
+
+export interface EmpleadoPayload {
+  cuil: string
+  nombre: string
+  apellido: string
+  rol_actual: string
+  area_trabajo: string
+}
+
 export class EmpleadoService {
   private empleadoRepository: EmpleadoRepository
 
@@ -42,13 +51,13 @@ export class EmpleadoService {
   }
 
   // Obtener todos los empleados
-  async findAll(): Promise<empleado[]> {
-    return await this.empleadoRepository.findAll()
+  async findAll(): Promise<EmpleadoPayload[]> {
+    return await this.empleadoRepository.findAllPublic()
   }
 
   // Obtener empleado por CUIL
-  async findByCuil(cuil: string): Promise<empleado | null> {
-    return await this.empleadoRepository.findByCuil(cuil)
+  async findByCuil(cuil: string): Promise<EmpleadoPayload | null> {
+    return await this.empleadoRepository.findByCuilPublic(cuil)
   }
 
   // Actualizar empleado
@@ -62,7 +71,8 @@ export class EmpleadoService {
       contrasenia?: string
     }>,
   ): Promise<empleado> {
-    const existingEmpleado = await this.empleadoRepository.findByCuil(cuil)
+    const existingEmpleado =
+      await this.empleadoRepository.findByCuilPublic(cuil)
     if (!existingEmpleado) {
       throw new Error('Empleado no encontrado')
     }

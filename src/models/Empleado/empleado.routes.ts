@@ -6,11 +6,17 @@ import {
   updateEmpleadoSchema,
   cuilParamsSchema,
 } from 'sigma-la-schemas'
+import { authenticateJWT } from '../Auth/auth.middleware.js'
+
 const empleadoController = new EmpleadoController()
 const empleadoRouter = Router()
 
 empleadoRouter.get('/', (req, res) => {
   empleadoController.getAll(req, res)
+})
+
+empleadoRouter.get('/me', authenticateJWT, (req, res) => {
+  empleadoController.getMe(req, res)
 })
 
 empleadoRouter.post(
