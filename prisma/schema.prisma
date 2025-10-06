@@ -48,6 +48,8 @@ model entrega {
   entrega_empleado     entrega_empleado[]
   uso_maquinaria       uso_maquinaria[]
   uso_vehiculo_entrega uso_vehiculo_entrega[]
+  cod_op               Int?                   @unique
+  orden_de_produccion  orden_de_produccion?   @relation(fields: [cod_op], references: [cod_op])
 }
 
 model entrega_empleado {
@@ -107,6 +109,7 @@ model orden_de_produccion {
   public_id        String?   @db.VarChar(255)
   estado           String    @default("PENDIENTE") @db.VarChar(255)
   obra             obra      @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+  entrega          entrega?
 }
 
 model pago {
