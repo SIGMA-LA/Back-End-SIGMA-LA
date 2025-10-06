@@ -95,6 +95,32 @@ export class VisitaController {
       })
     }
   }
+
+  async finalizarVisita(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+      const { observaciones } = req.body
+      const visita = await visitaService.finalizar(Number(id), observaciones)
+      res.json(visita)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(404).json({ error: message })
+    }
+  }
+
+  async cancelarVisita(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+      const { motivo } = req.body
+      const visita = await visitaService.cancelar(Number(id), motivo)
+      res.json(visita)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(404).json({ error: message })
+    }
+  }
 }
 
 export const visitaController = new VisitaController()
