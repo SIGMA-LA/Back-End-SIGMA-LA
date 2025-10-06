@@ -47,4 +47,10 @@ export class CloudinaryUploader implements IUploadStrategy {
   public getUploader(): multer.Multer {
     return this.uploader
   }
+  /**
+   * Elimina un archivo de Cloudinary usando su public_id.
+   */
+  public async deleteFile(publicId: string): Promise<any> {
+    return cloudinary.uploader.destroy(publicId)
+  }
 }
