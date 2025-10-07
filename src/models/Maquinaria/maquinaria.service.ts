@@ -1,8 +1,11 @@
 import { Prisma, maquinaria } from '@prisma/client'
 import { MaquinariaRepository } from './maquinaria.repository.js'
 
+export type AvailabilityStatus = 'DISPONIBLE' | 'ADVERTENCIA' | 'NO_DISPONIBLE'
+
 export type MaquinariaConDisponibilidad = maquinaria & {
-  isDisponibleEnFecha: boolean
+  availabilityStatus: AvailabilityStatus
+  warningMessage?: string
 }
 
 /**
@@ -24,12 +27,36 @@ export class MaquinariaService {
   }
 
   async findDisponibilidadPorFecha(fechaInicio: Date, fechaFin: Date): Promise<MaquinariaConDisponibilidad[]> {
-    const maquinariasConConflictos = await this.repository.findAllWithConflictingUsage(fechaInicio, fechaFin);
     
-    return maquinariasConConflictos.map(maquina => ({
-      ...maquina,
-      isDisponibleEnFecha: maquina._count.uso_maquinaria === 0,
-    }));
+    const buffer = 24 * 60 * 60 * 1000;
+    const warningStartTime = new Date(fechaInicio.getTime() - buffer);
+    const warningEndTime = new Date(fechaFin.getTime() + buffer);
+
+    const maquinariasConUsosCercanos = await this.repository.findAllWithUsageInRange(warningStartTime, warningEndTime);
+
+    return maquinariasConUsosCercanos.map(maquina => {
+      let availabilityStatus: AvailabilityStatus = 'DISPONIBLE';
+      let warningMessage: string | undefined = undefined;
+
+      if (maquina.uso_maquinaria.length > 0) {
+        const hayConflictoDirecto = maquina.uso_maquinaria.some(uso =>
+          (new Date(uso.fecha_hora_ini_uso) < fechaFin) && (new Date(uso.fecha_hora_fin_est) > fechaInicio)
+        );
+
+        if (hayConflictoDirecto) {
+          availabilityStatus = 'NO_DISPONIBLE';
+        } else {
+          availabilityStatus = 'ADVERTENCIA';
+          warningMessage = 'Esta maquinaria tiene un uso programado dentro de las 24hs de la fecha seleccionada.';
+        }
+      }
+      
+      return {
+        ...maquina,
+        availabilityStatus,
+        warningMessage,
+      };
+    });
   }
 
   async create(data: Prisma.maquinariaCreateInput): Promise<maquinaria> {

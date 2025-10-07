@@ -20,19 +20,15 @@ export class MaquinariaRepository {
     })
   }
 
-  async findAllWithConflictingUsage(fechaInicio: Date, fechaFin: Date): Promise<(maquinaria & { _count: { uso_maquinaria: number } })[]> {
+  async findAllWithUsageInRange(fechaInicio: Date, fechaFin: Date): Promise<(maquinaria & { uso_maquinaria: any[] })[]> {
     return await this.prisma.maquinaria.findMany({
       include: {
-        _count: {
-          select: {
-            uso_maquinaria: {
-              where: {
-                AND: [
-                  { fecha_hora_ini_uso: { lt: fechaFin } },
-                  { fecha_hora_fin_est: { gt: fechaInicio } },
-                ],
-              },
-            },
+        uso_maquinaria: {
+          where: {
+            AND: [
+              { fecha_hora_ini_uso: { lt: fechaFin } },
+              { fecha_hora_fin_est: { gt: fechaInicio } },
+            ],
           },
         },
       },

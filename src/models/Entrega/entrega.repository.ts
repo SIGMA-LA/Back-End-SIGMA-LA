@@ -20,6 +20,7 @@ export class EntregaRepository {
         obra: {
           include: {
             cliente: true,
+            localidad: true,
           },
         },
         entrega_empleado: {
@@ -41,7 +42,8 @@ export class EntregaRepository {
               }
             }
           }
-        }
+        },
+        orden_de_produccion: true,
       },
     })
   }

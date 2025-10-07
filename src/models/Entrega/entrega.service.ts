@@ -29,8 +29,9 @@ export class EntregaService {
     dias_viaticos?: number
     empleados: { cuil: string; rol_entrega: 'ENCARGADO' | 'AYUDANTE' }[]
     maquinarias?: number[]
+    cod_op?: number
   }): Promise<entrega> {
-    const { empleados, cod_obra, maquinarias, ...entregaData } = data
+    const { empleados, cod_obra, maquinarias, cod_op, ...entregaData } = data
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
 
     const fechaFinEstimada = new Date(fechaParaPrisma.getTime() + 24 * 60 * 60 * 1000)
@@ -60,6 +61,11 @@ export class EntregaService {
             estado: 'EN USO',
             obra: { connect: { cod_obra: cod_obra } },
           })),
+        },
+      }),
+      ...(cod_op && {
+        orden_de_produccion: {
+          connect: { cod_op: cod_op },
         },
       }),
     }
