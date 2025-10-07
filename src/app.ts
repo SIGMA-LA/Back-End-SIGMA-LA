@@ -9,15 +9,11 @@ import { errorHandler } from './shared/middlewares/errorHandler.js'
 const app = express()
 const PORT = process.env.PORT || 4000
 
-/*
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   }),
 )
-*/
-
-app.use(cors())
 
 app.use(express.json())
 app.use(ROUTES)
