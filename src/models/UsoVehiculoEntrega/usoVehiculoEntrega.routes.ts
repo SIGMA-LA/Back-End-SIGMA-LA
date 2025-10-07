@@ -21,12 +21,12 @@ usoVehiculoEntregaRouter.post(
   },
 )
 
-usoVehiculoEntregaRouter.get('/:cod_entrega/:cod_vehiculo', (req, res) => {
+usoVehiculoEntregaRouter.get('/:cod_entrega/:patente', (req, res) => {
   usoVehiculoEntregaController.getOne(req, res)
 })
 
 usoVehiculoEntregaRouter.put(
-  '/:cod_entrega/:cod_vehiculo',
+  '/:cod_entrega/:patente',
   validate({
     body: updateUsoVehiculoEntregaSchema,
   }),
@@ -35,7 +35,7 @@ usoVehiculoEntregaRouter.put(
   },
 )
 
-usoVehiculoEntregaRouter.delete('/:cod_entrega/:cod_vehiculo', (req, res) => {
+usoVehiculoEntregaRouter.delete('/:cod_entrega/:patente', (req, res) => {
   usoVehiculoEntregaController.remove(req, res)
 })
 
