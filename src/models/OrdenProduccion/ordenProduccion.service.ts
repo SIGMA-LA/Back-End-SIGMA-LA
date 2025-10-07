@@ -1,5 +1,6 @@
 import { orden_de_produccion, Prisma } from '@prisma/client'
 import { OrdenProduccionRepository } from './ordenProduccion.repository.js'
+import { prisma } from '../../shared/db/prismaClient.js'
 
 export class OrdenProduccionService {
   private repository: OrdenProduccionRepository
@@ -16,7 +17,7 @@ export class OrdenProduccionService {
   }): Promise<orden_de_produccion> {
     const prismaData: Prisma.orden_de_produccionCreateInput = {
       obra: {
-        connect: { cod_obra: data.cod_obra }
+        connect: { cod_obra: data.cod_obra },
       },
       fecha_confeccion: new Date(),
       fecha_validacion: data.fecha_validacion || null,
@@ -36,12 +37,12 @@ export class OrdenProduccionService {
   }
 
   async findValidadas(): Promise<orden_de_produccion[]> {
-  return await this.repository.findValidadas()
-}
+    return await this.repository.findValidadas()
+  }
 
-async findEnProduccion(): Promise<orden_de_produccion[]> {
-  return await this.repository.findEnProduccion()
-}
+  async findEnProduccion(): Promise<orden_de_produccion[]> {
+    return await this.repository.findEnProduccion()
+  }
 
   async update(
     cod_op: number,
@@ -53,19 +54,43 @@ async findEnProduccion(): Promise<orden_de_produccion[]> {
   async remove(cod_op: number): Promise<orden_de_produccion> {
     const existingOrden = await this.repository.findById(cod_op)
     if (!existingOrden) {
-      throw new Error('No existe una orden de producción con el código proporcionado.')
+      throw new Error(
+        'No existe una orden de producción con el código proporcionado.',
+      )
     }
     return await this.repository.delete(cod_op)
   }
 
   async findByObra(cod_obra: number): Promise<orden_de_produccion[]> {
-  return await this.repository.findByObra(cod_obra)
-}
+    return await this.repository.findByObra(cod_obra)
+  }
 
-async finalizarProduccion(cod_op: number): Promise<orden_de_produccion> {
-  return await this.repository.update(cod_op, {
-    estado: 'FINALIZADA',
-  })
-}
-}
+  async finalizarProduccion(cod_op: number): Promise<orden_de_produccion> {
+    const orden = await this.repository.findById(cod_op)
+    if (!orden) {
+      throw new Error('Orden de producción no encontrada.')
+    }
+    if (orden.estado !== 'EN PRODUCCION') {
+      throw new Error(
+        'Solo se pueden finalizar órdenes que están "En Producción".',
+      )
+    }
+    const [ordenActualizada] = await prisma.$transaction([
+      prisma.orden_de_produccion.update({
+        where: { cod_op },
+        data: { estado: 'FINALIZADA' },
+      }),
 
+      prisma.obra.update({
+        where: { cod_obra: orden.cod_obra },
+        data: { estado: 'FINALIZADA' },
+      }),
+    ])
+
+    console.log(
+      `[NOTIFICACIÓN] La producción de la Obra #${orden.cod_obra} ha finalizado. Notificar a Coordinación.`,
+    )
+
+    return ordenActualizada
+  }
+}

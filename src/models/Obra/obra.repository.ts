@@ -57,11 +57,8 @@ export class ObraRepository {
   }
 
   async delete(id: number): Promise<obra> {
-    return await this.prisma.obra.update({
+    return await this.prisma.obra.delete({
       where: { cod_obra: id },
-      data: {
-        estado: 'Eliminada',
-      },
     })
   }
 

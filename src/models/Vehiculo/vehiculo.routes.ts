@@ -4,7 +4,7 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   createVehiculoSchema,
   updateVehiculoSchema,
-  idParamsSchema,
+  patenteParamsSchema,
 } from 'sigma-la-schemas'
 const vehiculoController = new VehiculoController()
 const vehiculoRouter = Router()
@@ -21,14 +21,18 @@ vehiculoRouter.post(
   },
 )
 
-vehiculoRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
-  vehiculoController.getOne(req, res)
-})
+vehiculoRouter.get(
+  '/:patente',
+  validate({ params: patenteParamsSchema }),
+  (req, res) => {
+    vehiculoController.getOne(req, res)
+  },
+)
 
 vehiculoRouter.put(
-  '/:id',
+  '/:patente',
   validate({
-    params: idParamsSchema,
+    params: patenteParamsSchema,
     body: updateVehiculoSchema,
   }),
   (req, res) => {
@@ -37,8 +41,8 @@ vehiculoRouter.put(
 )
 
 vehiculoRouter.delete(
-  '/:id',
-  validate({ params: idParamsSchema }),
+  '/:patente',
+  validate({ params: patenteParamsSchema }),
   (req, res) => {
     vehiculoController.remove(req, res)
   },

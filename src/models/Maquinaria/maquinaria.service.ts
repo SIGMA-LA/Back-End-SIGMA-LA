@@ -111,13 +111,7 @@ export class MaquinariaService {
     }
 
     // Validar estados permitidos
-    const estadosValidos = [
-      'DISPONIBLE',
-      'EN_USO',
-      'MANTENIMIENTO',
-      'REPARACION',
-      'FUERA_DE_SERVICIO',
-    ]
+    const estadosValidos = ['DISPONIBLE', 'NO DISPONIBLE']
     if (!estadosValidos.includes(estado)) {
       throw new Error(
         'Estado no válido. Estados permitidos: ' + estadosValidos.join(', '),

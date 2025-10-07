@@ -1,3 +1,1 @@
-cat > .husky/commit-msg << 'EOF'
 npx --no-install commitlint --edit $1
-EOF

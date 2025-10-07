@@ -19,7 +19,6 @@ export function authenticateJWT(
   }
   try {
     const user = jwt.verify(token, JWT_SECRET) as JwtPayload
-    // @ts-expect-error: req.user no está tipado en Express por defecto
     req.user = user
     next()
   } catch {

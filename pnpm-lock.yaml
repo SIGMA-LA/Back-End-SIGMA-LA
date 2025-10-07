@@ -45,8 +45,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0(cloudinary@2.7.0)
       sigma-la-schemas:
-        specifier: ^1.0.21
-        version: 1.0.21(typescript@5.9.2)
+        specifier: ^1.0.22
+        version: 1.0.22(typescript@5.9.2)
       valibot:
         specifier: ^1.1.0
         version: 1.1.0(typescript@5.9.2)
@@ -2083,10 +2083,10 @@ packages:
   side-channel@1.1.0:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
     engines: {node: '>= 0.4'}
-
-  sigma-la-schemas@1.0.21:
-    resolution: {integrity: sha512-qoTo3aZRTB6RzLClSGIqgrcDP4Yb2/6PmcG8pkqWXn+70yBsZ1IxwPjkO+LUTKFBsjokbdD2rUSebzSQ/WAH0A==}
-
+    
+  sigma-la-schemas@1.0.22:
+    resolution: {integrity: sha512-zS0vWak4yWEDOsMaeUAg3Ft9obN/uWrpi2f8iWxghGm+6XqdlTeoAEYcG9h1EzX1IJUQ/Cm1NMLtmd2sUDvnIg==}
+    
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
@@ -4761,7 +4761,7 @@ snapshots:
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
 
-  sigma-la-schemas@1.0.21(typescript@5.9.2):
+  sigma-la-schemas@1.0.22(typescript@5.9.2):
     dependencies:
       valibot: 1.1.0(typescript@5.9.2)
     transitivePeerDependencies:

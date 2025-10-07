@@ -167,6 +167,55 @@ export class VisitaService {
   async getVisitasByObra(cod_obra: number): Promise<visita[]> {
     return await this.visitaRepository.findByObra(cod_obra)
   }
+
+  /**
+   * Finaliza una visita, cambiando su estado a 'COMPLETADA'.
+   * Opcionalmente, actualiza las observaciones (para registrar medidas).
+   * @param {number} cod_visita - El código de la visita a finalizar.
+   * @param {string} [observaciones] - Las observaciones o medidas registradas.
+   * @returns {Promise<visita>} - La visita actualizada.
+   */
+  async finalizar(cod_visita: number, observaciones?: string): Promise<visita> {
+    const existingVisita = await this.visitaRepository.findById(cod_visita)
+    if (!existingVisita) {
+      throw new Error('Visita no encontrada')
+    }
+
+    const updateData: Prisma.visitaUpdateInput = {
+      estado: 'COMPLETADA',
+    }
+
+    if (observaciones) {
+      updateData.observaciones = observaciones
+    }
+
+    return await this.visitaRepository.update(cod_visita, updateData)
+  }
+
+  /**
+   * Cancela una visita, cambiando su estado a 'CANCELADA'.
+   * Registra la fecha de cancelación y actualiza las observaciones con el motivo.
+   * @param {number} cod_visita - El código de la visita a cancelar.
+   * @param {string} [motivo] - El motivo de la cancelación.
+   * @returns {Promise<visita>} - La visita actualizada.
+   */
+  async cancelar(cod_visita: number, motivo?: string): Promise<visita> {
+    const existingVisita = await this.visitaRepository.findById(cod_visita)
+    if (!existingVisita) {
+      throw new Error('Visita no encontrada')
+    }
+
+    const updateData: Prisma.visitaUpdateInput = {
+      estado: 'CANCELADA',
+      fecha_cancelacion: new Date(),
+    }
+
+    if (motivo) {
+      updateData.observaciones = `Visita cancelada: ${motivo}`
+    }
+
+    return await this.visitaRepository.update(cod_visita, updateData)
+  }
 }
 
 export const visitaService = new VisitaService()
