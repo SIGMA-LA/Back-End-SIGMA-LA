@@ -55,4 +55,12 @@ visitaRouter.get('/obra/:cod_obra', (req, res) => {
   visitaController.getVisitasByObra(req, res)
 })
 
+visitaRouter.patch('/:id/finalizar', (req, res) => {
+  visitaController.finalizarVisita(req, res)
+})
+
+visitaRouter.patch('/:id/cancelar', (req, res) => {
+  visitaController.cancelarVisita(req, res)
+})
+
 export default visitaRouter
