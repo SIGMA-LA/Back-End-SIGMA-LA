@@ -1,4 +1,3 @@
-cat > .husky/post-merge << 'EOF'
 echo "Ejecutando tareas post-merge..."
 
 if git diff HEAD~1 HEAD --name-only | grep -q "package.json"; then
@@ -38,4 +37,3 @@ if git diff HEAD~1 HEAD --name-only | grep -q ".env.example"; then
 fi
 
 echo "Tareas post-merge completadas."
-EOF
