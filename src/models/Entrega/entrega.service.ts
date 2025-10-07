@@ -1,5 +1,6 @@
 import { EntregaRepository } from './entrega.repository.js'
 import { entrega, Prisma } from '@prisma/client'
+import { MaquinariaService } from '../Maquinaria/maquinaria.service.js'
 
 /**
  * Servicio para manejar la lógica de negocio de entregas.
@@ -15,9 +16,11 @@ import { entrega, Prisma } from '@prisma/client'
 
 export class EntregaService {
   private entregaRepository: EntregaRepository
+  private maquinariaService: MaquinariaService
 
   constructor() {
     this.entregaRepository = new EntregaRepository()
+    this.maquinariaService = new MaquinariaService()
   }
 
   async create(data: {
@@ -28,9 +31,19 @@ export class EntregaService {
     observaciones?: string
     dias_viaticos?: number
     empleados: { cuil: string; rol_entrega: 'ENCARGADO' | 'AYUDANTE' }[]
+    maquinarias?: number[]
+    cod_op?: number
   }): Promise<entrega> {
-    const { empleados, cod_obra, ...entregaData } = data
+    const { empleados, cod_obra, maquinarias, cod_op, dias_viaticos, ...entregaData } = data
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
+
+    const diasDeUso = (dias_viaticos && dias_viaticos > 0) ? dias_viaticos : 1;
+    const horasDeUsoEnMs = diasDeUso * 24 * 60 * 60 * 1000;
+    const fechaFinEstimada = new Date(fechaParaPrisma.getTime() + horasDeUsoEnMs);
+
+    if (maquinarias && maquinarias.length > 0) {
+      await this.maquinariaService.verificarDisponibilidadMaquinarias(maquinarias, fechaParaPrisma, fechaFinEstimada);
+    }
 
     const payload: Prisma.entregaCreateInput = {
       detalle: entregaData.detalle,
@@ -48,6 +61,22 @@ export class EntregaService {
           obra: { connect: { cod_obra: cod_obra } },
         })),
       },
+      ...(maquinarias && maquinarias.length > 0 && {
+        uso_maquinaria: {
+          create: maquinarias.map(cod_maquina => ({
+            maquinaria: { connect: { cod_maquina: cod_maquina } },
+            fecha_hora_ini_uso: fechaParaPrisma,
+            fecha_hora_fin_est: fechaFinEstimada,
+            estado: 'EN USO',
+            obra: { connect: { cod_obra: cod_obra } },
+          })),
+        },
+      }),
+      ...(cod_op && {
+        orden_de_produccion: {
+          connect: { cod_op: cod_op },
+        },
+      }),
     }
 
     console.log('--- Payload final enviado a Prisma ---', JSON.stringify(payload, null, 2));

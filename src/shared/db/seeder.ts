@@ -136,12 +136,12 @@ async function seed() {
   await post(`${API_URL}/api/maquinarias`, {
     cod_maquina: 2,
     descripcion: 'Grua',
-    estado: 'EN_USO',
+    estado: 'DISPONIBLE',
   })
   await post(`${API_URL}/api/maquinarias`, {
     cod_maquina: 3,
     descripcion: 'Camión',
-    estado: 'FUERA DE SERVICIO',
+    estado: 'NO DISPONIBLE',
   })
 
   // Vehículos

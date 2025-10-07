@@ -20,18 +20,30 @@ export class EntregaRepository {
         obra: {
           include: {
             cliente: true,
+            localidad: true,
           },
         },
         entrega_empleado: {
           include: {
             empleado: {
               select: {
+                cuil: true,
                 nombre: true,
                 apellido: true,
               },
             },
           },
         },
+        uso_maquinaria: {
+          include: {
+            maquinaria: {
+              select: {
+                descripcion: true
+              }
+            }
+          }
+        },
+        orden_de_produccion: true,
       },
     })
   }

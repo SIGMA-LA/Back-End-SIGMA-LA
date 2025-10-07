@@ -2083,10 +2083,10 @@ packages:
   side-channel@1.1.0:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
     engines: {node: '>= 0.4'}
-
+    
   sigma-la-schemas@1.0.22:
     resolution: {integrity: sha512-zS0vWak4yWEDOsMaeUAg3Ft9obN/uWrpi2f8iWxghGm+6XqdlTeoAEYcG9h1EzX1IJUQ/Cm1NMLtmd2sUDvnIg==}
-
+    
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
