@@ -1,5 +1,6 @@
 import { EntregaRepository } from './entrega.repository.js'
 import { entrega, Prisma } from '@prisma/client'
+import { MaquinariaService } from '../Maquinaria/maquinaria.service.js'
 
 /**
  * Servicio para manejar la lógica de negocio de entregas.
@@ -15,9 +16,11 @@ import { entrega, Prisma } from '@prisma/client'
 
 export class EntregaService {
   private entregaRepository: EntregaRepository
+  private maquinariaService: MaquinariaService
 
   constructor() {
     this.entregaRepository = new EntregaRepository()
+    this.maquinariaService = new MaquinariaService()
   }
 
   async create(data: {
@@ -31,10 +34,16 @@ export class EntregaService {
     maquinarias?: number[]
     cod_op?: number
   }): Promise<entrega> {
-    const { empleados, cod_obra, maquinarias, cod_op, ...entregaData } = data
+    const { empleados, cod_obra, maquinarias, cod_op, dias_viaticos, ...entregaData } = data
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
 
-    const fechaFinEstimada = new Date(fechaParaPrisma.getTime() + 24 * 60 * 60 * 1000)
+    const diasDeUso = (dias_viaticos && dias_viaticos > 0) ? dias_viaticos : 1;
+    const horasDeUsoEnMs = diasDeUso * 24 * 60 * 60 * 1000;
+    const fechaFinEstimada = new Date(fechaParaPrisma.getTime() + horasDeUsoEnMs);
+
+    if (maquinarias && maquinarias.length > 0) {
+      await this.maquinariaService.verificarDisponibilidadMaquinarias(maquinarias, fechaParaPrisma, fechaFinEstimada);
+    }
 
     const payload: Prisma.entregaCreateInput = {
       detalle: entregaData.detalle,

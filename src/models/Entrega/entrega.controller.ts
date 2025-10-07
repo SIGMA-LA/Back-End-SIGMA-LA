@@ -17,8 +17,18 @@ const entregaService = new EntregaService()
 
 export class EntregaController {
   async create(req: Request, res: Response) {
-    const entrega = await entregaService.create(req.body)
-    res.status(201).json(entrega)
+    try {
+      const entrega = await entregaService.create(req.body)
+      res.status(201).json(entrega)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message.includes('Conflicto de horario')) {
+          return res.status(409).json({ message: error.message });
+        }
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: 'Error interno del servidor' });
+    }
   }
 
   async getAll(req: Request, res: Response) {

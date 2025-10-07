@@ -59,6 +59,19 @@ export class MaquinariaService {
     });
   }
 
+  async verificarDisponibilidadMaquinarias(maquinariaIds: number[], fechaInicio: Date, fechaFin: Date): Promise<void> {
+    if (maquinariaIds.length === 0) {
+      return;
+    }
+
+    const conflictos = await this.repository.findConflictingUsageForIds(maquinariaIds, fechaInicio, fechaFin);
+
+    if (conflictos.length > 0) {
+      const maquinasEnConflicto = conflictos.map(c => `'${c.maquinaria.descripcion}' (ID: ${c.cod_maquina})`).join(', ');
+      throw new Error(`Conflicto de horario. Las siguientes maquinarias ya están en uso en la fecha seleccionada: ${maquinasEnConflicto}`);
+    }
+  }
+
   async create(data: Prisma.maquinariaCreateInput): Promise<maquinaria> {
     // Establecer estado por defecto si no se proporciona
     const maquinariaData = {
