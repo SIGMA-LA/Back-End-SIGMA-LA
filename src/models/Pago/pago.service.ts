@@ -56,9 +56,16 @@ export class PagoService {
 
       const totalPagado = obra.pago.reduce((sum, p) => sum + p.monto, 0)
 
-      if (totalPagado > 0 && obra.estado !== 'FINALIZADA') {
+      if (totalPagado === 0) {
+        await tx.obra.update({
+          where: { cod_obra },
+          data: { estado: 'PAGADA PARCIALMENTE' },
+        })
+      }
+
+      if (totalPagado > 0 && obra.estado !== 'PRODUCCION FINALIZADA') {
         throw new Error(
-          'Solo se pueden registrar pagos finales si la obra está en estado "FINALIZADA".',
+          'Solo se pueden registrar pagos finales si la obra está en estado "PRODUCCION FINALIZADA".',
         )
       }
 
