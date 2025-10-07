@@ -1,6 +1,7 @@
 import { EntregaRepository } from './entrega.repository.js'
 import { entrega, Prisma } from '@prisma/client'
 import { MaquinariaService } from '../Maquinaria/maquinaria.service.js'
+import { prisma } from '../../shared/db/prismaClient.js'
 
 /**
  * Servicio para manejar la lógica de negocio de entregas.
@@ -34,23 +35,40 @@ export class EntregaService {
     maquinarias?: number[]
     cod_op?: number
   }): Promise<entrega> {
-    const { empleados, cod_obra, maquinarias, cod_op, dias_viaticos, ...entregaData } = data
+    const {
+      empleados,
+      cod_obra,
+      maquinarias,
+      cod_op,
+      dias_viaticos,
+      ...entregaData
+    } = data
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
 
-    const diasDeUso = (dias_viaticos && dias_viaticos > 0) ? dias_viaticos : 1;
-    const horasDeUsoEnMs = diasDeUso * 24 * 60 * 60 * 1000;
-    const fechaFinEstimada = new Date(fechaParaPrisma.getTime() + horasDeUsoEnMs);
+    const diasDeUso = dias_viaticos && dias_viaticos > 0 ? dias_viaticos : 1
+    const horasDeUsoEnMs = diasDeUso * 24 * 60 * 60 * 1000
+    const fechaFinEstimada = new Date(
+      fechaParaPrisma.getTime() + horasDeUsoEnMs,
+    )
 
     if (maquinarias && maquinarias.length > 0) {
-      await this.maquinariaService.verificarDisponibilidadMaquinarias(maquinarias, fechaParaPrisma, fechaFinEstimada);
+      await this.maquinariaService.verificarDisponibilidadMaquinarias(
+        maquinarias,
+        fechaParaPrisma,
+        fechaFinEstimada,
+      )
     }
 
     const payload: Prisma.entregaCreateInput = {
       detalle: entregaData.detalle,
       estado: entregaData.estado,
       fecha_hora_entrega: fechaParaPrisma,
-      ...(entregaData.observaciones && { observaciones: entregaData.observaciones }),
-      ...(data.dias_viaticos !== undefined && { dias_viaticos: data.dias_viaticos }),
+      ...(entregaData.observaciones && {
+        observaciones: entregaData.observaciones,
+      }),
+      ...(data.dias_viaticos !== undefined && {
+        dias_viaticos: data.dias_viaticos,
+      }),
       obra: {
         connect: { cod_obra: cod_obra },
       },
@@ -61,17 +79,18 @@ export class EntregaService {
           obra: { connect: { cod_obra: cod_obra } },
         })),
       },
-      ...(maquinarias && maquinarias.length > 0 && {
-        uso_maquinaria: {
-          create: maquinarias.map(cod_maquina => ({
-            maquinaria: { connect: { cod_maquina: cod_maquina } },
-            fecha_hora_ini_uso: fechaParaPrisma,
-            fecha_hora_fin_est: fechaFinEstimada,
-            estado: 'EN USO',
-            obra: { connect: { cod_obra: cod_obra } },
-          })),
-        },
-      }),
+      ...(maquinarias &&
+        maquinarias.length > 0 && {
+          uso_maquinaria: {
+            create: maquinarias.map(cod_maquina => ({
+              maquinaria: { connect: { cod_maquina: cod_maquina } },
+              fecha_hora_ini_uso: fechaParaPrisma,
+              fecha_hora_fin_est: fechaFinEstimada,
+              estado: 'EN USO',
+              obra: { connect: { cod_obra: cod_obra } },
+            })),
+          },
+        }),
       ...(cod_op && {
         orden_de_produccion: {
           connect: { cod_op: cod_op },
@@ -79,7 +98,10 @@ export class EntregaService {
       }),
     }
 
-    console.log('--- Payload final enviado a Prisma ---', JSON.stringify(payload, null, 2));
+    console.log(
+      '--- Payload final enviado a Prisma ---',
+      JSON.stringify(payload, null, 2),
+    )
     return this.entregaRepository.create(payload)
   }
 
@@ -111,5 +133,63 @@ export class EntregaService {
     estado: string,
   ): Promise<entrega[]> {
     return this.entregaRepository.getByEmpleadoEstado(cuil_empleado, estado)
+  }
+
+  async finalizar(
+    cod_entrega: number,
+    observaciones?: string,
+  ): Promise<entrega> {
+    const [entregaActualizada] = await prisma.$transaction(async tx => {
+      const entrega = await tx.entrega.update({
+        where: { cod_entrega },
+        data: {
+          estado: 'ENTREGADO',
+          ...(observaciones && { observaciones }),
+        },
+      })
+
+      await tx.uso_vehiculo_entrega.updateMany({
+        where: { cod_entrega: cod_entrega },
+        data: { fecha_hora_fin_real: new Date() },
+      })
+
+      const otrasEntregasPendientes = await tx.entrega.count({
+        where: {
+          cod_obra: entrega.cod_obra,
+          estado: 'PENDIENTE',
+        },
+      })
+
+      if (otrasEntregasPendientes === 0) {
+        await tx.obra.update({
+          where: { cod_obra: entrega.cod_obra },
+          data: { estado: 'ENTREGADA' },
+        })
+      }
+
+      return [entrega]
+    })
+
+    return entregaActualizada
+  }
+
+  async cancelar(cod_entrega: number, motivo?: string): Promise<entrega> {
+    const [entregaCancelada] = await prisma.$transaction(async tx => {
+      const entrega = await tx.entrega.update({
+        where: { cod_entrega: cod_entrega },
+        data: {
+          estado: 'CANCELADO',
+          ...(motivo && { observaciones: `Entrega cancelada: ${motivo}` }),
+        },
+      })
+
+      await tx.uso_vehiculo_entrega.deleteMany({
+        where: { cod_entrega: cod_entrega },
+      })
+
+      return [entrega]
+    })
+
+    return entregaCancelada
   }
 }

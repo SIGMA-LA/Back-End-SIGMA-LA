@@ -44,4 +44,12 @@ entregaRouter.delete(
   },
 )
 
+entregaRouter.patch('/:id/finalizar', (req, res) => {
+  entregaController.finalizarEntrega(req, res)
+})
+
+entregaRouter.patch('/:id/cancelar', (req, res) => {
+  entregaController.cancelarEntrega(req, res)
+})
+
 export default entregaRouter

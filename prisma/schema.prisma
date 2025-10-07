@@ -159,7 +159,7 @@ model uso_vehiculo_entrega {
   estado              String    @db.VarChar(50)
   cod_entrega         Int
   obraCod_obra        Int?
-  fecha_hora_ini_est  DateTime  @db.Timestamp(6)
+  fecha_hora_fin_est  DateTime  @db.Timestamp(6)
   entrega             entrega   @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
   obra                obra?     @relation(fields: [obraCod_obra], references: [cod_obra])
   vehiculo            vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)
@@ -198,6 +198,7 @@ model visita {
   estado              String                @db.VarChar(50)
   direccion_visita    String?               @db.VarChar(500)
   cod_visita          Int                   @id @default(autoincrement())
+  dias_viatico        Int?
   empleado_visita     empleado_visita[]
   uso_vehiculo_visita uso_vehiculo_visita[]
   obra                obra?                 @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
