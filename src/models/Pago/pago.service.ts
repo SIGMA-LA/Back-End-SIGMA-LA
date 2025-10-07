@@ -1,5 +1,6 @@
 import { pago, Prisma } from '@prisma/client'
 import { PagoRepository } from './pago.repository.js'
+import { prisma } from '../../shared/db/prismaClient.js'
 
 /**
  * Servicio para gestionar las operaciones relacionadas con los pagos.
@@ -23,18 +24,74 @@ export class PagoService {
     cod_obra: number,
     data: Omit<Prisma.pagoUncheckedCreateInput, 'cod_obra'>,
   ): Promise<pago> {
-    let fecha_pago = data.fecha_pago
-    if (
-      typeof fecha_pago === 'string' &&
-      /^\d{4}-\d{2}-\d{2}$/.test(fecha_pago)
-    ) {
-      fecha_pago = new Date(fecha_pago)
+    const nuevoMonto = Number(data.monto)
+
+    if (isNaN(nuevoMonto) || nuevoMonto <= 0) {
+      throw new Error(
+        'El monto del pago debe ser un número válido y mayor a cero.',
+      )
     }
-    return await this.repository.createForObra({
-      ...data,
-      cod_obra,
-      fecha_pago,
+
+    const pagoCreado = await prisma.$transaction(async tx => {
+      const obra = await tx.obra.findUnique({
+        where: { cod_obra },
+        include: { pago: true, presupuesto: true },
+      })
+
+      if (!obra) {
+        throw new Error('La obra no existe.')
+      }
+
+      const presupuestoAceptado = obra.presupuesto.find(
+        p => p.fecha_aceptacion !== null,
+      )
+
+      if (!presupuestoAceptado) {
+        throw new Error(
+          'No se puede registrar un pago. La obra no tiene un presupuesto aceptado.',
+        )
+      }
+
+      const totalPresupuestado = presupuestoAceptado.valor
+
+      const totalPagado = obra.pago.reduce((sum, p) => sum + p.monto, 0)
+
+      if (totalPagado > 0 && obra.estado !== 'FINALIZADA') {
+        throw new Error(
+          'Solo se pueden registrar pagos finales si la obra está en estado "FINALIZADA".',
+        )
+      }
+
+      const montoRestante = totalPresupuestado - totalPagado
+
+      if (nuevoMonto > montoRestante + 0.01) {
+        throw new Error(
+          `El monto del pago (${nuevoMonto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}) excede el saldo restante (${montoRestante.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}).`,
+        )
+      }
+
+      const nuevoPago = await tx.pago.create({
+        data: {
+          monto: nuevoMonto,
+          fecha_pago: new Date(),
+          obra: {
+            connect: { cod_obra: cod_obra },
+          },
+        },
+      })
+
+      const nuevoTotalPagado = totalPagado + nuevoMonto
+      if (nuevoTotalPagado >= totalPresupuestado - 0.01) {
+        await tx.obra.update({
+          where: { cod_obra },
+          data: { estado: 'PAGADA TOTALMENTE' },
+        })
+      }
+
+      return nuevoPago
     })
+
+    return pagoCreado
   }
 
   async createOne(data: Prisma.pagoCreateInput): Promise<pago> {
