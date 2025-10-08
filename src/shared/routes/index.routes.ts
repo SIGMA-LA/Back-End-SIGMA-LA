@@ -51,6 +51,7 @@ import visitaEmpleadoRouter from '../../models/VisitaEmpleado/visitaEmpleado.rou
 
 import authRouter from '../../models/Auth/auth.routes.js'
 import routeMid from '../../models/midlewareTest/mid.routes.js'
+import provinciaRouter from '../../models/Provincia/provincia.routes.js'
 
 router.use('/api/auth', authRouter)
 
@@ -72,6 +73,7 @@ router.use('/api/presupuestos', presupuestoRouter)
 router.use('/api/visitas', visitaRouter)
 router.use('/api/entrega-empleado', entregaEmpleadoRouter)
 router.use('/api/empleado-visita', visitaEmpleadoRouter)
+router.use('/api/provincias', provinciaRouter)
 
 router.use((req, res) => {
   res.status(404).json({

@@ -1,3 +1,5 @@
+import seedLocalidades from './localidadesSeeder'
+
 const API_URL = 'http://localhost:4000'
 
 async function post(url: string, data: Record<string, unknown>) {
@@ -14,69 +16,9 @@ async function post(url: string, data: Record<string, unknown>) {
 }
 
 async function seed() {
-  // Localidades
-  await post(`${API_URL}/api/localidades`, {
-    cod_postal: 2000,
-    nombre_localidad: 'Rosario',
-  })
-  await post(`${API_URL}/api/localidades`, {
-    cod_postal: 2200,
-    nombre_localidad: 'San Lorenzo',
-  })
-  await post(`${API_URL}/api/localidades`, {
-    cod_postal: 3000,
-    nombre_localidad: 'Santa Fe',
-  })
-  await post(`${API_URL}/api/localidades`, {
-    cod_postal: 1900,
-    nombre_localidad: 'La Plata',
-  })
-  await post(`${API_URL}/api/localidades`, {
-    cod_postal: 5000,
-    nombre_localidad: 'Córdoba',
-  })
-  await post(`${API_URL}/api/localidades`, {
-    cod_postal: 4000,
-    nombre_localidad: 'San Miguel de Tucumán',
-  })
 
-  // Clientes
-  await post(`${API_URL}/api/clientes`, {
-    cuil: '20111111111',
-    razon_social: 'Constructora San Martín S.A.',
-    telefono: '+54 9 11 1234 5678',
-    mail: 'contacto@constructorasanmartin.com.ar',
-  })
-  await post(`${API_URL}/api/clientes`, {
-    cuil: '20222222222',
-    razon_social: 'Edificaciones del Litoral S.R.L.',
-    telefono: '+54 9 11 1234 5678',
-    mail: 'ventas@edificacionesdellitoral.com.ar',
-  })
-  await post(`${API_URL}/api/clientes`, {
-    cuil: '20333333333',
-    razon_social: 'Desarrollos Urbanos Santa Fe S.A.',
-    telefono: '+54 9 11 1234 5678',
-    mail: 'proyectos@desarrollosurbanos.com.ar',
-  })
-  await post(`${API_URL}/api/clientes`, {
-    cuil: '20444444444',
-    razon_social: 'Inmobiliaria La Plata S.A.',
-    telefono: '+54 9 11 1234 5678',
-    mail: 'info@inmobiliarialaplata.com.ar',
-  })
-  await post(`${API_URL}/api/clientes`, {
-    cuil: '20555555555',
-    razon_social: 'Construcciones Córdoba Norte S.R.L.',
-    telefono: '+54 9 11 1234 5678',
-    mail: 'administracion@cordobanorte.com.ar',
-  })
-  await post(`${API_URL}/api/clientes`, {
-    cuil: '20666666666',
-    razon_social: 'Grupo Constructor Tucumán S.A.',
-    telefono: '+54 9 11 1234 5678',
-    mail: 'gerencia@constructortucuman.com.ar',
-  })
+  //Provincias y Localidades
+  seedLocalidades()
 
   // Empleados - Roles únicos
   const roles = ['ADMIN', 'COORDINACION', 'VISITADOR', 'VENTAS', 'PRODUCCION']

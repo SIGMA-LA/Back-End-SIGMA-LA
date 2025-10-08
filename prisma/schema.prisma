@@ -8,10 +8,14 @@ datasource db {
 }
 
 model cliente {
-  cuil         String @id
-  razon_social String @db.VarChar(50)
-  telefono     String @db.VarChar(20)
-  mail         String @db.VarChar(100)
+  cuil         String  @id
+  razon_social String? @db.VarChar(50)
+  telefono     String  @db.VarChar(20)
+  mail         String  @db.VarChar(100)
+  apellido     String? @db.VarChar(50)
+  nombre       String? @db.VarChar(50)
+  sexo         String? @db.VarChar(20)
+  tipo_cliente String  @db.VarChar(50)
   obra         obra[]
 }
 
@@ -67,6 +71,7 @@ model entrega_empleado {
 model localidad {
   cod_postal       Int      @id
   nombre_localidad String   @db.VarChar(255)
+  provincia        
   obra             obra[]
   visita           visita[]
 }
@@ -142,7 +147,6 @@ model uso_maquinaria {
   fecha_hora_ini_uso  DateTime   @db.Timestamp(6)
   fecha_hora_fin_est  DateTime   @db.Timestamp(6)
   fecha_hora_fin_real DateTime?  @db.Timestamp(6)
-  estado              String     @db.VarChar(50)
   cod_entrega         Int
   obraCod_obra        Int?
   entrega             entrega    @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
@@ -156,7 +160,6 @@ model uso_vehiculo_entrega {
   patente             String    @db.VarChar(10)
   fecha_hora_ini_uso  DateTime  @db.Timestamp(6)
   fecha_hora_fin_real DateTime? @db.Timestamp(6)
-  estado              String    @db.VarChar(50)
   cod_entrega         Int
   obraCod_obra        Int?
   fecha_hora_fin_est  DateTime  @db.Timestamp(6)
@@ -172,7 +175,6 @@ model uso_vehiculo_visita {
   fecha_hora_ini_uso  DateTime  @db.Timestamp(6)
   fecha_hora_fin_est  DateTime  @db.Timestamp(6)
   fecha_hora_fin_real DateTime? @db.Timestamp(6)
-  estado              String    @db.VarChar(50)
   cod_visita          Int
   visita              visita    @relation(fields: [cod_visita], references: [cod_visita], onDelete: NoAction, onUpdate: NoAction)
   vehiculo            vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)
@@ -184,6 +186,9 @@ model vehiculo {
   patente              String                 @id @db.VarChar(10)
   tipo_vehiculo        String                 @db.VarChar(50)
   estado               String                 @db.VarChar(50)
+  anio                 Int?
+  marca                String?                @db.VarChar(50)
+  modelo               String?                @db.VarChar(50)
   uso_vehiculo_entrega uso_vehiculo_entrega[]
   uso_vehiculo_visita  uso_vehiculo_visita[]
 }
@@ -199,6 +204,9 @@ model visita {
   direccion_visita    String?               @db.VarChar(500)
   cod_visita          Int                   @id @default(autoincrement())
   dias_viatico        Int?
+  apellido_cliente    String?               @db.VarChar(50)
+  nombre_cliente      String?               @db.VarChar(50)
+  telefono_cliente    String?               @db.VarChar(20)
   empleado_visita     empleado_visita[]
   uso_vehiculo_visita uso_vehiculo_visita[]
   obra                obra?                 @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
