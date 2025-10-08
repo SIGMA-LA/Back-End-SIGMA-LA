@@ -106,7 +106,7 @@ async function seed() {
   // Obras
   await post(`${API_URL}/api/obras`, {
     cod_obra: 1,
-    cod_postal: 2000,
+    cod_localidad: 2000,
     cuil: '20111111111',
     fecha_ini: '2025-09-01',
     estado: 'ACTIVA',
@@ -117,7 +117,7 @@ async function seed() {
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 2,
-    cod_postal: 2200,
+    cod_localidad: 2200,
     cuil: '20222222222',
     fecha_ini: '2025-09-02',
     estado: 'ACTIVA',
@@ -127,7 +127,7 @@ async function seed() {
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 3,
-    cod_postal: 3000,
+    cod_localidad: 3000,
     cuil: '20333333333',
     fecha_ini: '2025-09-03',
     estado: 'ACTIVA',
@@ -137,7 +137,7 @@ async function seed() {
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 4,
-    cod_postal: 1900,
+    cod_localidad: 1900,
     cuil: '20444444444',
     fecha_ini: '2025-09-04',
     estado: 'ACTIVA',
@@ -147,7 +147,7 @@ async function seed() {
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 5,
-    cod_postal: 5000,
+    cod_localidad: 5000,
     cuil: '20555555555',
     fecha_ini: '2025-09-05',
     estado: 'ACTIVA',
@@ -158,7 +158,7 @@ async function seed() {
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 6,
-    cod_postal: 4000,
+    cod_localidad: 4000,
     cuil: '20666666666',
     fecha_ini: '2025-09-06',
     estado: 'ACTIVA',

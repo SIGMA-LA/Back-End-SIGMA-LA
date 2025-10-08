@@ -82,7 +82,7 @@ export class EntregaRepository {
             cod_obra: true,
             direccion: true,
             localidad: {
-              select: { cod_postal: true, nombre_localidad: true },
+              select: { cod_localidad: true, nombre_localidad: true },
             },
             cliente: {
               select: {

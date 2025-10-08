@@ -20,25 +20,25 @@ export class LocalidadRepository {
     })
   }
 
-  async findById(cod_postal: number): Promise<localidad | null> {
+  async findById(cod_localidad: number): Promise<localidad | null> {
     return await this.prisma.localidad.findUnique({
-      where: { cod_postal },
+      where: { cod_localidad },
     })
   }
 
   async update(
-    cod_postal: number,
+    cod_localidad: number,
     data: Prisma.localidadUpdateInput,
   ): Promise<localidad> {
     return await this.prisma.localidad.update({
-      where: { cod_postal },
+      where: { cod_localidad },
       data,
     })
   }
 
-  async delete(cod_postal: number): Promise<localidad> {
+  async delete(cod_localidad: number): Promise<localidad> {
     return await this.prisma.localidad.delete({
-      where: { cod_postal },
+      where: { cod_localidad },
     })
   }
 }
