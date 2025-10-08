@@ -57,7 +57,7 @@ export default async function seedLocalidades() {
   // Crear provincias
   for (const provincia of provincias) {
     try {
-      await post(`${API_URL}/api/provincias`, {cod: provincia.cod, nombre: provincia.nombre})
+      await post(`${API_URL}/api/provincias`, {cod_provincia: provincia.cod, nombre: provincia.nombre})
     } catch (error) {
       console.error(`Error al crear provincia ${provincia.nombre}:`, error)
     }
@@ -88,8 +88,8 @@ export default async function seedLocalidades() {
     if (idProvincia !== undefined && nombreLocalidad) {
       try {
         await post(`${API_URL}/api/localidades`, {
-          cod_provincia: idProvincia,
-          nombre: nombreLocalidad.trim()
+          cod_localidad: idProvincia,
+          nombre_localidad: nombreLocalidad.trim()
         })
       } catch (error) {
         console.error(`✗ Error al crear ${nombreLocalidad}:`, error)
