@@ -68,10 +68,17 @@ model entrega_empleado {
   @@id([cod_entrega, cuil])
 }
 
+model provincia {
+  cod_provincia Int         @id
+  nombre        String      @db.VarChar(30)
+  localidad     localidad[]
+}
+
 model localidad {
-  cod_postal       Int      @id
-  nombre_localidad String   @db.VarChar(255)
-  provincia        
+  nombre_localidad String    @db.VarChar(255)
+  cod_localidad    Int       @id
+  cod_provincia    Int
+  provincia        provincia @relation(fields: [cod_provincia], references: [cod_provincia], onDelete: NoAction, onUpdate: NoAction)
   obra             obra[]
   visita           visita[]
 }
@@ -85,7 +92,6 @@ model maquinaria {
 
 model obra {
   cod_obra             Int                    @id @default(autoincrement())
-  cod_postal           Int
   cuil                 String
   fecha_ini            DateTime               @db.Date
   estado               String                 @db.VarChar(50)
@@ -93,9 +99,10 @@ model obra {
   direccion            String                 @db.VarChar(500)
   nota_fabrica         String?                @db.VarChar(255)
   nota_fabrica_pid     String?                @db.VarChar(255)
+  cod_localidad        Int
   entrega              entrega[]
   entrega_empleado     entrega_empleado[]
-  localidad            localidad              @relation(fields: [cod_postal], references: [cod_postal], onDelete: NoAction, onUpdate: NoAction)
+  localidad            localidad              @relation(fields: [cod_localidad], references: [cod_localidad], onDelete: NoAction, onUpdate: NoAction)
   cliente              cliente                @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
   orden_de_produccion  orden_de_produccion[]
   pago                 pago[]
@@ -196,23 +203,23 @@ model vehiculo {
 model visita {
   fecha_hora_visita   DateTime              @db.Timestamp(6)
   cod_obra            Int?
-  cod_postal          Int?
   fecha_cancelacion   DateTime?             @db.Date
   observaciones       String?               @db.VarChar(500)
   motivo_visita       String                @db.VarChar(50)
   estado              String                @db.VarChar(50)
   direccion_visita    String?               @db.VarChar(500)
   cod_visita          Int                   @id @default(autoincrement())
-  dias_viatico        Int?
   apellido_cliente    String?               @db.VarChar(50)
+  cod_localidad       Int?
+  dias_viatico        Int?
   nombre_cliente      String?               @db.VarChar(50)
   telefono_cliente    String?               @db.VarChar(20)
   empleado_visita     empleado_visita[]
   uso_vehiculo_visita uso_vehiculo_visita[]
+  localidad           localidad?            @relation(fields: [cod_localidad], references: [cod_localidad], onDelete: NoAction, onUpdate: NoAction)
   obra                obra?                 @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
-  localidad           localidad?            @relation(fields: [cod_postal], references: [cod_postal], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([cod_obra])
-  @@index([cod_postal])
+  @@index([cod_localidad])
   @@index([fecha_hora_visita])
 }
