@@ -189,7 +189,7 @@ export class VisitaRepository {
         },
         localidad: {
           select: {
-            cod_postal: true,
+            cod_localidad: true,
             nombre_localidad: true,
           },
         },
@@ -236,7 +236,7 @@ export class VisitaRepository {
         },
         localidad: {
           select: {
-            cod_postal: true,
+            cod_localidad: true,
             nombre_localidad: true,
           },
         },

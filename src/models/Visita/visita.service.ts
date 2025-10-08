@@ -26,7 +26,7 @@ export class VisitaService {
   async create(data: {
     fecha_hora_visita: string
     cod_obra?: number
-    cod_postal?: number
+    cod_localidad?: number
     motivo_visita: string
     estado: string
     observaciones?: string
@@ -49,9 +49,14 @@ export class VisitaService {
     }
 
     // Conectar localidad si se proporciona
-    if (data.cod_postal) {
+    if (data.cod_localidad
+
+    ) {
       createData.localidad = {
-        connect: { cod_postal: data.cod_postal },
+        connect: { cod_localidad
+    : data.cod_localidad
+    
+         },
       }
     }
 
@@ -74,7 +79,8 @@ export class VisitaService {
     data: {
       fecha_hora_visita?: string
       cod_obra?: number
-      cod_postal?: number
+      cod_localidad
+?: number
       motivo_visita?: string
       estado?: string
       observaciones?: string
@@ -90,7 +96,8 @@ export class VisitaService {
     // Separar los campos que necesitan conectores de los campos simples
     const {
       cod_obra,
-      cod_postal,
+      cod_localidad
+,
       fecha_hora_visita,
       fecha_cancelacion,
       ...simpleFields
@@ -116,11 +123,15 @@ export class VisitaService {
     }
 
     // Conectar localidad si se proporciona
-    if (cod_postal !== undefined) {
-      if (cod_postal === null) {
+    if (cod_localidad
+ !== undefined) {
+      if (cod_localidad
+   === null) {
         updateData.localidad = { disconnect: true }
       } else {
-        updateData.localidad = { connect: { cod_postal } }
+        updateData.localidad = { connect: { cod_localidad
+    
+         } }
       }
     }
 
