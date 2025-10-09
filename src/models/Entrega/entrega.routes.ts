@@ -1,11 +1,7 @@
 import { Router } from 'express'
 import { EntregaController } from './entrega.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
-import {
-  createEntregaSchema,
-  updateEntregaSchema,
-  idParamsSchema,
-} from 'sigma-la-schemas'
+import { updateEntregaSchema, idParamsSchema } from 'sigma-la-schemas'
 const entregaController = new EntregaController()
 const entregaRouter = Router()
 
@@ -17,7 +13,7 @@ entregaRouter.get('/:cuil_empleado/:estado', (req, res) => {
   entregaController.getEntregasByEmpleadoEstado(req, res)
 })
 
-entregaRouter.post('/', validate({ body: createEntregaSchema }), (req, res) => {
+entregaRouter.post('/', (req, res) => {
   entregaController.create(req, res)
 })
 

@@ -1,11 +1,7 @@
 import { Router } from 'express'
 import { LocalidadController } from './localidad.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
-import {
-  createLocalidadSchema,
-  updateLocalidadSchema,
-  idParamsSchema,
-} from 'sigma-la-schemas'
+import { updateLocalidadSchema, idParamsSchema } from 'sigma-la-schemas'
 
 const localidadController = new LocalidadController()
 const localidadRouter = Router()
@@ -14,13 +10,9 @@ localidadRouter.get('/', (req, res) => {
   localidadController.getAll(req, res)
 })
 
-localidadRouter.post(
-  '/',
-  validate({ body: createLocalidadSchema }),
-  (req, res) => {
-    localidadController.create(req, res)
-  },
-)
+localidadRouter.post('/', (req, res) => {
+  localidadController.create(req, res)
+})
 
 localidadRouter.get(
   '/:id',

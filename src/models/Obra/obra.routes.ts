@@ -5,11 +5,7 @@ import {
   upload,
   deleteUploadedFile,
 } from '../../shared/middlewares/upload.middleware.js'
-import {
-  createObraSchema,
-  updateObraSchema,
-  idParamsSchema,
-} from 'sigma-la-schemas'
+import { updateObraSchema, idParamsSchema } from 'sigma-la-schemas'
 
 const obraController = new ObraController()
 const obraRouter = Router()
@@ -50,7 +46,7 @@ obraRouter.get('/notas-con-orden-proceso', (req, res) => {
   obraController.getNotasConOrdenEnProceso(req, res)
 })
 
-obraRouter.post('/', validate({ body: createObraSchema }), (req, res) => {
+obraRouter.post('/', (req, res) => {
   obraController.create(req, res)
 })
 
