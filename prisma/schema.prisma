@@ -76,7 +76,7 @@ model provincia {
 
 model localidad {
   nombre_localidad String    @db.VarChar(255)
-  cod_localidad    Int       @id
+  cod_localidad    Int       @id @default(autoincrement())
   cod_provincia    Int
   provincia        provincia @relation(fields: [cod_provincia], references: [cod_provincia], onDelete: NoAction, onUpdate: NoAction)
   obra             obra[]

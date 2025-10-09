@@ -1,6 +1,27 @@
-import seedLocalidades from './localidadesSeeder'
-
 const API_URL = 'http://localhost:4000'
+
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+async function dropDataBase() {
+  await prisma.cliente.deleteMany()
+  await prisma.empleado.deleteMany()
+  await prisma.maquinaria.deleteMany()
+  await prisma.vehiculo.deleteMany()
+  await prisma.entrega.deleteMany()
+  await prisma.visita.deleteMany()
+  await prisma.orden_de_produccion.deleteMany()
+  await prisma.obra.deleteMany()
+  await prisma.parametro.deleteMany()
+  await prisma.pago.deleteMany()
+  await prisma.presupuesto.deleteMany()
+  await prisma.uso_maquinaria.deleteMany()
+  await prisma.uso_vehiculo_entrega.deleteMany()
+  await prisma.uso_vehiculo_visita.deleteMany()
+  await prisma.entrega_empleado.deleteMany()
+  await prisma.empleado_visita.deleteMany()
+}
 
 async function post(url: string, data: Record<string, unknown>) {
   const res = await fetch(url, {
@@ -16,9 +37,7 @@ async function post(url: string, data: Record<string, unknown>) {
 }
 
 async function seed() {
-
   //Provincias y Localidades
-  seedLocalidades()
 
   // Empleados - Roles únicos
   const roles = ['ADMIN', 'COORDINACION', 'VISITADOR', 'VENTAS', 'PRODUCCION']
@@ -36,7 +55,7 @@ async function seed() {
       nombre: roles[i].charAt(0) + roles[i].slice(1).toLowerCase(),
       apellido: 'Test',
       rol_actual: roles[i],
-      area_trabajo: areas[i], // Ahora nunca será undefined
+      area_trabajo: areas[i],
       contrasenia: 'test1234',
     })
   }
@@ -109,7 +128,7 @@ async function seed() {
     cod_localidad: 2000,
     cuil: '20111111111',
     fecha_ini: '2025-09-01',
-    estado: 'ACTIVA',
+    estado: 'EN PRODUCCION',
     direccion: 'Av. Pellegrini 1250, Rosario',
     nota_fabrica:
       'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
@@ -120,7 +139,7 @@ async function seed() {
     cod_localidad: 2200,
     cuil: '20222222222',
     fecha_ini: '2025-09-02',
-    estado: 'ACTIVA',
+    estado: 'EN PRODUCCION',
     direccion: 'Av. San Martín 850, San Lorenzo',
     nota_fabrica: null,
     nota_fabrica_pid: null,
@@ -130,7 +149,7 @@ async function seed() {
     cod_localidad: 3000,
     cuil: '20333333333',
     fecha_ini: '2025-09-03',
-    estado: 'ACTIVA',
+    estado: 'EN PRODUCCION',
     direccion: 'Bv. Gálvez 1680, Santa Fe',
     nota_fabrica: null,
     nota_fabrica_pid: null,
@@ -140,7 +159,7 @@ async function seed() {
     cod_localidad: 1900,
     cuil: '20444444444',
     fecha_ini: '2025-09-04',
-    estado: 'ACTIVA',
+    estado: 'EN PRODUCCION',
     direccion: 'Calle 7 entre 47 y 48, La Plata',
     nota_fabrica: null,
     nota_fabrica_pid: null,
@@ -150,7 +169,7 @@ async function seed() {
     cod_localidad: 5000,
     cuil: '20555555555',
     fecha_ini: '2025-09-05',
-    estado: 'ACTIVA',
+    estado: 'EN PRODUCCION',
     direccion: 'Av. Colón 4500, Córdoba',
     nota_fabrica:
       'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
@@ -161,7 +180,7 @@ async function seed() {
     cod_localidad: 4000,
     cuil: '20666666666',
     fecha_ini: '2025-09-06',
-    estado: 'ACTIVA',
+    estado: 'EN PRODUCCION',
     direccion: 'Av. Aconquija 1200, San Miguel de Tucumán',
     nota_fabrica:
       'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
@@ -586,7 +605,7 @@ async function seed() {
     viatico_dia_persona: 800,
   })
 }
-
+await dropDataBase().then(() => console.log('Base de datos limpiada'))
 seed()
   .then(() => console.log('Seed completado con éxito'))
   .catch(e => console.error('Error en seed:', e))
