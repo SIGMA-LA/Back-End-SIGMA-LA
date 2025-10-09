@@ -18,6 +18,9 @@ export class ObraService {
   constructor() {
     this.repository = new ObraRepository()
   }
+  async buscar(q: string) {
+    return this.repository.buscar(q)
+  }
 
   async create(data: Prisma.obraCreateInput): Promise<obra> {
     if (

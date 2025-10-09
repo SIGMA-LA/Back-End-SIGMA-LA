@@ -86,6 +86,23 @@ export class ObraRepository {
       },
     })
   }
+  async buscar(q: string) {
+    return this.prisma.obra.findMany({
+      where: {
+        OR: [
+          { direccion: { contains: q, mode: 'insensitive' } },
+          { cliente: { razon_social: { contains: q, mode: 'insensitive' } } },
+          { cliente: { nombre: { contains: q, mode: 'insensitive' } } },
+          { cliente: { apellido: { contains: q, mode: 'insensitive' } } },
+        ],
+      },
+      include: {
+        cliente: true,
+      },
+      orderBy: { cod_obra: 'desc' },
+      take: 10,
+    })
+  }
 
   async findNotasConOrdenEnProceso(): Promise<obra[]> {
     return await this.prisma.obra.findMany({

@@ -10,6 +10,9 @@ import { updateObraSchema, idParamsSchema } from 'sigma-la-schemas'
 const obraController = new ObraController()
 const obraRouter = Router()
 
+obraRouter.get('/buscar', (req, res) => {
+  obraController.buscar(req, res)
+})
 obraRouter.get('/', (req, res) => {
   obraController.getAll(req, res)
 })

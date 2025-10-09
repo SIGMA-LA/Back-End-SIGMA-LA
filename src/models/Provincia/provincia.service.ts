@@ -7,6 +7,9 @@ export class ProvinciaService {
   constructor() {
     this.repository = new ProvinciaRepository()
   }
+  async findById(cod_provincia: number): Promise<provincia | null> {
+    return await this.repository.findById(cod_provincia)
+  }
 
   async create(data: Prisma.provinciaCreateInput): Promise<provincia> {
     return await this.repository.create(data)
@@ -15,5 +18,4 @@ export class ProvinciaService {
   async findAll(): Promise<provincia[]> {
     return await this.repository.findAll()
   }
-
 }

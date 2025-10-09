@@ -8,11 +8,12 @@ provinciaRouter.get('/', (req, res) => {
   provinciaController.getAll(req, res)
 })
 
-provinciaRouter.post(
-  '/',
-  (req, res) => {
-    provinciaController.create(req, res)
-  },
-)
+provinciaRouter.get('/:id', (req, res) => {
+  provinciaController.getOne(req, res)
+})
+
+provinciaRouter.post('/', (req, res) => {
+  provinciaController.create(req, res)
+})
 
 export default provinciaRouter

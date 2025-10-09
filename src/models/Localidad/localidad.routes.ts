@@ -6,6 +6,11 @@ import { updateLocalidadSchema, idParamsSchema } from 'sigma-la-schemas'
 const localidadController = new LocalidadController()
 const localidadRouter = Router()
 
+localidadRouter.get('/provincias/:provinciaId', (req, res) => {
+  const provinciaId = parseInt(req.params.provinciaId, 10)
+  localidadController.getByProvincia(provinciaId, req, res)
+})
+
 localidadRouter.get('/', (req, res) => {
   localidadController.getAll(req, res)
 })
