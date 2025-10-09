@@ -21,6 +21,9 @@ export class ObraService {
   async buscar(q: string) {
     return this.repository.buscar(q)
   }
+  async filtrar(filtros: { estado?: string; cod_localidad?: number }) {
+    return this.repository.filtrar(filtros)
+  }
 
   async create(data: Prisma.obraCreateInput): Promise<obra> {
     if (

@@ -29,6 +29,29 @@ export class ObraController {
     }
   }
 
+  async filtrar(req: Request, res: Response) {
+    try {
+      const { estado, localidad } = req.query
+      const obras = await obraService.filtrar({
+        estado: estado as string | undefined,
+        cod_localidad: localidad ? Number(localidad) : undefined,
+      })
+      res.json(obras)
+    } catch (error) {
+      res.status(500).json({ message: 'Error al filtrar obras', error })
+    }
+  }
+
+  async buscar(req: Request, res: Response) {
+    try {
+      const q = req.query.q as string
+      const obras = await obraService.buscar(q)
+      res.json(obras)
+    } catch (error) {
+      res.status(500).json({ message: 'Error al buscar obras', error })
+    }
+  }
+
   async getAll(req: Request, res: Response) {
     const obras = await obraService.findAll()
     res.status(201).json(obras)
