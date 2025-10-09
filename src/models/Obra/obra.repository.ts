@@ -24,6 +24,22 @@ export class ObraRepository {
       },
     })
   }
+  async filtrar({
+    estado,
+    cod_localidad,
+  }: {
+    estado?: string
+    cod_localidad?: number
+  }) {
+    return this.prisma.obra.findMany({
+      where: {
+        ...(estado && { estado }),
+        ...(cod_localidad && { cod_localidad }),
+      },
+      include: { cliente: true, localidad: true },
+      orderBy: { cod_obra: 'desc' },
+    })
+  }
 
   async findById(id: number): Promise<obra | null> {
     return await this.prisma.obra.findUnique({

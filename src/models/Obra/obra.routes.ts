@@ -10,13 +10,26 @@ import { updateObraSchema, idParamsSchema } from 'sigma-la-schemas'
 const obraController = new ObraController()
 const obraRouter = Router()
 
+// ----------- FILTROS Y BÚSQUEDAS -----------
+
+// Filtrar obras por estado o localidad
+obraRouter.get('/filtrar', (req, res) => {
+  obraController.filtrar(req, res)
+})
+
+// Buscar obras por texto (dirección, cliente, etc.)
 obraRouter.get('/buscar', (req, res) => {
   obraController.buscar(req, res)
 })
+
+// Obtener todas las obras
 obraRouter.get('/', (req, res) => {
   obraController.getAll(req, res)
 })
 
+// ----------- NOTA DE FÁBRICA -----------
+
+// Subir nota de fábrica a una obra
 obraRouter.post('/:id/nota-fabrica', (req, res) => {
   upload.single('file')(req, res, err => {
     if (err) {
@@ -28,6 +41,7 @@ obraRouter.post('/:id/nota-fabrica', (req, res) => {
   })
 })
 
+// Eliminar nota de fábrica de una obra
 obraRouter.delete('/:id/nota-fabrica', (req, res) => {
   validate({ params: idParamsSchema })(req, res, async () => {
     const id = parseInt(req.params.id, 10)
@@ -35,28 +49,34 @@ obraRouter.delete('/:id/nota-fabrica', (req, res) => {
     if (!obra) {
       return res.status(404).json({ message: 'Obra no encontrada' })
     }
-
     await deleteUploadedFile(obra.nota_fabrica_pid?.toString() || '')
     obraController.deleteNotaFabrica(req, res)
   })
 })
 
+// Obtener obras con nota de fábrica sin orden aprobada
 obraRouter.get('/notas-sin-orden-aprobada', (req, res) => {
   obraController.getNotasSinOrdenAprobada(req, res)
 })
 
+// Obtener obras con nota de fábrica y orden en proceso
 obraRouter.get('/notas-con-orden-proceso', (req, res) => {
   obraController.getNotasConOrdenEnProceso(req, res)
 })
 
+// ----------- CRUD DE OBRAS -----------
+
+// Crear una nueva obra
 obraRouter.post('/', (req, res) => {
   obraController.create(req, res)
 })
 
+// Obtener una obra por ID
 obraRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
   obraController.getOne(req, res)
 })
 
+// Actualizar una obra por ID
 obraRouter.put(
   '/:id',
   validate({
@@ -68,6 +88,7 @@ obraRouter.put(
   },
 )
 
+// Eliminar una obra por ID
 obraRouter.delete('/:id', (req, res) => {
   validate({ params: idParamsSchema })(req, res, () => {})
   obraController.remove(req, res)

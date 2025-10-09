@@ -19,6 +19,20 @@ export class ObraController {
     const nueva = await obraService.create(req.body)
     res.status(201).json(nueva)
   }
+
+  async filtrar(req: Request, res: Response) {
+    try {
+      const { estado, localidad } = req.query
+      const obras = await obraService.filtrar({
+        estado: estado as string | undefined,
+        cod_localidad: localidad ? Number(localidad) : undefined,
+      })
+      res.json(obras)
+    } catch (error) {
+      res.status(500).json({ message: 'Error al filtrar obras', error })
+    }
+  }
+
   async buscar(req: Request, res: Response) {
     try {
       const q = req.query.q as string
