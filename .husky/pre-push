@@ -1,4 +1,3 @@
-cat > .husky/pre-push << 'EOF'
 echo "Ejecutando verificaciones previas al push..."
 
 echo "Ejecutando tests..."
@@ -18,4 +17,3 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Todas las verificaciones completadas. Procediendo con el push..."
-EOF

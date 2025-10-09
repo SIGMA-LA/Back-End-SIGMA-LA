@@ -1,11 +1,7 @@
 import { Router } from 'express'
 import { VisitaController } from './visita.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
-import {
-  createVisitaSchema,
-  updateVisitaSchema,
-  idParamsSchema,
-} from 'sigma-la-schemas'
+import { updateVisitaSchema, idParamsSchema } from 'sigma-la-schemas'
 
 const visitaController = new VisitaController()
 const visitaRouter = Router()
@@ -14,7 +10,7 @@ visitaRouter.get('/', (req, res) => {
   visitaController.getAll(req, res)
 })
 
-visitaRouter.post('/', validate({ body: createVisitaSchema }), (req, res) => {
+visitaRouter.post('/', (req, res) => {
   visitaController.create(req, res)
 })
 

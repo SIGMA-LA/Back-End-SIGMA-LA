@@ -1,4 +1,9 @@
-import { PrismaClient, maquinaria, Prisma } from '@prisma/client'
+import {
+  PrismaClient,
+  maquinaria,
+  Prisma,
+  uso_maquinaria,
+} from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
 
 export class MaquinariaRepository {
@@ -20,7 +25,11 @@ export class MaquinariaRepository {
     })
   }
 
-  async findConflictingUsageForIds(maquinariaIds: number[], fechaInicio: Date, fechaFin: Date) {
+  async findConflictingUsageForIds(
+    maquinariaIds: number[],
+    fechaInicio: Date,
+    fechaFin: Date,
+  ) {
     return await this.prisma.uso_maquinaria.findMany({
       where: {
         cod_maquina: {
@@ -41,8 +50,10 @@ export class MaquinariaRepository {
     })
   }
 
-
-  async findAllWithUsageInRange(fechaInicio: Date, fechaFin: Date): Promise<(maquinaria & { uso_maquinaria: any[] })[]> {
+  async findAllWithUsageInRange(
+    fechaInicio: Date,
+    fechaFin: Date,
+  ): Promise<(maquinaria & { uso_maquinaria: uso_maquinaria[] })[]> {
     return await this.prisma.maquinaria.findMany({
       include: {
         uso_maquinaria: {

@@ -1,11 +1,7 @@
 import { Router } from 'express'
 import { ClienteController } from './cliente.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
-import {
-  createClienteSchema,
-  updateClienteSchema,
-  cuilParamsSchema,
-} from 'sigma-la-schemas'
+import { updateClienteSchema, cuilParamsSchema } from 'sigma-la-schemas'
 
 const clienteController = new ClienteController()
 const clienteRouter = Router()
@@ -14,7 +10,7 @@ clienteRouter.get('/', (req, res) => {
   clienteController.getAll(req, res)
 })
 
-clienteRouter.post('/', validate({ body: createClienteSchema }), (req, res) => {
+clienteRouter.post('/', (req, res) => {
   clienteController.create(req, res)
 })
 
