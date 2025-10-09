@@ -19,6 +19,10 @@ export class LocalidadController {
     const localidad = await localidadService.create(req.body)
     res.status(201).json(localidad)
   }
+  async getByProvincia(provinciaId: number, req: Request, res: Response) {
+    const localidades = await localidadService.findByProvincia(provinciaId)
+    res.json(localidades)
+  }
 
   async getAll(req: Request, res: Response) {
     const localidades = await localidadService.findAll()

@@ -7,6 +7,11 @@ export class ProvinciaRepository {
   constructor() {
     this.prisma = prisma
   }
+  async findById(cod_provincia: number): Promise<provincia | null> {
+    return await this.prisma.provincia.findUnique({
+      where: { cod_provincia },
+    })
+  }
 
   async create(data: Prisma.provinciaCreateInput): Promise<provincia> {
     return await this.prisma.provincia.create({

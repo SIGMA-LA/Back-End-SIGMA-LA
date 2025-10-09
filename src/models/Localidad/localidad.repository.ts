@@ -13,6 +13,12 @@ export class LocalidadRepository {
       data,
     })
   }
+  async findByProvincia(cod_provincia: number): Promise<localidad[]> {
+    return await this.prisma.localidad.findMany({
+      where: { cod_provincia },
+      orderBy: { nombre_localidad: 'asc' },
+    })
+  }
 
   async findAll(): Promise<localidad[]> {
     return await this.prisma.localidad.findMany({

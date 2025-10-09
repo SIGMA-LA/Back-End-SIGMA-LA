@@ -18,6 +18,9 @@ export class LocalidadService {
   constructor() {
     this.repository = new LocalidadRepository()
   }
+  async findByProvincia(cod_provincia: number): Promise<localidad[]> {
+    return await this.repository.findByProvincia(cod_provincia)
+  }
 
   async create(data: Prisma.localidadCreateInput): Promise<localidad> {
     return await this.repository.create(data)
