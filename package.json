@@ -14,7 +14,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "prepare": "husky",
-    "seed": "prisma migrate reset --force --skip-seed && timeout /t 3 && pnpm exec ts-node src/shared/db/seeder.ts"
+    "seed": "pnpm exec ts-node src/shared/db/seeder.ts"
   },
   "keywords": [],
   "author": "",

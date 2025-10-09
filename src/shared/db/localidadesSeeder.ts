@@ -53,11 +53,14 @@ async function post(url: string, data: Record<string, unknown>) {
   return res.json()
 }
 
-export default async function seedLocalidades() {
+async function seedLocalidades() {
   // Crear provincias
   for (const provincia of provincias) {
     try {
-      await post(`${API_URL}/api/provincias`, {cod_provincia: provincia.cod, nombre: provincia.nombre})
+      await post(`${API_URL}/api/provincias`, {
+        cod_provincia: provincia.cod,
+        nombre: provincia.nombre,
+      })
     } catch (error) {
       console.error(`Error al crear provincia ${provincia.nombre}:`, error)
     }
@@ -65,13 +68,16 @@ export default async function seedLocalidades() {
   console.log('Provincias completadas\n')
 
   // Leer y procesar localidades desde CSV
-  const csvContent = await fs.readFile('localidades.csv', 'utf-8')
-  
+  const csvContent = await fs.readFile(
+    'E:/Emi/Facultad/Seminario/Back-End-SIGMA-LA/src/shared/db/localidades.csv',
+    'utf-8',
+  )
+
   const parseResult = Papa.parse<LocalidadCSV>(csvContent, {
     header: true,
     skipEmptyLines: true,
     dynamicTyping: true,
-    transformHeader: (header: string): string => header.trim()
+    transformHeader: (header: string): string => header.trim(),
   })
 
   if (parseResult.errors.length > 0) {
@@ -88,8 +94,8 @@ export default async function seedLocalidades() {
     if (idProvincia !== undefined && nombreLocalidad) {
       try {
         await post(`${API_URL}/api/localidades`, {
-          cod_localidad: idProvincia,
-          nombre_localidad: nombreLocalidad.trim()
+          cod_provincia: idProvincia,
+          nombre_localidad: nombreLocalidad.trim(),
         })
       } catch (error) {
         console.error(`✗ Error al crear ${nombreLocalidad}:`, error)
@@ -99,3 +105,8 @@ export default async function seedLocalidades() {
     }
   }
 }
+
+seedLocalidades().then(() => {
+  console.log('\nLocalidades completadas')
+  process.exit(0)
+})

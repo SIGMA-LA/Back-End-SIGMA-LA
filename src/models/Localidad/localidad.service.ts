@@ -20,12 +20,6 @@ export class LocalidadService {
   }
 
   async create(data: Prisma.localidadCreateInput): Promise<localidad> {
-    const existingLocalidad = await this.repository.findById(
-      data.cod_localidad as number,
-    )
-    if (existingLocalidad) {
-      throw new Error('Ya existe una localidad con el mismo código postal.')
-    }
     return await this.repository.create(data)
   }
 

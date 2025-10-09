@@ -1,4 +1,26 @@
-import seedLocalidades from './localidadesSeeder'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+async function dropDataBase() {
+  await prisma.empleado_visita.deleteMany()
+  await prisma.entrega_empleado.deleteMany()
+  await prisma.orden_de_produccion.deleteMany()
+  await prisma.visita.deleteMany()
+  await prisma.entrega.deleteMany()
+  await prisma.pago.deleteMany()
+  await prisma.obra.deleteMany()
+  await prisma.vehiculo.deleteMany()
+  await prisma.maquinaria.deleteMany()
+  await prisma.empleado.deleteMany()
+  await prisma.cliente.deleteMany()
+  await prisma.parametro.deleteMany()
+  await prisma.uso_maquinaria.deleteMany()
+  await prisma.presupuesto.deleteMany()
+  await prisma.uso_vehiculo_entrega.deleteMany()
+  await prisma.uso_vehiculo_visita.deleteMany()
+  console.log('Base de datos limpiada')
+}
 
 const API_URL = 'http://localhost:4000'
 
@@ -16,11 +38,55 @@ async function post(url: string, data: Record<string, unknown>) {
 }
 
 async function seed() {
+  // CLIENTES
+  await post(`${API_URL}/api/clientes`, {
+    cuil: '20111111111',
+    tipo_cliente: 'EMPRESA',
+    razon_social: 'Constructora San Martín S.A.',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'contacto@constructorasanmartin.com.ar',
+  })
+  await post(`${API_URL}/api/clientes`, {
+    cuil: '20222222222',
+    tipo_cliente: 'EMPRESA',
+    razon_social: 'Edificaciones del Litoral S.R.L.',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'ventas@edificacionesdellitoral.com.ar',
+  })
+  await post(`${API_URL}/api/clientes`, {
+    cuil: '20333333333',
+    tipo_cliente: 'EMPRESA',
+    razon_social: 'Desarrollos Urbanos Santa Fe S.A.',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'proyectos@desarrollosurbanos.com.ar',
+  })
+  await post(`${API_URL}/api/clientes`, {
+    cuil: '20444444444',
+    tipo_cliente: 'PERSONA',
+    nombre: 'Juan',
+    apellido: 'Pérez',
+    sexo: 'MASCULINO',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'juan.perez@gmail.com',
+  })
+  await post(`${API_URL}/api/clientes`, {
+    cuil: '20555555555',
+    tipo_cliente: 'PERSONA',
+    nombre: 'María',
+    apellido: 'Gómez',
+    sexo: 'FEMENINO',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'maria.gomez@gmail.com',
+  })
+  await post(`${API_URL}/api/clientes`, {
+    cuil: '20666666666',
+    tipo_cliente: 'EMPRESA',
+    razon_social: 'Grupo Constructor Tucumán S.A.',
+    telefono: '+54 9 11 1234 5678',
+    mail: 'gerencia@constructortucuman.com.ar',
+  })
 
-  //Provincias y Localidades
-  seedLocalidades()
-
-  // Empleados - Roles únicos
+  // EMPLEADOS
   const roles = ['ADMIN', 'COORDINACION', 'VISITADOR', 'VENTAS', 'PRODUCCION']
   const areas = [
     'COORDINACION',
@@ -29,19 +95,16 @@ async function seed() {
     'ATENCION_CLIENTE',
     'PRODUCCION',
   ]
-
   for (let i = 0; i < roles.length; i++) {
     await post(`${API_URL}/api/empleados`, {
       cuil: `2099999999${i}`,
       nombre: roles[i].charAt(0) + roles[i].slice(1).toLowerCase(),
       apellido: 'Test',
       rol_actual: roles[i],
-      area_trabajo: areas[i], // Ahora nunca será undefined
+      area_trabajo: areas[i],
       contrasenia: 'test1234',
     })
   }
-
-  // Empleados de PLANTA
   const nombresPlanta = ['Carlos', 'Miguel', 'Roberto', 'Fernando', 'Diego']
   const apellidosPlanta = [
     'Martinez',
@@ -57,7 +120,6 @@ async function seed() {
     'ENSAMBLE',
     'PRODUCCION',
   ]
-
   for (let i = 0; i < 5; i++) {
     await post(`${API_URL}/api/empleados`, {
       cuil: `209999999${10 + i}`,
@@ -69,7 +131,7 @@ async function seed() {
     })
   }
 
-  // Maquinarias
+  // MAQUINARIAS
   await post(`${API_URL}/api/maquinarias`, {
     cod_maquina: 1,
     descripcion: 'Excavadora',
@@ -86,30 +148,39 @@ async function seed() {
     estado: 'NO DISPONIBLE',
   })
 
-  // Vehículos
+  // VEHICULOS (con anio, marca, modelo)
   await post(`${API_URL}/api/vehiculos`, {
     patente: 'ABC123',
     tipo_vehiculo: 'CAMIONETA',
     estado: 'DISPONIBLE',
+    anio: 2022,
+    marca: 'Toyota',
+    modelo: 'Hilux',
   })
   await post(`${API_URL}/api/vehiculos`, {
     patente: 'DEF456',
     tipo_vehiculo: 'CAMION CHICO',
-    estado: 'EN USO',
+    estado: 'DISPONIBLE',
+    anio: 2020,
+    marca: 'Ford',
+    modelo: 'F-350',
   })
   await post(`${API_URL}/api/vehiculos`, {
     patente: 'GHI789',
     tipo_vehiculo: 'AUTOMOVIL',
     estado: 'FUERA DE SERVICIO',
+    anio: 2018,
+    marca: 'Chevrolet',
+    modelo: 'Onix',
   })
 
-  // Obras
+  // OBRAS (cod_localidad y cuil de cliente)
   await post(`${API_URL}/api/obras`, {
     cod_obra: 1,
     cod_localidad: 2000,
     cuil: '20111111111',
     fecha_ini: '2025-09-01',
-    estado: 'ACTIVA',
+    estado: 'EN PRODUCCION',
     direccion: 'Av. Pellegrini 1250, Rosario',
     nota_fabrica:
       'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
@@ -117,21 +188,21 @@ async function seed() {
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 2,
-    cod_localidad: 2200,
+    cod_localidad: 2210,
     cuil: '20222222222',
     fecha_ini: '2025-09-02',
-    estado: 'ACTIVA',
-    direccion: 'Av. San Martín 850, San Lorenzo',
+    estado: 'EN ESPERA DE PAGO',
+    direccion: 'Av. San Martín 850',
     nota_fabrica: null,
     nota_fabrica_pid: null,
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 3,
-    cod_localidad: 3000,
+    cod_localidad: 1000,
     cuil: '20333333333',
     fecha_ini: '2025-09-03',
-    estado: 'ACTIVA',
-    direccion: 'Bv. Gálvez 1680, Santa Fe',
+    estado: 'CANCELADA',
+    direccion: 'Bv. Gálvez 1680',
     nota_fabrica: null,
     nota_fabrica_pid: null,
   })
@@ -140,34 +211,35 @@ async function seed() {
     cod_localidad: 1900,
     cuil: '20444444444',
     fecha_ini: '2025-09-04',
-    estado: 'ACTIVA',
-    direccion: 'Calle 7 entre 47 y 48, La Plata',
+    estado: 'EN PRODUCCION',
+    direccion: 'Calle 7 entre 47 y 48',
     nota_fabrica: null,
     nota_fabrica_pid: null,
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 5,
-    cod_localidad: 5000,
+    cod_localidad: 500,
     cuil: '20555555555',
     fecha_ini: '2025-09-05',
-    estado: 'ACTIVA',
-    direccion: 'Av. Colón 4500, Córdoba',
+    estado: 'EN ESPERA DE PAGO',
+    direccion: 'Av. Colón 4500',
     nota_fabrica:
       'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
     nota_fabrica_pid: 'MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx',
   })
   await post(`${API_URL}/api/obras`, {
     cod_obra: 6,
-    cod_localidad: 4000,
+    cod_localidad: 400,
     cuil: '20666666666',
     fecha_ini: '2025-09-06',
-    estado: 'ACTIVA',
-    direccion: 'Av. Aconquija 1200, San Miguel de Tucumán',
+    estado: 'EN ESPERA DE PAGO',
+    direccion: 'Av. Aconquija 1200',
     nota_fabrica:
       'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
     nota_fabrica_pid: 'MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx',
   })
-  // Pagos
+
+  // PAGOS
   const pagos = [
     { cod_obra: 1, fecha_pago: '2025-09-10', monto: 150000 },
     { cod_obra: 1, fecha_pago: '2025-09-20', monto: 80000 },
@@ -182,18 +254,21 @@ async function seed() {
     { cod_obra: 6, fecha_pago: '2025-09-22', monto: 175000 },
     { cod_obra: 6, fecha_pago: '2025-10-02', monto: 90000 },
   ]
-
   for (const pago of pagos) {
     await post(`${API_URL}/api/pagos`, pago)
   }
 
-  // Entregas
+  // ENTREGAS
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 1,
     fecha_hora_entrega: '2025-09-05T09:00',
     estado: 'PENDIENTE',
     detalle: 'Entrega de aberturas piso 1-3',
     observaciones: 'Verificar medidas antes de instalación',
+    empleados: [
+      { cuil: '20999999992', rol_entrega: 'ENCARGADO' },
+      { cuil: '20999999910', rol_entrega: 'AYUDANTE' },
+    ],
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 1,
@@ -201,6 +276,10 @@ async function seed() {
     estado: 'EN CURSO',
     detalle: 'Entrega parcial piso 4-6',
     observaciones: 'Faltan herrajes de seguridad',
+    empleados: [
+      { cuil: '20999999912', rol_entrega: 'ENCARGADO' },
+      { cuil: '20999999913', rol_entrega: 'AYUDANTE' },
+    ],
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 2,
@@ -208,6 +287,10 @@ async function seed() {
     estado: 'ENTREGADO',
     detalle: 'Entrega completa bloques A y B',
     observaciones: 'Entrega conforme - documentación firmada',
+    empleados: [
+      { cuil: '20999999911', rol_entrega: 'ENCARGADO' },
+      { cuil: '20999999914', rol_entrega: 'AYUDANTE' },
+    ],
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 2,
@@ -215,6 +298,7 @@ async function seed() {
     estado: 'CANCELADO',
     detalle: 'Entrega bloque C',
     observaciones: 'Obra suspendida temporalmente por cliente',
+    empleados: [],
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 3,
@@ -222,6 +306,7 @@ async function seed() {
     estado: 'PENDIENTE',
     detalle: 'Aberturas planta baja comercial',
     observaciones: 'Requiere coordinación con electricista',
+    empleados: [],
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 3,
@@ -229,6 +314,7 @@ async function seed() {
     estado: 'EN CURSO',
     detalle: 'Mamparas divisorias primer piso',
     observaciones: 'Pendiente entrega de vidrios templados',
+    empleados: [],
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 4,
@@ -236,6 +322,7 @@ async function seed() {
     estado: 'ENTREGADO',
     detalle: 'Ventanales fachada principal',
     observaciones: 'Instalación perfecta - cliente satisfecho',
+    empleados: [],
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 5,
@@ -243,6 +330,7 @@ async function seed() {
     estado: 'PENDIENTE',
     detalle: 'Puertas principales casas 1-20',
     observaciones: 'Coordinar con paisajista para accesos',
+    empleados: [],
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 5,
@@ -250,6 +338,7 @@ async function seed() {
     estado: 'EN CURSO',
     detalle: 'Ventanas casas 21-40',
     observaciones: 'Modificación en color solicitada por cliente',
+    empleados: [],
   })
   await post(`${API_URL}/api/entregas`, {
     cod_obra: 6,
@@ -257,320 +346,74 @@ async function seed() {
     estado: 'ENTREGADO',
     detalle: 'Cerramiento integral Torre A',
     observaciones: 'Proyecto finalizado exitosamente',
+    empleados: [],
   })
-  // Visitas
+
+  // VISITAS (con y sin obra asociada)
+  // Con obra asociada: cod_obra, cod_localidad y datos de cliente en null
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-06T10:00',
     cod_obra: 1,
+    cod_localidad: null,
     motivo_visita: 'MEDICION',
     estado: 'PROGRAMADA',
     observaciones: 'Medición inicial para aberturas piso 1-3',
     direccion_visita: 'Av. Pellegrini 1250, Rosario',
+    nombre_cliente: null,
+    apellido_cliente: null,
+    telefono_cliente: null,
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-07T11:30',
     cod_obra: 2,
+    cod_localidad: null,
     motivo_visita: 'RE-MEDICION',
     estado: 'EN CURSO',
     observaciones: 'Ajuste medidas bloque B por modificación estructural',
     direccion_visita: 'Av. San Martín 850, San Lorenzo',
+    nombre_cliente: null,
+    apellido_cliente: null,
+    telefono_cliente: null,
   })
   await post(`${API_URL}/api/visitas`, {
     fecha_hora_visita: '2025-09-08T09:00',
     cod_obra: 3,
-    motivo_visita: 'REPARACION',
+    cod_localidad: null,
+    motivo_visita: 'ASESORAMIENTO',
     estado: 'COMPLETADA',
     observaciones: 'Reparación marco puerta principal - resuelto',
     direccion_visita: 'Bv. Gálvez 1680, Santa Fe',
+    nombre_cliente: null,
+    apellido_cliente: null,
+    telefono_cliente: null,
   })
+  // Sin obra asociada: cod_obra null, cod_localidad y datos de cliente completos
   await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-09T15:00',
-    cod_obra: 4,
-    motivo_visita: 'ASESORAMIENTO',
-    estado: 'CANCELADA',
-    observaciones: 'Cliente reprogramó para próxima semana',
-    direccion_visita: 'Calle 7 entre 47 y 48, La Plata',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-10T13:00',
-    cod_obra: 2,
+    fecha_hora_visita: '2025-09-16T10:00',
+    cod_obra: null,
+    cod_localidad: 200,
     motivo_visita: 'VISITA INICIAL',
     estado: 'PROGRAMADA',
-    observaciones: 'Acceso complicado por lluvia - reagendar',
-    direccion_visita: 'Av. Colón 4500, Córdoba',
+    observaciones: 'Visita a cliente particular sin obra asociada',
+    direccion_visita: 'San Juan 1234',
+    nombre_cliente: 'Lucía',
+    apellido_cliente: 'Fernández',
+    telefono_cliente: '0341-5551234',
   })
   await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-11T14:30',
-    cod_obra: 6,
-    motivo_visita: 'MEDICION',
-    estado: 'PROGRAMADA',
-    observaciones: 'Medición para cerramiento Torre A',
-    direccion_visita: 'Av. Aconquija 1200, San Miguel de Tucumán',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-12T16:00',
-    cod_obra: 1,
-    motivo_visita: 'RE-MEDICION',
-    estado: 'EN CURSO',
-    observaciones: 'Verificar cambios solicitados piso 4-6',
-    direccion_visita: 'Av. Pellegrini 1250, Rosario',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-13T12:00',
-    cod_obra: 2,
-    motivo_visita: 'REPARACION',
-    estado: 'COMPLETADA',
-    observaciones: 'Ajuste marcos bloque A - trabajo finalizado',
-    direccion_visita: 'Av. San Martín 850, San Lorenzo',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-14T10:30',
-    cod_obra: 3,
+    fecha_hora_visita: '2025-09-17T15:30',
+    cod_obra: null,
+    cod_localidad: 2200,
     motivo_visita: 'ASESORAMIENTO',
-    estado: 'CANCELADA',
-    observaciones: 'Arquitecto no disponible - reprogramar',
-    direccion_visita: 'Bv. Gálvez 1680, Santa Fe',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-15T09:30',
-    cod_obra: 4,
-    motivo_visita: 'VISITA INICIAL',
     estado: 'PROGRAMADA',
-    observaciones: 'Feriado local - nueva fecha coordinada',
-    direccion_visita: 'Calle 7 entre 47 y 48, La Plata',
+    observaciones: 'Consulta por presupuesto de aberturas',
+    direccion_visita: 'Av. Pellegrini 2000',
+    nombre_cliente: 'Martín',
+    apellido_cliente: 'Giménez',
+    telefono_cliente: '0341-5555678',
   })
 
-  // Órdenes de Producción
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 1,
-    fecha_confeccion: '2025-09-05',
-    fecha_validacion: '2025-09-06',
-    url: 'https://docs.sigma-la.com/op-rosario-pellegrini-001.pdf',
-    public_id: null,
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 1,
-    fecha_confeccion: '2025-09-10',
-    fecha_validacion: '2025-09-11',
-    url: 'https://docs.sigma-la.com/op-rosario-pellegrini-002.pdf',
-    public_id: null,
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 2,
-    fecha_confeccion: '2025-09-12',
-    fecha_validacion: '2025-09-13',
-    url: 'https://docs.sigma-la.com/op-sanlorenzo-sanmartin-001.pdf',
-    public_id: null,
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 3,
-    fecha_confeccion: '2025-09-15',
-    fecha_validacion: '2025-09-16',
-    url: 'https://docs.sigma-la.com/op-santafe-galvez-001.pdf',
-    public_id: null,
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 4,
-    fecha_confeccion: '2025-09-18',
-    fecha_validacion: '2025-09-19',
-    url: 'https://docs.sigma-la.com/op-laplata-calle7-001.pdf',
-    public_id: null,
-  })
-
-  const relacionesVisitaEmpleado = [
-    { cuil: '20999999992', cod_visita: 1 },
-    { cuil: '20999999910', cod_visita: 1 },
-
-    { cuil: '20999999992', cod_visita: 2 },
-    { cuil: '20999999911', cod_visita: 2 },
-
-    { cuil: '20999999912', cod_visita: 3 },
-    { cuil: '20999999913', cod_visita: 3 },
-
-    { cuil: '20999999992', cod_visita: 4 },
-
-    { cuil: '20999999910', cod_visita: 5 },
-    { cuil: '20999999914', cod_visita: 5 },
-
-    { cuil: '20999999992', cod_visita: 6 },
-    { cuil: '20999999911', cod_visita: 6 },
-
-    { cuil: '20999999913', cod_visita: 7 },
-    { cuil: '20999999912', cod_visita: 7 },
-
-    { cuil: '20999999914', cod_visita: 8 },
-    { cuil: '20999999910', cod_visita: 8 },
-
-    { cuil: '20999999992', cod_visita: 9 },
-
-    { cuil: '20999999911', cod_visita: 10 },
-    { cuil: '20999999913', cod_visita: 10 },
-  ]
-
-  // Crear relaciones empleado-visita
-  for (const relacion of relacionesVisitaEmpleado) {
-    await post(`${API_URL}/api/empleado-visita`, relacion)
-  }
-
-  // Relaciones Empleado-Entrega
-  const relacionesEntregaEmpleado = [
-    {
-      cuil: '20999999992',
-      cod_entrega: 1,
-      cod_obra: 1,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999910',
-      cod_entrega: 1,
-      cod_obra: 1,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999911',
-      cod_entrega: 1,
-      cod_obra: 1,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999912',
-      cod_entrega: 2,
-      cod_obra: 1,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999913',
-      cod_entrega: 2,
-      cod_obra: 1,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999992',
-      cod_entrega: 3,
-      cod_obra: 2,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999910',
-      cod_entrega: 4,
-      cod_obra: 2,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999914',
-      cod_entrega: 4,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999911',
-      cod_entrega: 4,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999992',
-      cod_entrega: 5,
-      cod_obra: 3,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999912',
-      cod_entrega: 5,
-      cod_obra: 3,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999913',
-      cod_entrega: 5,
-      cod_obra: 3,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999911',
-      cod_entrega: 6,
-      cod_obra: 3,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999914',
-      cod_entrega: 6,
-      cod_obra: 3,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999913',
-      cod_entrega: 7,
-      cod_obra: 4,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999910',
-      cod_entrega: 7,
-      cod_obra: 4,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999992',
-      cod_entrega: 7,
-      cod_obra: 4,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999914',
-      cod_entrega: 8,
-      cod_obra: 4,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999992',
-      cod_entrega: 9,
-      cod_obra: 1,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999912',
-      cod_entrega: 9,
-      cod_obra: 1,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999910',
-      cod_entrega: 10,
-      cod_obra: 2,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999911',
-      cod_entrega: 10,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999912',
-      cod_entrega: 10,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999913',
-      cod_entrega: 10,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999914',
-      cod_entrega: 10,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-  ]
-
-  for (const relacion of relacionesEntregaEmpleado) {
-    await post(`${API_URL}/api/entrega-empleado`, relacion)
-  }
-
-  // Parámetros
+  // PARAMETROS
   await post(`${API_URL}/api/parametros`, {
     cod_parametro: 1,
     fecha_cambio: '2025-01-01',
@@ -586,7 +429,7 @@ async function seed() {
     viatico_dia_persona: 800,
   })
 }
-
+await dropDataBase()
 seed()
   .then(() => console.log('Seed completado con éxito'))
   .catch(e => console.error('Error en seed:', e))
