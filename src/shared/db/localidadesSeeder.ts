@@ -68,10 +68,7 @@ async function seedLocalidades() {
   console.log('Provincias completadas\n')
 
   // Leer y procesar localidades desde CSV
-  const csvContent = await fs.readFile(
-    'E:/Emi/Facultad/Seminario/Back-End-SIGMA-LA/src/shared/db/localidades.csv',
-    'utf-8',
-  )
+  const csvContent = await fs.readFile('src/shared/db/localidades.csv', 'utf-8')
 
   const parseResult = Papa.parse<LocalidadCSV>(csvContent, {
     header: true,
@@ -105,8 +102,6 @@ async function seedLocalidades() {
     }
   }
 }
-
-seedLocalidades().then(() => {
-  console.log('\nLocalidades completadas')
-  process.exit(0)
-})
+seedLocalidades()
+  .then(() => console.log('Seed completado con éxito'))
+  .catch(e => console.error('Error en seed:', e))
