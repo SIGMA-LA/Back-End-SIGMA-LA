@@ -13,6 +13,21 @@ export class ObraRepository {
 
   // ----------- FILTROS Y BÚSQUEDAS -----------
 
+  async findAll() {
+    return await this.prisma.obra.findMany({
+      orderBy: { cod_obra: 'desc' },
+      include: {
+        cliente: true,
+        localidad: {
+          include: {
+            provincia: true,
+          },
+        },
+        presupuesto: true,
+        pago: true,
+      },
+    })
+  }
   /** Filtra obras por estado, localidad o ambos */
   async filtrar({
     estado,
@@ -32,7 +47,16 @@ export class ObraRepository {
         ...(estado && { estado }),
         ...(cod_localidad && { cod_localidad }),
       },
-      include: { cliente: true, localidad: true },
+      include: {
+        cliente: true,
+        localidad: {
+          include: {
+            provincia: true,
+          },
+        },
+        presupuesto: true,
+        pago: true,
+      },
       orderBy: { cod_obra: 'desc' },
     })
   }
@@ -122,6 +146,21 @@ export class ObraRepository {
       },
     })
   }
+  async buscar(q: string) {
+    return this.prisma.obra.findMany({
+      where: {
+        OR: [
+          { direccion: { contains: q, mode: 'insensitive' } },
+          { cliente: { razon_social: { contains: q, mode: 'insensitive' } } },
+        ],
+      },
+      include: {
+        cliente: true,
+      },
+      orderBy: { cod_obra: 'desc' },
+      take: 10,
+    })
+  }
 
   /** Obtiene obras con nota de fábrica y orden en proceso */
   async findNotasConOrdenEnProceso(): Promise<obra[]> {
@@ -149,6 +188,72 @@ export class ObraRepository {
     })
   }
 
+  async findObrasConPresupuestoAceptado(search?: string) {
+    const whereConditions: Prisma.obraWhereInput = {
+      presupuesto: {
+        some: {
+          fecha_aceptacion: {
+            not: null,
+          },
+        },
+      },
+    }
+
+    // Filtro de búsqueda mejorado (cliente + dirección)
+    if (search) {
+      whereConditions.OR = [
+        {
+          direccion: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          cliente: {
+            OR: [
+              {
+                razon_social: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                nombre: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                apellido: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+        },
+      ]
+    }
+
+    return await this.prisma.obra.findMany({
+      where: whereConditions,
+      orderBy: { cod_obra: 'desc' },
+      include: {
+        cliente: true,
+        presupuesto: {
+          where: {
+            fecha_aceptacion: {
+              not: null,
+            },
+          },
+          orderBy: {
+            fecha_aceptacion: 'desc',
+          },
+          take: 1,
+        },
+        pago: true,
+      },
+      take: 1000, // Limitar para performance
   // ----------- CRUD DE OBRAS -----------
 
   /** Crea una nueva obra */

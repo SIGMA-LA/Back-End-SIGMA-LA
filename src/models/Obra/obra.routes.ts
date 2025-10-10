@@ -64,6 +64,11 @@ obraRouter.get('/notas-con-orden-proceso', (req, res) => {
   obraController.getNotasConOrdenEnProceso(req, res)
 })
 
+// Obtener obras con presupuesto aceptado
+obraRouter.get('/con-presupuesto-aceptado', (req, res) => {
+  obraController.getObrasConPresupuestoAceptado(req, res)
+})
+
 // ----------- CRUD DE OBRAS -----------
 
 // Crear una nueva obra

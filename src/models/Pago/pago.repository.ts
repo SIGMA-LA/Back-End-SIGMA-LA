@@ -15,20 +15,114 @@ export class PagoRepository {
   async createOne(data: Prisma.pagoCreateInput): Promise<pago> {
     return await this.prisma.pago.create({ data })
   }
-  async findAll(): Promise<pago[]> {
+  async findAll() {
     return await this.prisma.pago.findMany({
       orderBy: { fecha_pago: 'desc' },
       include: {
         obra: {
           include: {
-            cliente: {
-              select: {
-                razon_social: true,
-              },
-            },
+            cliente: true,
           },
         },
       },
+    })
+  }
+
+  async findAllWithFilters(filters: {
+    cliente?: string
+    fechaDesde?: string
+    fechaHasta?: string
+    obra?: string
+    montoMin?: number
+    montoMax?: number
+  }) {
+    const whereConditions: Prisma.pagoWhereInput = {}
+
+    if (filters.fechaDesde || filters.fechaHasta) {
+      whereConditions.fecha_pago = {}
+      if (filters.fechaDesde) {
+        whereConditions.fecha_pago.gte = new Date(filters.fechaDesde)
+      }
+      if (filters.fechaHasta) {
+        whereConditions.fecha_pago.lte = new Date(filters.fechaHasta)
+      }
+    }
+
+    if (filters.montoMin !== undefined || filters.montoMax !== undefined) {
+      whereConditions.monto = {}
+      if (filters.montoMin !== undefined) {
+        whereConditions.monto.gte = filters.montoMin
+      }
+      if (filters.montoMax !== undefined) {
+        whereConditions.monto.lte = filters.montoMax
+      }
+    }
+
+    const andConditions: Prisma.pagoWhereInput[] = []
+
+    if (filters.obra) {
+      andConditions.push({
+        obra: {
+          direccion: {
+            contains: filters.obra,
+            mode: 'insensitive',
+          },
+        },
+      })
+    }
+
+    if (filters.cliente) {
+      andConditions.push({
+        obra: {
+          cliente: {
+            OR: [
+              {
+                razon_social: {
+                  contains: filters.cliente,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                nombre: {
+                  contains: filters.cliente,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                apellido: {
+                  contains: filters.cliente,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+        },
+      })
+    }
+
+    if (andConditions.length > 0) {
+      if (Object.keys(whereConditions).length > 0) {
+        whereConditions.AND = andConditions
+      } else {
+        if (andConditions.length === 1) {
+          Object.assign(whereConditions, andConditions[0])
+        } else {
+          whereConditions.AND = andConditions
+        }
+      }
+    }
+
+    return await this.prisma.pago.findMany({
+      where: whereConditions,
+      orderBy: { fecha_pago: 'desc' },
+      include: {
+        obra: {
+          include: {
+            cliente: true,
+          },
+        },
+      },
+      take: 1000,
     })
   }
 

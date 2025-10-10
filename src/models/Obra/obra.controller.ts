@@ -131,4 +131,41 @@ export class ObraController {
     const obra = await obraService.remove(id)
     res.json(obra)
   }
+
+  async getNotasSinOrdenAprobada(req: Request, res: Response) {
+    const obras = await obraService.findNotasSinOrdenAprobada()
+    res.json(obras)
+  }
+
+  async getNotasConOrdenEnProceso(req: Request, res: Response) {
+    const obras = await obraService.findNotasConOrdenEnProceso()
+    res.json(obras)
+  }
+
+  async getObrasConPresupuestoAceptado(req: Request, res: Response) {
+    try {
+      let search = req.query.search as string
+
+      // Sanitizar el input de búsqueda
+      if (search) {
+        search = search.trim().replace(/[<>{}]/g, '')
+        // Limitar longitud para evitar ataques
+        if (search.length > 100) {
+          return res.status(400).json({
+            message: 'El término de búsqueda es demasiado largo',
+          })
+        }
+      }
+
+      const obras = await obraService.findObrasConPresupuestoAceptado(search)
+      res.json(obras)
+    } catch (error) {
+      console.error('Error al obtener obras con presupuesto aceptado:', error)
+      res.status(500).json({
+        message:
+          'Error interno del servidor al obtener obras con presupuesto aceptado',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
 }

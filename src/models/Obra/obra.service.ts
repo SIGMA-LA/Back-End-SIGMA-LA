@@ -121,4 +121,57 @@ export class ObraService {
 
     return await this.repository.update(id, dataToUpdate)
   }
+
+  async findNotasSinOrdenAprobada(): Promise<obra[]> {
+    return await this.repository.findNotasSinOrdenAprobada()
+  }
+
+  async findNotasConOrdenEnProceso(): Promise<obra[]> {
+    return await this.repository.findNotasConOrdenEnProceso()
+  }
+
+  async findObrasConPresupuestoAceptado(search?: string) {
+    const obrasConPresupuesto =
+      await this.repository.findObrasConPresupuestoAceptado(search)
+
+    return obrasConPresupuesto.map(obra => {
+      const presupuestoAceptado = obra.presupuesto[0] // Ya filtrado en el query
+      const totalPagado = obra.pago.reduce((sum, pago) => sum + pago.monto, 0)
+      const saldoPendiente = presupuestoAceptado.valor - totalPagado
+      const porcentajePagado =
+        presupuestoAceptado.valor > 0
+          ? Math.round((totalPagado / presupuestoAceptado.valor) * 100)
+          : 0
+
+      return {
+        cod_obra: obra.cod_obra,
+        direccion: obra.direccion,
+        estado: obra.estado,
+        cliente: {
+          cuil: this.formatCUIL(obra.cliente.cuil),
+          nombre: obra.cliente.nombre,
+          apellido: obra.cliente.apellido,
+          razon_social: obra.cliente.razon_social,
+        },
+        presupuesto: {
+          nro_presupuesto: presupuestoAceptado.nro_presupuesto,
+          valor: presupuestoAceptado.valor,
+          fecha_aceptacion: presupuestoAceptado.fecha_aceptacion
+            ?.toISOString()
+            .split('T')[0], // Solo fecha YYYY-MM-DD
+        },
+        totalPagado,
+        saldoPendiente,
+        porcentajePagado,
+      }
+    })
+  }
+
+  private formatCUIL(cuil: string): string {
+    // Formatear CUIL con guiones: 20-12345678-9
+    if (cuil.length === 11) {
+      return `${cuil.slice(0, 2)}-${cuil.slice(2, 10)}-${cuil.slice(10)}`
+    }
+    return cuil
+  }
 }

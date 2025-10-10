@@ -2,6 +2,18 @@ import { pago, Prisma } from '@prisma/client'
 import { PagoRepository } from './pago.repository.js'
 import { prisma } from '../../shared/db/prismaClient.js'
 
+/*
+type PagoConRelaciones = Prisma.pagoGetPayload<{
+  include: {
+    obra: {
+      include: {
+        cliente: true
+      }
+    }
+  }
+}>
+*/
+
 /**
  * Servicio para gestionar las operaciones relacionadas con los pagos.
  * @class PagoService
@@ -112,8 +124,39 @@ export class PagoService {
     return await this.repository.createOne({ ...data, fecha_pago })
   }
 
-  async findAll(): Promise<pago[]> {
-    return await this.repository.findAll()
+  async findAll(filters?: {
+    cliente?: string
+    fechaDesde?: string
+    fechaHasta?: string
+    obra?: string
+    montoMin?: number
+    montoMax?: number
+  }) {
+    let pagos
+    if (filters && Object.keys(filters).length > 0) {
+      pagos = await this.repository.findAllWithFilters(filters)
+    } else {
+      pagos = await this.repository.findAll()
+    }
+
+    return pagos.map(pago => ({
+      ...pago,
+      fecha_pago: pago.fecha_pago.toISOString().split('T')[0],
+      obra: {
+        ...pago.obra,
+        cliente: {
+          ...pago.obra.cliente,
+          cuil: this.formatCUIL(pago.obra.cliente.cuil),
+        },
+      },
+    }))
+  }
+
+  private formatCUIL(cuil: string): string {
+    if (cuil.length === 11) {
+      return `${cuil.slice(0, 2)}-${cuil.slice(2, 10)}-${cuil.slice(10)}`
+    }
+    return cuil
   }
 
   async findById(id: number): Promise<pago | null> {
