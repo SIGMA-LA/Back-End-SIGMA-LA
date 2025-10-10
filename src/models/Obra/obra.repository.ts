@@ -266,4 +266,29 @@ export class ObraRepository {
       where: { cod_obra: id },
     })
   }
+
+  /**
+   * Obtiene obras de empresas con estado 'PAGADA PARCIALMENTE'
+   */
+  async findObrasParaPedidoStock(): Promise<obra[]> {
+    return this.prisma.obra.findMany({
+      where: {
+        estado: 'PAGADA PARCIALMENTE',
+        cliente: {
+          tipo_cliente: 'EMPRESA',
+        },
+      },
+      include: {
+        cliente: true,
+        localidad: {
+          include: {
+            provincia: true,
+          },
+        },
+        presupuesto: true,
+        pago: true,
+      },
+      orderBy: { cod_obra: 'desc' },
+    })
+  }
 }
