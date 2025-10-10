@@ -80,18 +80,6 @@ export class ObraRepository {
     })
   }
 
-  /** Obtiene todas las obras */
-  async findAll(): Promise<obra[]> {
-    return await this.prisma.obra.findMany({
-      orderBy: { cod_obra: 'desc' },
-      include: {
-        cliente: true,
-        localidad: true,
-        presupuesto: true,
-      },
-    })
-  }
-
   /** Obtiene una obra por ID */
   async findById(id: number): Promise<obra | null> {
     return await this.prisma.obra.findUnique({
@@ -144,21 +132,6 @@ export class ObraRepository {
         cliente: true,
         localidad: true,
       },
-    })
-  }
-  async buscar(q: string) {
-    return this.prisma.obra.findMany({
-      where: {
-        OR: [
-          { direccion: { contains: q, mode: 'insensitive' } },
-          { cliente: { razon_social: { contains: q, mode: 'insensitive' } } },
-        ],
-      },
-      include: {
-        cliente: true,
-      },
-      orderBy: { cod_obra: 'desc' },
-      take: 10,
     })
   }
 
@@ -254,6 +227,8 @@ export class ObraRepository {
         pago: true,
       },
       take: 1000, // Limitar para performance
+    })
+  }
   // ----------- CRUD DE OBRAS -----------
 
   /** Crea una nueva obra */
