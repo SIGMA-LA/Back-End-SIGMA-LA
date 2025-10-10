@@ -15,6 +15,22 @@ import { visita, Prisma } from '@prisma/client'
  * @returns {Promise<visita | visita[] | null>} - Resultado de la operación.
  * @throws {Error} - Si ocurre un error durante la operación.
  */
+interface CreateVisitaData {
+  empleados_visita: string[]
+  fecha_hora_visita: string
+  motivo_visita: string
+  observaciones?: string
+  direccion_visita?: string
+  dias_viatico?: number
+  nombre_cliente?: string
+  apellido_cliente?: string
+  telefono_cliente?: string
+  cod_obra?: number
+  cod_localidad?: number
+  vehiculo: string
+  fechaHasta?: string
+}
+
 export class VisitaService {
   private visitaRepository: VisitaRepository
 
@@ -23,41 +39,61 @@ export class VisitaService {
   }
 
   // Crear nueva visita
-  async create(data: {
-    fecha_hora_visita: string
-    cod_obra?: number
-    cod_localidad?: number
-    motivo_visita: string
-    estado: string
-    observaciones?: string
-    direccion_visita?: string
-  }): Promise<visita> {
-    // Construir el objeto de creación dinámicamente
-    const createData: Prisma.visitaCreateInput = {
+  async create(data: CreateVisitaData) {
+    const empleadosParaCrear = data.empleados_visita.map(
+      (cuilEmpleado: string) => ({
+        cuil: cuilEmpleado,
+      }),
+    )
+
+    const createData = {
+      // ... otros campos de la visita (fecha_hora_visita, motivo_visita, etc.)
       fecha_hora_visita: new Date(data.fecha_hora_visita),
       motivo_visita: data.motivo_visita,
-      estado: data.estado,
+      estado: 'PROGRAMADA',
       observaciones: data.observaciones,
       direccion_visita: data.direccion_visita,
-    }
+      dias_viatico: data.dias_viatico,
+      nombre_cliente: data.nombre_cliente,
+      apellido_cliente: data.apellido_cliente,
+      telefono_cliente: data.telefono_cliente,
 
-    // Conectar obra si se proporciona
-    if (data.cod_obra) {
-      createData.obra = {
-        connect: { cod_obra: data.cod_obra },
-      }
-    }
+      // Conexiones
+      ...(data.cod_obra && { obra: { connect: { cod_obra: data.cod_obra } } }),
+      ...(data.cod_localidad && {
+        localidad: { connect: { cod_localidad: data.cod_localidad } },
+      }),
 
-    // Conectar localidad si se proporciona
-    if (data.cod_localidad
+      // Relación con empleados (esto ya estaba bien)
+      empleado_visita: {
+        createMany: {
+          data: empleadosParaCrear,
+          skipDuplicates: true,
+        },
+      },
 
-    ) {
-      createData.localidad = {
-        connect: { cod_localidad
-    : data.cod_localidad
-    
-         },
-      }
+      // --- ¡LA CORRECCIÓN FINAL ESTÁ AQUÍ! ---
+      // Relación con el uso del vehículo
+      uso_vehiculo_visita: {
+        create: {
+          // 1. Conectamos con el vehículo existente a través de la patente.
+          vehiculo: {
+            connect: {
+              patente: data.vehiculo,
+            },
+          },
+
+          // 2. Proporcionamos los campos OBLIGATORIOS de la tabla 'uso_vehiculo_visita'.
+          //    Estos valores los podemos tomar de la propia visita.
+          fecha_hora_ini_uso: new Date(data.fecha_hora_visita),
+
+          // Asumimos que la fecha fin estimada es la fecha fin de la visita.
+          // Si el frontend envía `fechaHasta`, úsala. Si no, usa la fecha de inicio.
+          fecha_hora_fin_est: new Date(
+            data.fechaHasta || data.fecha_hora_visita,
+          ),
+        },
+      },
     }
 
     return await this.visitaRepository.create(createData)
@@ -79,8 +115,7 @@ export class VisitaService {
     data: {
       fecha_hora_visita?: string
       cod_obra?: number
-      cod_localidad
-?: number
+      cod_localidad?: number
       motivo_visita?: string
       estado?: string
       observaciones?: string
@@ -96,8 +131,7 @@ export class VisitaService {
     // Separar los campos que necesitan conectores de los campos simples
     const {
       cod_obra,
-      cod_localidad
-,
+      cod_localidad,
       fecha_hora_visita,
       fecha_cancelacion,
       ...simpleFields
@@ -123,15 +157,11 @@ export class VisitaService {
     }
 
     // Conectar localidad si se proporciona
-    if (cod_localidad
- !== undefined) {
-      if (cod_localidad
-   === null) {
+    if (cod_localidad !== undefined) {
+      if (cod_localidad === null) {
         updateData.localidad = { disconnect: true }
       } else {
-        updateData.localidad = { connect: { cod_localidad
-    
-         } }
+        updateData.localidad = { connect: { cod_localidad } }
       }
     }
 
