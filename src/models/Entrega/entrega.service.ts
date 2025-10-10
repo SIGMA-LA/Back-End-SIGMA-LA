@@ -2,6 +2,7 @@ import { EntregaRepository } from './entrega.repository.js'
 import { entrega, Prisma } from '@prisma/client'
 import { MaquinariaService } from '../Maquinaria/maquinaria.service.js'
 import { prisma } from '../../shared/db/prismaClient.js'
+import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 
 /**
  * Servicio para manejar la lógica de negocio de entregas.
@@ -18,10 +19,12 @@ import { prisma } from '../../shared/db/prismaClient.js'
 export class EntregaService {
   private entregaRepository: EntregaRepository
   private maquinariaService: MaquinariaService
+  private vehiculoService: VehiculoService
 
   constructor() {
     this.entregaRepository = new EntregaRepository()
     this.maquinariaService = new MaquinariaService()
+    this.vehiculoService = new VehiculoService()
   }
 
   async create(data: {
@@ -33,12 +36,14 @@ export class EntregaService {
     dias_viaticos?: number
     empleados: { cuil: string; rol_entrega: 'ENCARGADO' | 'AYUDANTE' }[]
     maquinarias?: number[]
+    vehiculos?: string[]
     cod_op?: number
   }): Promise<entrega> {
     const {
       empleados,
       cod_obra,
       maquinarias,
+      vehiculos,
       cod_op,
       dias_viaticos,
       ...entregaData
@@ -86,7 +91,17 @@ export class EntregaService {
               maquinaria: { connect: { cod_maquina: cod_maquina } },
               fecha_hora_ini_uso: fechaParaPrisma,
               fecha_hora_fin_est: fechaFinEstimada,
-              estado: 'EN USO',
+              obra: { connect: { cod_obra: cod_obra } },
+            })),
+          },
+        }),
+        ...(vehiculos &&
+        vehiculos.length > 0 && {
+          uso_vehiculo_entrega: {
+            create: vehiculos.map(patente => ({
+              vehiculo: { connect: { patente: patente } },
+              fecha_hora_ini_uso: fechaParaPrisma,
+              fecha_hora_fin_est: fechaFinEstimada,
               obra: { connect: { cod_obra: cod_obra } },
             })),
           },

@@ -80,7 +80,26 @@ export class OrdenProduccionRepository {
 
   async findByObra(cod_obra: number): Promise<orden_de_produccion[]> {
     return await this.prisma.orden_de_produccion.findMany({
-      where: { cod_obra },
+      where: {cod_obra},
+      orderBy: { fecha_confeccion: 'desc' },
+      include: {
+        obra: {
+          include: {
+            cliente: true,
+            localidad: true,
+          },
+        },
+      },
+    })
+  }
+
+
+  async findByObraAndFinalizada(cod_obra: number): Promise<orden_de_produccion[]> {
+    return await this.prisma.orden_de_produccion.findMany({
+      where: {
+        cod_obra,
+        estado: 'FINALIZADA',
+      },
       orderBy: { fecha_confeccion: 'desc' },
       include: {
         obra: {

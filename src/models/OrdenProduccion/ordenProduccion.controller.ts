@@ -228,4 +228,25 @@ export class OrdenProduccionController {
       })
     }
   }
+
+  async getByObraAndFinalizada(req: Request, res: Response) {
+    try {
+      const cod_obra = parseInt(req.params.cod_obra, 10)
+
+      if (isNaN(cod_obra)) {
+        return res.status(400).json({ message: 'Código de obra inválido' })
+      }
+
+      const ordenes = await ordenService.findByObraAndFinalizada(cod_obra)
+      res.status(200).json(ordenes)
+    } catch (error) {
+      console.error('Error al obtener órdenes por obra:', error)
+      res.status(500).json({
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error al obtener órdenes por obra',
+      })
+    }
+  }
 }

@@ -43,6 +43,16 @@ export class EntregaRepository {
             }
           }
         },
+        uso_vehiculo_entrega: {
+          include: {
+            vehiculo: {
+              select: {
+                patente: true,
+                tipo_vehiculo: true
+              }
+            }
+          }
+        },
         orden_de_produccion: true,
       },
     })
@@ -82,7 +92,7 @@ export class EntregaRepository {
             cod_obra: true,
             direccion: true,
             localidad: {
-              select: { cod_localidad: true, nombre_localidad: true },
+              select: { nombre_localidad: true },
             },
             cliente: {
               select: {

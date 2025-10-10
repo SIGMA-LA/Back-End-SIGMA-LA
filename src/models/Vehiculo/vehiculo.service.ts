@@ -1,6 +1,13 @@
 import { VehiculoRepository } from './vehiculo.repository.js'
 import { vehiculo } from '@prisma/client'
 
+export type AvailabilityStatus = 'DISPONIBLE' | 'ADVERTENCIA' | 'NO_DISPONIBLE'
+
+export type VehiculoConDisponibilidad = vehiculo & {
+  availabilityStatus: AvailabilityStatus
+  warningMessage?: string
+}
+
 /**
  * Servicio para manejar la lógica de negocio de vehiculos.
  * @class VehiculoService
@@ -39,6 +46,53 @@ export class VehiculoService {
   // Obtener todos los vehiculos
   async findAll(): Promise<vehiculo[]> {
     return await this.vehiculoRepository.findAll()
+  }
+
+  async findDisponibilidadPorFecha(
+    fechaInicio: Date,
+    fechaFin: Date,
+  ): Promise<VehiculoConDisponibilidad[]> {
+    const buffer = 24 * 60 * 60 * 1000 // Buffer de 24 horas
+    const warningStartTime = new Date(fechaInicio.getTime() - buffer)
+    const warningEndTime = new Date(fechaFin.getTime() + buffer)
+
+    const vehiculosConUsos =
+      await this.vehiculoRepository.findAllWithUsageInRange(
+        warningStartTime,
+        warningEndTime,
+      )
+
+    return vehiculosConUsos.map(vehiculo => {
+      let availabilityStatus: AvailabilityStatus = 'DISPONIBLE'
+      let warningMessage: string | undefined = undefined
+
+      const allUsages = [
+        ...vehiculo.uso_vehiculo_entrega,
+        ...vehiculo.uso_vehiculo_visita,
+      ]
+
+      if (allUsages.length > 0) {
+        const hayConflictoDirecto = allUsages.some(
+          uso =>
+            new Date(uso.fecha_hora_ini_uso) < fechaFin &&
+            new Date(uso.fecha_hora_fin_est) > fechaInicio,
+        )
+
+        if (hayConflictoDirecto) {
+          availabilityStatus = 'NO_DISPONIBLE'
+        } else {
+          availabilityStatus = 'ADVERTENCIA'
+          warningMessage =
+            'Este vehículo tiene un uso programado dentro de las 24hs de la fecha seleccionada.'
+        }
+      }
+
+      return {
+        ...vehiculo,
+        availabilityStatus,
+        warningMessage,
+      }
+    })
   }
 
   // Obtener vehiculo por patente

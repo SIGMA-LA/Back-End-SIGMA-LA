@@ -20,6 +20,10 @@ vehiculoRouter.post(
   },
 )
 
+vehiculoRouter.get('/disponibilidad', (req, res) => {
+  vehiculoController.getDisponibilidadPorFecha(req, res)
+})
+
 vehiculoRouter.get(
   '/:patente',
   (req, res) => {
