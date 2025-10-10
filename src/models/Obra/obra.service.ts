@@ -159,6 +159,37 @@ export class ObraService {
     })
   }
 
+  /** Obtiene obras de empresas para realizar pedido de stock */
+  async findObrasParaPedidoStock() {
+    return this.repository.findObrasParaPedidoStock()
+  }
+
+  /** Cambia el estado de una obra a EN ESPERA DE STOCK */
+  async solicitarStock(id: number): Promise<obra> {
+    const obra = await this.repository.findById(id)
+    if (!obra) {
+      throw new Error('Obra no encontrada.')
+    }
+    if (obra.estado !== 'PAGADA PARCIALMENTE') {
+      throw new Error(
+        'Solo se puede solicitar stock para obras con pago parcial.',
+      )
+    }
+    return await this.repository.update(id, { estado: 'EN ESPERA DE STOCK' })
+  }
+
+  /** Cambia el estado de una obra a EN PRODUCCION */
+  async recibirStock(id: number): Promise<obra> {
+    const obra = await this.repository.findById(id)
+    if (!obra) {
+      throw new Error('Obra no encontrada.')
+    }
+    if (obra.estado !== 'EN ESPERA DE STOCK') {
+      throw new Error('Esta obra no está esperando stock.')
+    }
+    return await this.repository.update(id, { estado: 'EN PRODUCCION' })
+  }
+
   private formatCUIL(cuil: string): string {
     // Formatear CUIL con guiones: 20-12345678-9
     if (cuil.length === 11) {

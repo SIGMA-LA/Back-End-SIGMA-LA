@@ -27,6 +27,21 @@ obraRouter.get('/', (req, res) => {
   obraController.getAll(req, res)
 })
 
+// Obtener obras listas para pedido de stock
+obraRouter.get('/para-pedido-stock', (req, res) => {
+  obraController.getObrasParaPedidoStock(req, res)
+})
+
+// Solicitar stock para una obra
+obraRouter.patch('/:id/solicitar-stock', (req, res) => {
+  obraController.solicitarStock(req, res)
+})
+
+// Confirmar recepción de stock
+obraRouter.patch('/:id/recibir-stock', (req, res) => {
+  obraController.recibirStock(req, res)
+})
+
 // ----------- NOTA DE FÁBRICA -----------
 
 // Subir nota de fábrica a una obra

@@ -157,4 +157,42 @@ export class ObraController {
       })
     }
   }
+
+  /** Obtiene obras para pedido de stock */
+  async getObrasParaPedidoStock(req: Request, res: Response) {
+    try {
+      const obras = await obraService.findObrasParaPedidoStock()
+      res.json(obras)
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: 'Error al obtener obras para pedido', error })
+    }
+  }
+
+  /** Cambia el estado de una obra a EN ESPERA DE STOCK */
+  async solicitarStock(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id, 10)
+      const obra = await obraService.solicitarStock(id)
+      res.json({ message: 'Pedido de stock solicitado con éxito', obra })
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(400).json({ message })
+    }
+  }
+
+  /** Cambia el estado de una obra a EN PRODUCCION */
+  async recibirStock(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id, 10)
+      const obra = await obraService.recibirStock(id)
+      res.json({ message: 'Stock recibido y obra en producción', obra })
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(400).json({ message })
+    }
+  }
 }
