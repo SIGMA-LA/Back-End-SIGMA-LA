@@ -42,16 +42,6 @@ export class ObraController {
     }
   }
 
-  async buscar(req: Request, res: Response) {
-    try {
-      const q = req.query.q as string
-      const obras = await obraService.buscar(q)
-      res.json(obras)
-    } catch (error) {
-      res.status(500).json({ message: 'Error al buscar obras', error })
-    }
-  }
-
   async getAll(req: Request, res: Response) {
     const obras = await obraService.findAll()
     res.status(201).json(obras)
@@ -105,5 +95,32 @@ export class ObraController {
   async getNotasConOrdenEnProceso(req: Request, res: Response) {
     const obras = await obraService.findNotasConOrdenEnProceso()
     res.json(obras)
+  }
+
+  async getObrasConPresupuestoAceptado(req: Request, res: Response) {
+    try {
+      let search = req.query.search as string
+
+      // Sanitizar el input de búsqueda
+      if (search) {
+        search = search.trim().replace(/[<>{}]/g, '')
+        // Limitar longitud para evitar ataques
+        if (search.length > 100) {
+          return res.status(400).json({
+            message: 'El término de búsqueda es demasiado largo',
+          })
+        }
+      }
+
+      const obras = await obraService.findObrasConPresupuestoAceptado(search)
+      res.json(obras)
+    } catch (error) {
+      console.error('Error al obtener obras con presupuesto aceptado:', error)
+      res.status(500).json({
+        message:
+          'Error interno del servidor al obtener obras con presupuesto aceptado',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
   }
 }

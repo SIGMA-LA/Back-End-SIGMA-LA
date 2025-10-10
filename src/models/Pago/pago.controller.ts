@@ -24,8 +24,67 @@ export class PagoController {
   }
 
   async getAll(req: Request, res: Response) {
-    const pagos = await pagoService.findAll()
-    res.status(200).json(pagos)
+    try {
+      const filters = {
+        cliente: req.query.cliente as string,
+        fechaDesde: req.query.fechaDesde as string,
+        fechaHasta: req.query.fechaHasta as string,
+        obra: req.query.obra as string,
+        montoMin: req.query.montoMin
+          ? parseFloat(req.query.montoMin as string)
+          : undefined,
+        montoMax: req.query.montoMax
+          ? parseFloat(req.query.montoMax as string)
+          : undefined,
+      }
+
+      if (filters.fechaDesde && filters.fechaHasta) {
+        const fechaDesde = new Date(filters.fechaDesde)
+        const fechaHasta = new Date(filters.fechaHasta)
+        if (fechaDesde > fechaHasta) {
+          return res.status(400).json({
+            message: 'La fecha desde no puede ser mayor que la fecha hasta',
+          })
+        }
+      }
+
+      if (filters.montoMin !== undefined && filters.montoMax !== undefined) {
+        if (filters.montoMin > filters.montoMax) {
+          return res.status(400).json({
+            message: 'El monto mínimo no puede ser mayor que el monto máximo',
+          })
+        }
+      }
+
+      if (filters.cliente) {
+        filters.cliente = filters.cliente.replace(/[<>{}]/g, '')
+      }
+      if (filters.obra) {
+        filters.obra = filters.obra.replace(/[<>{}]/g, '')
+      }
+
+      Object.keys(filters).forEach(key => {
+        const value = filters[key as keyof typeof filters]
+        if (
+          value === undefined ||
+          value === '' ||
+          (typeof value === 'number' && isNaN(value))
+        ) {
+          delete filters[key as keyof typeof filters]
+        }
+      })
+
+      const pagos = await pagoService.findAll(
+        Object.keys(filters).length > 0 ? filters : undefined,
+      )
+      res.status(200).json(pagos)
+    } catch (error) {
+      console.error('Error al obtener pagos:', error)
+      res.status(500).json({
+        message: 'Error interno del servidor al obtener pagos',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
   }
 
   async create(req: Request, res: Response) {
