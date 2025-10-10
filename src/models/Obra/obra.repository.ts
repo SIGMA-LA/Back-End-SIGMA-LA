@@ -31,6 +31,12 @@ export class ObraRepository {
     estado?: string
     cod_localidad?: number
   }) {
+    if (!estado && !cod_localidad) {
+      return this.prisma.obra.findMany({
+        include: { cliente: true, localidad: true },
+        orderBy: { cod_obra: 'desc' },
+      })
+    }
     return this.prisma.obra.findMany({
       where: {
         ...(estado && { estado }),
@@ -40,7 +46,6 @@ export class ObraRepository {
       orderBy: { cod_obra: 'desc' },
     })
   }
-
   async findById(id: number): Promise<obra | null> {
     return await this.prisma.obra.findUnique({
       where: { cod_obra: id },
