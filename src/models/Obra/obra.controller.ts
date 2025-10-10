@@ -15,20 +15,9 @@ const obraService = new ObraService()
  * @throws {Error} - Si ocurre un error durante la operación.
  */
 export class ObraController {
-  async create(req: Request, res: Response) {
-    const nueva = await obraService.create(req.body)
-    res.status(201).json(nueva)
-  }
-  async buscar(req: Request, res: Response) {
-    try {
-      const q = req.query.q as string
-      const obras = await obraService.buscar(q)
-      res.json(obras)
-    } catch (error) {
-      res.status(500).json({ message: 'Error al buscar obras', error })
-    }
-  }
+  // ----------- FILTROS Y BÚSQUEDAS -----------
 
+  /** Filtra obras por estado, localidad o ambos */
   async filtrar(req: Request, res: Response) {
     try {
       const { estado, localidad } = req.query
@@ -42,15 +31,29 @@ export class ObraController {
     }
   }
 
+  /** Busca obras por texto (dirección, cliente, etc.) */
+  async buscar(req: Request, res: Response) {
+    try {
+      const q = req.query.q as string
+      const obras = await obraService.buscar(q)
+      res.json(obras)
+    } catch (error) {
+      res.status(500).json({ message: 'Error al buscar obras', error })
+    }
+  }
+
+  /** Obtiene todas las obras */
   async getAll(req: Request, res: Response) {
     const obras = await obraService.findAll()
     res.status(201).json(obras)
   }
 
+  /** Obtiene una obra por ID (usado internamente) */
   async getOneById(id: number) {
     return await obraService.findById(id)
   }
 
+  /** Obtiene una obra por ID (endpoint) */
   async getOne(req: Request, res: Response) {
     const id = parseInt(req.params.id, 10)
     const obra = await obraService.findById(id)
@@ -60,6 +63,9 @@ export class ObraController {
     res.json(obra)
   }
 
+  // ----------- NOTA DE FÁBRICA -----------
+
+  /** Sube nota de fábrica a una obra */
   async subirNotaFabrica(req: Request, res: Response) {
     const id = parseInt(req.params.id, 10)
     if (!req.file) {
@@ -69,18 +75,57 @@ export class ObraController {
     res.status(201).json({ message: 'Archivo subido correctamente' })
   }
 
+  /** Elimina la nota de fábrica de una obra */
   async deleteNotaFabrica(req: Request, res: Response) {
     const id = parseInt(req.params.id, 10)
     await obraService.deleteNotaFabrica(id)
     res.json({ message: 'Nota de fábrica eliminada correctamente' })
   }
 
+  /** Obtiene obras con nota de fábrica sin orden aprobada */
+  async getNotasSinOrdenAprobada(req: Request, res: Response) {
+    const obras = await obraService.findNotasSinOrdenAprobada()
+    res.json(obras)
+  }
+
+  /** Obtiene obras con nota de fábrica y orden en proceso */
+  async getNotasConOrdenEnProceso(req: Request, res: Response) {
+    const obras = await obraService.findNotasConOrdenEnProceso()
+    res.json(obras)
+  }
+
+  // ----------- CRUD DE OBRAS -----------
+
+  /** Crea una nueva obra */
+  async create(req: Request, res: Response) {
+    const nueva = await obraService.create(req.body)
+    res.status(201).json(nueva)
+  }
+
+  /** Actualiza una obra por ID */
   async update(req: Request, res: Response) {
     const id = parseInt(req.params.id, 10)
     const obra = await obraService.update(id, req.body)
     res.json(obra)
   }
 
+  /** Baja lógica de una obra (cambia estado a CANCELADA) */
+  async bajaLogica(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id, 10)
+      const obra = await obraService.bajaLogica(id)
+      if (!obra) {
+        return res.status(404).json({ message: 'Obra no encontrada' })
+      }
+      res.json({ message: 'Baja lógica realizada con éxito', obra })
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: 'Error al realizar la baja lógica', error })
+    }
+  }
+
+  /** Elimina una obra por ID (baja física) */
   async remove(req: Request, res: Response) {
     const id = parseInt(req.params.id, 10)
     const obra = await obraService.remove(id)

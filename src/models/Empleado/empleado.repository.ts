@@ -83,12 +83,19 @@ export class EmpleadoRepository {
   }
 
   // Buscar empleados por criterio
-  async findByCriteria(
+  async findByCriteriaPublic(
     criteria: Prisma.empleadoWhereInput,
-  ): Promise<empleado[]> {
+  ): Promise<EmpleadoPayload[]> {
     return await this.prisma.empleado.findMany({
       where: criteria,
       orderBy: { nombre: 'asc' },
+      select: {
+        cuil: true,
+        nombre: true,
+        apellido: true,
+        rol_actual: true,
+        area_trabajo: true,
+      },
     })
   }
 

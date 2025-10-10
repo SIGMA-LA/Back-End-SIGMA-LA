@@ -1,6 +1,9 @@
 import { PrismaClient, obra, Prisma } from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
 
+/**
+ * Repositorio para acceder a la base de datos de obras.
+ */
 export class ObraRepository {
   private prisma: PrismaClient
 
@@ -8,11 +11,7 @@ export class ObraRepository {
     this.prisma = prisma
   }
 
-  async create(data: Prisma.obraCreateInput): Promise<obra> {
-    return await this.prisma.obra.create({
-      data,
-    })
-  }
+  // ----------- FILTROS Y BÚSQUEDAS -----------
 
   async findAll() {
     return await this.prisma.obra.findMany({
@@ -29,6 +28,7 @@ export class ObraRepository {
       },
     })
   }
+  /** Filtra obras por estado, localidad o ambos */
   async filtrar({
     estado,
     cod_localidad,
@@ -36,6 +36,12 @@ export class ObraRepository {
     estado?: string
     cod_localidad?: number
   }) {
+    if (!estado && !cod_localidad) {
+      return this.prisma.obra.findMany({
+        include: { cliente: true, localidad: true },
+        orderBy: { cod_obra: 'desc' },
+      })
+    }
     return this.prisma.obra.findMany({
       where: {
         ...(estado && { estado }),
@@ -55,6 +61,38 @@ export class ObraRepository {
     })
   }
 
+  /** Busca obras por texto (dirección, cliente, etc.) */
+  async buscar(q: string) {
+    return this.prisma.obra.findMany({
+      where: {
+        OR: [
+          { direccion: { contains: q, mode: 'insensitive' } },
+          { cliente: { razon_social: { contains: q, mode: 'insensitive' } } },
+          { cliente: { nombre: { contains: q, mode: 'insensitive' } } },
+          { cliente: { apellido: { contains: q, mode: 'insensitive' } } },
+        ],
+      },
+      include: {
+        cliente: true,
+      },
+      orderBy: { cod_obra: 'desc' },
+      take: 10,
+    })
+  }
+
+  /** Obtiene todas las obras */
+  async findAll(): Promise<obra[]> {
+    return await this.prisma.obra.findMany({
+      orderBy: { cod_obra: 'desc' },
+      include: {
+        cliente: true,
+        localidad: true,
+        presupuesto: true,
+      },
+    })
+  }
+
+  /** Obtiene una obra por ID */
   async findById(id: number): Promise<obra | null> {
     return await this.prisma.obra.findUnique({
       where: { cod_obra: id },
@@ -65,6 +103,10 @@ export class ObraRepository {
       },
     })
   }
+
+  // ----------- NOTA DE FÁBRICA -----------
+
+  /** Sube nota de fábrica a una obra */
   async subirNotaFabrica(
     id: number,
     path: string,
@@ -79,19 +121,7 @@ export class ObraRepository {
     })
   }
 
-  async update(id: number, data: Prisma.obraUpdateInput): Promise<obra> {
-    return await this.prisma.obra.update({
-      where: { cod_obra: id },
-      data,
-    })
-  }
-
-  async delete(id: number): Promise<obra> {
-    return await this.prisma.obra.delete({
-      where: { cod_obra: id },
-    })
-  }
-
+  /** Obtiene obras con nota de fábrica sin orden aprobada */
   async findNotasSinOrdenAprobada(): Promise<obra[]> {
     return await this.prisma.obra.findMany({
       where: {
@@ -132,6 +162,7 @@ export class ObraRepository {
     })
   }
 
+  /** Obtiene obras con nota de fábrica y orden en proceso */
   async findNotasConOrdenEnProceso(): Promise<obra[]> {
     return await this.prisma.obra.findMany({
       where: {
@@ -223,6 +254,41 @@ export class ObraRepository {
         pago: true,
       },
       take: 1000, // Limitar para performance
+  // ----------- CRUD DE OBRAS -----------
+
+  /** Crea una nueva obra */
+  async create(data: Prisma.obraCreateInput): Promise<obra> {
+    return await this.prisma.obra.create({
+      data,
+    })
+  }
+
+  /** Actualiza una obra por ID */
+  async update(id: number, data: Prisma.obraUpdateInput): Promise<obra> {
+    return await this.prisma.obra.update({
+      where: { cod_obra: id },
+      data,
+    })
+  }
+
+  /** Baja lógica de una obra (cambia estado a CANCELADA) */
+  async bajaLogica(id: number): Promise<obra | null> {
+    const obra = await this.prisma.obra.findUnique({
+      where: { cod_obra: id },
+    })
+    if (!obra) {
+      return null
+    }
+    return await this.prisma.obra.update({
+      where: { cod_obra: id },
+      data: { estado: 'CANCELADA' },
+    })
+  }
+
+  /** Elimina una obra por ID (baja física) */
+  async delete(id: number): Promise<obra> {
+    return await this.prisma.obra.delete({
+      where: { cod_obra: id },
     })
   }
 }
