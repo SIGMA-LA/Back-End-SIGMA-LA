@@ -81,14 +81,10 @@ export class OrdenProduccionService {
         data: { estado: 'FINALIZADA' },
       }),
 
-      prisma.obra.update({
-        where: { cod_obra: orden.cod_obra },
-        data: { estado: 'FINALIZADA' },
-      }),
     ])
 
     console.log(
-      `[NOTIFICACIÓN] La producción de la Obra #${orden.cod_obra} ha finalizado. Notificar a Coordinación.`,
+      `[NOTIFICACIÓN] La producción de la Orden #${orden.cod_op} ha finalizado. Notificar a Coordinación.`,
     )
 
     return ordenActualizada
