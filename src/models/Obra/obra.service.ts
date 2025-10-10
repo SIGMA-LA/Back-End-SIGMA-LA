@@ -1,16 +1,13 @@
 import { obra, Prisma } from '@prisma/client'
 import { ObraRepository } from './obra.repository.js'
 
+type ObraCreateInputExtended = Prisma.obraCreateInput & {
+  cuil?: string
+  cod_localidad?: number
+}
+
 /**
  * Servicio para gestionar las operaciones relacionadas con las obras.
- * @class ObraService
- * @method create - Crea una nueva obra.
- * @method findAll - Obtiene todas las obras.
- * @method findById - Obtiene una obra por su código.
- * @method update - Actualiza una obra existente.
- * @method remove - Elimina una obra por su código.
- * @returns {Promise<obra | obra[]>} - Resultado de la operación.
- * @throws {Error} - Si ocurre un error durante la operación.
  */
 export class ObraService {
   private repository: ObraRepository
@@ -18,39 +15,37 @@ export class ObraService {
   constructor() {
     this.repository = new ObraRepository()
   }
-  async buscar(q: string) {
-    return this.repository.buscar(q)
-  }
+
+  // ----------- FILTROS Y BÚSQUEDAS -----------
+
+  /** Filtra obras por estado, localidad o ambos */
   async filtrar(filtros: { estado?: string; cod_localidad?: number }) {
     return this.repository.filtrar(filtros)
   }
 
-  async create(data: Prisma.obraCreateInput): Promise<obra> {
-    if (
-      typeof data.fecha_ini === 'string' &&
-      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_ini)
-    ) {
-      data.fecha_ini = new Date(data.fecha_ini + 'T00:00:00.000Z')
-    }
-
-    if (data.nota_fabrica === '' || data.nota_fabrica === null) {
-      delete data.nota_fabrica
-    }
-    return await this.repository.create(data)
+  /** Busca obras por texto (dirección, cliente, etc.) */
+  async buscar(q: string) {
+    return this.repository.buscar(q)
   }
 
+  /** Obtiene todas las obras */
   async findAll(): Promise<obra[]> {
     return this.repository.findAll()
   }
 
+  /** Obtiene una obra por ID */
   async findById(id: number): Promise<obra | null> {
     return await this.repository.findById(id)
   }
 
+  // ----------- NOTA DE FÁBRICA -----------
+
+  /** Sube nota de fábrica a una obra */
   async subirNotaFabrica(id: number, file: Express.Multer.File): Promise<void> {
     await this.repository.subirNotaFabrica(id, file.path, file.filename)
   }
 
+  /** Elimina la nota de fábrica de una obra */
   async deleteNotaFabrica(id: number) {
     await this.repository.update(id, {
       nota_fabrica: null,
@@ -58,6 +53,44 @@ export class ObraService {
     })
   }
 
+  /** Obtiene obras con nota de fábrica sin orden aprobada */
+  async findNotasSinOrdenAprobada(): Promise<obra[]> {
+    return await this.repository.findNotasSinOrdenAprobada()
+  }
+
+  /** Obtiene obras con nota de fábrica y orden en proceso */
+  async findNotasConOrdenEnProceso(): Promise<obra[]> {
+    return await this.repository.findNotasConOrdenEnProceso()
+  }
+
+  // ----------- CRUD DE OBRAS -----------
+
+  /** Crea una nueva obra */
+  async create(data: ObraCreateInputExtended): Promise<obra> {
+    const { cuil, cod_localidad, ...rest } = data
+
+    const prismaData: Prisma.obraCreateInput = {
+      ...rest,
+      ...(cuil && { cliente: { connect: { cuil } } }),
+      ...(cod_localidad && {
+        localidad: { connect: { cod_localidad: Number(cod_localidad) } },
+      }),
+    }
+
+    if (
+      typeof prismaData.fecha_ini === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(prismaData.fecha_ini)
+    ) {
+      prismaData.fecha_ini = new Date(prismaData.fecha_ini + 'T00:00:00.000Z')
+    }
+
+    if (prismaData.nota_fabrica === '' || prismaData.nota_fabrica === null) {
+      delete prismaData.nota_fabrica
+    }
+
+    return await this.repository.create(prismaData)
+  }
+  /** Actualiza una obra por ID */
   async update(id: number, data: Prisma.obraUpdateInput): Promise<obra> {
     if (
       typeof data.fecha_ini === 'string' &&
@@ -69,6 +102,12 @@ export class ObraService {
     return await this.repository.update(id, data)
   }
 
+  /** Baja lógica de una obra (cambia estado a CANCELADA) */
+  async bajaLogica(id: number) {
+    return this.repository.bajaLogica(id)
+  }
+
+  /** Elimina una obra por ID (baja física) */
   async remove(id: number): Promise<obra> {
     const existingObra = await this.repository.findById(id)
     if (!existingObra) {
@@ -81,13 +120,5 @@ export class ObraService {
     }
 
     return await this.repository.update(id, dataToUpdate)
-  }
-
-  async findNotasSinOrdenAprobada(): Promise<obra[]> {
-    return await this.repository.findNotasSinOrdenAprobada()
-  }
-
-  async findNotasConOrdenEnProceso(): Promise<obra[]> {
-    return await this.repository.findNotasConOrdenEnProceso()
   }
 }
