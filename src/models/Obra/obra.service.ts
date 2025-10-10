@@ -122,14 +122,6 @@ export class ObraService {
     return await this.repository.update(id, dataToUpdate)
   }
 
-  async findNotasSinOrdenAprobada(): Promise<obra[]> {
-    return await this.repository.findNotasSinOrdenAprobada()
-  }
-
-  async findNotasConOrdenEnProceso(): Promise<obra[]> {
-    return await this.repository.findNotasConOrdenEnProceso()
-  }
-
   async findObrasConPresupuestoAceptado(search?: string) {
     const obrasConPresupuesto =
       await this.repository.findObrasConPresupuestoAceptado(search)

@@ -82,12 +82,6 @@ export class ObraController {
     res.json({ message: 'Nota de fábrica eliminada correctamente' })
   }
 
-  /** Obtiene obras con nota de fábrica sin orden aprobada */
-  async getNotasSinOrdenAprobada(req: Request, res: Response) {
-    const obras = await obraService.findNotasSinOrdenAprobada()
-    res.json(obras)
-  }
-
   /** Obtiene obras con nota de fábrica y orden en proceso */
   async getNotasConOrdenEnProceso(req: Request, res: Response) {
     const obras = await obraService.findNotasConOrdenEnProceso()
@@ -134,11 +128,6 @@ export class ObraController {
 
   async getNotasSinOrdenAprobada(req: Request, res: Response) {
     const obras = await obraService.findNotasSinOrdenAprobada()
-    res.json(obras)
-  }
-
-  async getNotasConOrdenEnProceso(req: Request, res: Response) {
-    const obras = await obraService.findNotasConOrdenEnProceso()
     res.json(obras)
   }
 
