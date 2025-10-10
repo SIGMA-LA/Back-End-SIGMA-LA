@@ -50,6 +50,11 @@ export class EmpleadoService {
     })
   }
 
+  async findVisitadores(): Promise<EmpleadoPayload[]> {
+    return await this.empleadoRepository.findByCriteriaPublic({
+      rol_actual: 'VISITADOR',
+    })
+  }
   // Obtener todos los empleados
   async findAll(): Promise<EmpleadoPayload[]> {
     return await this.empleadoRepository.findAllPublic()
@@ -60,12 +65,9 @@ export class EmpleadoService {
     return await this.empleadoRepository.findByCuilPublic(cuil)
   }
 
-  async findDisponiblesParaEntrega(): Promise<empleado[]> {
-    return await this.empleadoRepository.findByCriteria({
-      OR: [
-        { rol_actual: 'VISITADOR' },
-        { rol_actual: 'PLANTA' },
-      ],
+  async findDisponiblesParaEntrega(): Promise<EmpleadoPayload[]> {
+    return await this.empleadoRepository.findByCriteriaPublic({
+      OR: [{ rol_actual: 'VISITADOR' }, { rol_actual: 'PLANTA' }],
     })
   }
 

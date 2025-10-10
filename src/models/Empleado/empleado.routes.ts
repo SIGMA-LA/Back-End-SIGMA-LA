@@ -15,11 +15,15 @@ empleadoRouter.get('/', (req, res) => {
   empleadoController.getAll(req, res)
 })
 
+empleadoRouter.get('/visitadores', (req, res) => {
+  empleadoController.getVisitadores(req, res)
+})
+
 empleadoRouter.get('/me', authenticateJWT, (req, res) => {
   empleadoController.getMe(req, res)
 })
 
-  empleadoRouter.get('/disponibles-entrega', (req, res) => {
+empleadoRouter.get('/disponibles-entrega', (req, res) => {
   empleadoController.getDisponiblesParaEntrega(req, res)
 })
 

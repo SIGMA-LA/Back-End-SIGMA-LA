@@ -21,6 +21,11 @@ export class EmpleadoController {
     res.status(201).json(empleado)
   }
 
+  async getVisitadores(req: Request, res: Response) {
+    const empleados = await empleadoService.findVisitadores()
+    res.json(empleados)
+  }
+
   async getMe(req: Request, res: Response) {
     const user = req.user
     if (!user) {
