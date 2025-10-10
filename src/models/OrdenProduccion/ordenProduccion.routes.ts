@@ -36,6 +36,10 @@ ordenProduccionRouter.delete('/:cod_orden', (req, res) => {
   ordenProduccionController.remove(req, res)
 })
 
+ordenProduccionRouter.get('/obra/:cod_obra/finalizada', (req, res) => {
+  ordenProduccionController.getByObraAndFinalizada(req, res)
+})
+
 ordenProduccionRouter.get('/obra/:cod_obra', (req, res) => {
   ordenProduccionController.getByObra(req, res)
 })

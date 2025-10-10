@@ -14,6 +14,32 @@ export class VehiculoRepository {
     })
   }
 
+  async findAllWithUsageInRange(
+    fechaInicio: Date,
+    fechaFin: Date,
+  ) {
+    return await this.prisma.vehiculo.findMany({
+      include: {
+        uso_vehiculo_entrega: {
+          where: {
+            AND: [
+              { fecha_hora_ini_uso: { lt: fechaFin } },
+              { fecha_hora_fin_est: { gt: fechaInicio } },
+            ],
+          },
+        },
+        uso_vehiculo_visita: {
+          where: {
+            AND: [
+              { fecha_hora_ini_uso: { lt: fechaFin } },
+              { fecha_hora_fin_est: { gt: fechaInicio } },
+            ],
+          },
+        },
+      },
+    })
+  }
+
   // Obtener vehiculo por patente
   async findByPatente(patente: string): Promise<vehiculo | null> {
     return await this.prisma.vehiculo.findUnique({

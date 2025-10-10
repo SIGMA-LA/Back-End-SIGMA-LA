@@ -65,6 +65,10 @@ export class OrdenProduccionService {
     return await this.repository.findByObra(cod_obra)
   }
 
+  async findByObraAndFinalizada(cod_obra: number): Promise<orden_de_produccion[]> {
+    return await this.repository.findByObraAndFinalizada(cod_obra)
+  }
+
   async finalizarProduccion(cod_op: number): Promise<orden_de_produccion> {
     const orden = await this.repository.findById(cod_op)
     if (!orden) {
