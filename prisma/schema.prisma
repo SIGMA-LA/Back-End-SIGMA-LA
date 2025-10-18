@@ -26,6 +26,7 @@ model empleado {
   rol_actual       String             @db.VarChar(50)
   area_trabajo     String             @db.VarChar(50)
   contrasenia      String?            @db.VarChar(255)
+  refreshTokenHash String?            @db.VarChar(255)
   empleado_visita  empleado_visita[]
   entrega_empleado entrega_empleado[]
 }

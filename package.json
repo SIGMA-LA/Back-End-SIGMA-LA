@@ -14,7 +14,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "prepare": "husky",
-    "seed": "pnpm exec ts-node src/shared/db/seeder.ts"
+    "seed": "pnpx prisma migrate reset --force && timeout /t 3 && pnpx ts-node src/shared/db/localidadesSeeder.ts && pnpx ts-node src/shared/db/seeder.ts"
   },
   "keywords": [],
   "author": "",
@@ -33,8 +33,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
-    "papaparse": "^5.5.3",
-    "sigma-la-schemas": "^1.0.28",
+    "sigma-la-schemas": "git+https://github.com/SIGMA-LA/sigma-la-schemas.git",
     "valibot": "^1.1.0"
   },
   "devDependencies": {
@@ -45,7 +44,6 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.1",
-    "@types/papaparse": "^5.3.16",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
     "cross-env": "^10.0.0",
