@@ -50,7 +50,7 @@ export class AuthService {
    * Inicia sesión validando credenciales y genera JWT.
    * @param {bigint} cuil - CUIL del empleado
    * @param {string} contrasenia - Contraseña en texto plano
-   * @returns {Promise<{ token: string, empleado: empleado }>} - JWT y datos del empleado
+   * @returns {Promise<{ token: string, empleado: empleado, refreshToken: string }>} - JWT y datos del empleado
    */
   async login(
     cuil: string,
@@ -65,9 +65,10 @@ export class AuthService {
       throw new Error('Credenciales inválidas')
     }
     const token = this.generateToken(empleado)
+
     const refreshToken = jwt.sign(
       { cuil: empleado.cuil, jti: uuidv4() },
-      process.env.REFRESH_TOKEN_SECRET!,
+      process.env.NODE_AUTH_REFRESH_TOKEN!,
       { expiresIn: '30d' },
     )
     const hash = await bcrypt.hash(refreshToken, 10)
