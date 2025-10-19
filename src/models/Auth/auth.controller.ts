@@ -41,18 +41,21 @@ export class AuthController {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 8 * 60 * 60 * 1000,
+        path: '/',
       })
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 30 * 24 * 60 * 60 * 1000,
+        path: '/',
       })
       res.cookie('usuario', JSON.stringify(empleado), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 8 * 60 * 60 * 1000,
+        path: '/',
       })
 
       res.status(200).json({ empleado })
