@@ -117,7 +117,7 @@ export class ObraRepository {
           not: null,
         },
         estado: {
-          in: ['ACTIVA', 'EN PRODUCCION'],
+          in: ['PAGADA PARCIALMENTE'],
         },
         orden_de_produccion: {
           none: {

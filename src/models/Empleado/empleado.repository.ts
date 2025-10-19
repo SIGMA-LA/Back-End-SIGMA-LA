@@ -126,4 +126,14 @@ export class EmpleadoRepository {
       where: { rol_actual },
     })
   }
+
+  async updateRefreshTokenHash(
+    cuil: string,
+    hash: string | null,
+  ): Promise<void> {
+    await this.prisma.empleado.update({
+      where: { cuil },
+      data: { refreshTokenHash: hash },
+    })
+  }
 }

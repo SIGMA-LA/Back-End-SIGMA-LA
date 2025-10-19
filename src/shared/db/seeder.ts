@@ -14,24 +14,6 @@ async function post(url: string, data: Record<string, unknown>) {
 }
 
 async function seed() {
-  // Localidades
-  await post(`${API_URL}/api/localidades`, {
-    cod_postal: 1000,
-    nombre_localidad: 'Ciudad Uno',
-  })
-  await post(`${API_URL}/api/localidades`, {
-    cod_postal: 2000,
-    nombre_localidad: 'Ciudad Dos',
-  })
-  await post(`${API_URL}/api/localidades`, {
-    cod_postal: 3000,
-    nombre_localidad: 'Ciudad Tres',
-  })
-  await post(`${API_URL}/api/localidades`, {
-    cod_postal: 4000,
-    nombre_localidad: 'Ciudad Cuatro',
-  })
-
   // Clientes
   await post(`${API_URL}/api/clientes`, {
     cuil: '20111111111',

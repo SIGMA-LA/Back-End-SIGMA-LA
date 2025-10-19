@@ -16,11 +16,6 @@ export class AuthController {
     this.authService = new AuthService()
   }
 
-  /**
-   * Endpoint para registrar un nuevo empleado (visitador).
-   * @param {Request} req - Express request
-   * @param {Response} res - Express response
-   */
   async register(req: Request, res: Response) {
     try {
       const data = parse(registerSchema, req.body)
@@ -33,16 +28,37 @@ export class AuthController {
     }
   }
 
-  /**
-   * Endpoint para login de empleado.
-   * @param {Request} req - Express request
-   * @param {Response} res - Express response
-   */
   async login(req: Request, res: Response) {
     try {
       const { cuil, contrasenia } = parse(loginSchema, req.body)
-      const result = await this.authService.login(cuil, contrasenia)
-      res.status(200).json(result)
+      const { token, refreshToken, empleado } = await this.authService.login(
+        cuil,
+        contrasenia,
+      )
+
+      res.cookie('accessToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 8 * 60 * 60 * 1000,
+        path: '/',
+      })
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        path: '/',
+      })
+      res.cookie('usuario', JSON.stringify(empleado), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 8 * 60 * 60 * 1000,
+        path: '/',
+      })
+
+      res.status(200).json({ empleado })
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Error desconocido'
@@ -50,11 +66,21 @@ export class AuthController {
     }
   }
 
-  /**
-   * Endpoint para obtener el perfil del usuario autenticado.
-   * @param {Request} req - Express request
-   * @param {Response} res - Express response
-   */
+  async logout(req: Request, res: Response) {
+    try {
+      res.clearCookie('accessToken')
+      res.clearCookie('refreshToken')
+      res.clearCookie('usuario')
+      const refreshToken = req.cookies?.refreshToken || req.body.refreshToken
+      await this.authService.logout(refreshToken)
+      res.status(204).send()
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(400).json({ error: message })
+    }
+  }
+
   async getProfile(req: Request, res: Response) {
     try {
       const cuil = req.user?.cuil
@@ -64,6 +90,27 @@ export class AuthController {
       const message =
         error instanceof Error ? error.message : 'Error desconocido'
       res.status(404).json({ error: message })
+    }
+  }
+
+  async refresh(req: Request, res: Response) {
+    try {
+      const refreshToken = req.cookies.refreshToken
+      if (!refreshToken) {
+        return res.status(401).json({ error: 'No hay refresh token' })
+      }
+      const { token } = await this.authService.refreshAccessToken(refreshToken)
+      res.cookie('accessToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 8 * 60 * 60 * 1000,
+      })
+      res.status(200).json({ message: 'Token refrescado' })
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(401).json({ error: message })
     }
   }
 }

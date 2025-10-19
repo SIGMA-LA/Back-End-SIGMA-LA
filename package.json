@@ -14,7 +14,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "prepare": "husky",
-    "seed": "pnpm exec ts-node src/shared/db/seeder.ts"
+    "seed": "pnpx prisma migrate reset --force && timeout /t 3 && pnpx ts-node src/shared/db/localidadesSeeder.ts && pnpx ts-node src/shared/db/seeder.ts"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +26,7 @@
     "@types/multer-s3": "^3.0.3",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -35,12 +36,14 @@
     "multer-storage-cloudinary": "^4.0.0",
     "papaparse": "^5.5.3",
     "sigma-la-schemas": "^1.0.28",
+    "uuid": "^13.0.0",
     "valibot": "^1.1.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.35.0",
+    "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",

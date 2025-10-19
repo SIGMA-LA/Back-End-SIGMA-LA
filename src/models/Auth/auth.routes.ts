@@ -17,9 +17,11 @@ router.post('/register', validate({ body: registerSchema }), (req, res) =>
 router.post('/login', validate({ body: loginSchema }), (req, res) =>
   authController.login(req, res),
 )
+router.post('/logout', (req, res) => authController.logout(req, res))
+
+router.post('/refresh', (req, res) => authController.refresh(req, res))
 
 router.get('/profile', authenticateJWT, (req, res) =>
   authController.getProfile(req, res),
 )
-
 export default router

@@ -2,6 +2,7 @@ import { EmpleadoRepository } from '../Empleado/empleado.repository.js'
 import { empleado } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { v4 as uuidv4 } from 'uuid'
 
 const JWT_SECRET = process.env.JWT_SECRET as string
 const JWT_EXPIRES_IN = '8h'
@@ -49,12 +50,12 @@ export class AuthService {
    * Inicia sesión validando credenciales y genera JWT.
    * @param {bigint} cuil - CUIL del empleado
    * @param {string} contrasenia - Contraseña en texto plano
-   * @returns {Promise<{ token: string, empleado: empleado }>} - JWT y datos del empleado
+   * @returns {Promise<{ token: string, empleado: empleado, refreshToken: string }>} - JWT y datos del empleado
    */
   async login(
     cuil: string,
     contrasenia: string,
-  ): Promise<{ token: string; empleado: empleado }> {
+  ): Promise<{ token: string; empleado: empleado; refreshToken: string }> {
     const empleado = await this.empleadoRepository.findByCuil(cuil)
     if (!empleado || !empleado.contrasenia) {
       throw new Error('Credenciales inválidas')
@@ -64,7 +65,23 @@ export class AuthService {
       throw new Error('Credenciales inválidas')
     }
     const token = this.generateToken(empleado)
-    return { token, empleado }
+
+    const refreshToken = jwt.sign(
+      { cuil: empleado.cuil, jti: uuidv4() },
+      process.env.NODE_AUTH_REFRESH_TOKEN!,
+      { expiresIn: '30d' },
+    )
+    const hash = await bcrypt.hash(refreshToken, 10)
+    await this.empleadoRepository.updateRefreshTokenHash(empleado.cuil, hash)
+    return { token, refreshToken, empleado }
+  }
+
+  async logout(refreshToken: string): Promise<void> {
+    if (!refreshToken) return
+    const payload = jwt.decode(refreshToken) as { cuil?: string }
+    if (payload?.cuil) {
+      await this.empleadoRepository.updateRefreshTokenHash(payload.cuil, null)
+    }
   }
 
   /**
@@ -106,5 +123,29 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { contrasenia, ...empleadoSinContrasenia } = empleado
     return empleadoSinContrasenia
+  }
+
+  async refreshAccessToken(refreshToken: string): Promise<{ token: string }> {
+    try {
+      const payload = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET!,
+      ) as jwt.JwtPayload
+      const empleado = await this.empleadoRepository.findByCuil(payload.cuil)
+      if (!empleado || !empleado.refreshTokenHash) {
+        throw new Error('Refresh token inválido')
+      }
+      const isValid = await bcrypt.compare(
+        refreshToken,
+        empleado.refreshTokenHash,
+      )
+      if (!isValid) {
+        throw new Error('Refresh token inválido')
+      }
+      const token = this.generateToken(empleado)
+      return { token }
+    } catch {
+      throw new Error('Refresh token inválido')
+    }
   }
 }
