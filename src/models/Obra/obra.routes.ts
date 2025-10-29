@@ -18,7 +18,6 @@ obraRouter.get('/', (req, res) => {
 
 // Filtrar obras por estado o localidad
 obraRouter.get('/filtrar', (req, res) => {
-  console.log('Entró al route de filtrar obras')
   obraController.filtrar(req, res)
 })
 

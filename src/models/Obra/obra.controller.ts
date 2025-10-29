@@ -21,12 +21,6 @@ export class ObraController {
   async filtrar(req: Request, res: Response) {
     try {
       const { estado, localidad } = req.query
-      console.log(
-        'Filtrando obras con estado:',
-        estado,
-        'y localidad:',
-        localidad,
-      )
       const obras = await obraService.filtrar({
         estado: estado as string | undefined,
         cod_localidad: localidad ? Number(localidad) : undefined,
