@@ -39,7 +39,7 @@ export class ObraRepository {
     if (!estado && !cod_localidad) {
       return this.prisma.obra.findMany({
         include: { cliente: true, localidad: true },
-        orderBy: { cod_obra: 'desc' },
+        orderBy: { fecha_ini: 'desc' },
       })
     }
     return this.prisma.obra.findMany({
@@ -54,10 +54,8 @@ export class ObraRepository {
             provincia: true,
           },
         },
-        presupuesto: true,
-        pago: true,
       },
-      orderBy: { cod_obra: 'desc' },
+      orderBy: { fecha_ini: 'desc' },
     })
   }
 
@@ -74,6 +72,11 @@ export class ObraRepository {
       },
       include: {
         cliente: true,
+        localidad: {
+          include: {
+            provincia: true,
+          },
+        },
       },
       orderBy: { cod_obra: 'desc' },
       take: 10,
