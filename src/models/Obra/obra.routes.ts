@@ -11,6 +11,10 @@ const obraController = new ObraController()
 const obraRouter = Router()
 
 // ----------- FILTROS Y BÚSQUEDAS -----------
+// Obtener todas las obras
+obraRouter.get('/', (req, res) => {
+  obraController.getAll(req, res)
+})
 
 // Filtrar obras por estado o localidad
 obraRouter.get('/filtrar', (req, res) => {
@@ -20,11 +24,6 @@ obraRouter.get('/filtrar', (req, res) => {
 // Buscar obras por texto (dirección, cliente, etc.)
 obraRouter.get('/buscar', (req, res) => {
   obraController.buscar(req, res)
-})
-
-// Obtener todas las obras
-obraRouter.get('/', (req, res) => {
-  obraController.getAll(req, res)
 })
 
 // Obtener obras listas para pedido de stock
