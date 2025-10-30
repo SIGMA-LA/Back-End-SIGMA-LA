@@ -6,59 +6,110 @@ import {
   updateEmpleadoSchema,
   cuilParamsSchema,
 } from 'sigma-la-schemas'
-import { authenticateJWT } from '../Auth/auth.middleware.js'
+import { authenticateJWT, authorizeRoles } from '../Auth/auth.middleware.js'
 
 const empleadoController = new EmpleadoController()
 const empleadoRouter = Router()
 
-empleadoRouter.get('/', (req, res) => {
-  empleadoController.getAll(req, res)
+/**
+ * @route   GET /api/empleados
+ * @desc    Obtener todos los empleados activos
+ * @access  Privado (requiere autenticación)
+ */
+empleadoRouter.get('/', authenticateJWT, (req, res, next) => {
+  empleadoController.getAll(req, res, next)
 })
 
-empleadoRouter.get('/visitadores', (req, res) => {
-  empleadoController.getVisitadores(req, res)
+/**
+ * @route   GET /api/empleados/visitadores
+ * @desc    Obtener todos los visitadores activos
+ * @access  Privado (requiere autenticación)
+ */
+empleadoRouter.get('/visitadores', authenticateJWT, (req, res, next) => {
+  empleadoController.getVisitadores(req, res, next)
 })
 
-empleadoRouter.get('/me', authenticateJWT, (req, res) => {
-  empleadoController.getMe(req, res)
+/**
+ * @route   GET /api/empleados/me
+ * @desc    Obtener información del empleado autenticado
+ * @access  Privado (requiere autenticación)
+ */
+empleadoRouter.get('/me', authenticateJWT, (req, res, next) => {
+  empleadoController.getMe(req, res, next)
 })
 
-empleadoRouter.get('/disponibles-entrega', (req, res) => {
-  empleadoController.getDisponiblesParaEntrega(req, res)
-})
+/**
+ * @route   GET /api/empleados/disponibles-entrega
+ * @desc    Obtener empleados disponibles para entrega (VISITADOR o PLANTA)
+ * @access  Privado (requiere autenticación)
+ */
+empleadoRouter.get(
+  '/disponibles-entrega',
+  authenticateJWT,
+  (req, res, next) => {
+    empleadoController.getDisponiblesParaEntrega(req, res, next)
+  },
+)
 
+/**
+ * @route   POST /api/empleados
+ * @desc    Crear nuevo empleado
+ * @access  Privado (solo ADMIN)
+ */
 empleadoRouter.post(
   '/',
+  authenticateJWT,
+  authorizeRoles(['ADMIN']),
   validate({ body: createEmpleadoSchema }),
-  (req, res) => {
-    empleadoController.create(req, res)
+  (req, res, next) => {
+    empleadoController.create(req, res, next)
   },
 )
 
+/**
+ * @route   GET /api/empleados/:cuil
+ * @desc    Obtener un empleado por CUIL
+ * @access  Privado (requiere autenticación)
+ */
 empleadoRouter.get(
   '/:cuil',
+  authenticateJWT,
   validate({ params: cuilParamsSchema }),
-  (req, res) => {
-    empleadoController.getOne(req, res)
+  (req, res, next) => {
+    empleadoController.getOne(req, res, next)
   },
 )
 
+/**
+ * @route   PUT /api/empleados/:cuil
+ * @desc    Actualizar un empleado
+ * @access  Privado (solo ADMIN)
+ */
 empleadoRouter.put(
   '/:cuil',
+  authenticateJWT,
+  authorizeRoles(['ADMIN']),
   validate({
     params: cuilParamsSchema,
     body: updateEmpleadoSchema,
   }),
-  (req, res) => {
-    empleadoController.update(req, res)
+  (req, res, next) => {
+    empleadoController.update(req, res, next)
   },
 )
 
+/**
+ * @route   DELETE /api/empleados/:cuil
+ * @desc    Desactivar un empleado (soft delete)
+ * @access  Privado (solo ADMIN)
+ */
 empleadoRouter.delete(
   '/:cuil',
+  authenticateJWT,
+  authorizeRoles(['ADMIN']),
   validate({ params: cuilParamsSchema }),
-  (req, res) => {
-    empleadoController.remove(req, res)
+  (req, res, next) => {
+    empleadoController.remove(req, res, next)
   },
 )
 

@@ -1,73 +1,196 @@
-import { Request, Response } from 'express'
+import { Request, Response, NextFunction } from 'express'
 import { EmpleadoService } from './empleado.service.js'
 
 const empleadoService = new EmpleadoService()
 
 /**
  * Controlador para manejar las rutas de empleados.
+ * Maneja las respuestas HTTP y delega la lógica de negocio al servicio.
  * @class EmpleadoController
- * @method create - Maneja la creación de un nuevo empleado.
- * @method getAll - Maneja la obtención de todos los empleados.
- * @method getOne - Maneja la obtención de un empleado por su CUIL.
- * @method update - Maneja la actualización de un empleado existente.
- * @method remove - Maneja la eliminación de un empleado por su CUIL.
- * @returns {Promise<void>} - Respuesta HTTP.
- * @throws {Error} - Si ocurre un error durante la operación.
  */
-
 export class EmpleadoController {
-  async create(req: Request, res: Response) {
-    const empleado = await empleadoService.create(req.body)
-    res.status(201).json(empleado)
-  }
-
-  async getVisitadores(req: Request, res: Response) {
-    const empleados = await empleadoService.findVisitadores()
-    res.json(empleados)
-  }
-
-  async getMe(req: Request, res: Response) {
-    const user = req.user
-    if (!user) {
-      return res.status(404).json({ message: 'Empleado no encontrado' })
+  /**
+   * Crear nuevo empleado (solo ADMIN)
+   * La contraseña es OPCIONAL - un empleado puede existir sin acceso al sistema
+   */
+  async create(req: Request, res: Response, next: NextFunction) {
+    try {
+      const empleado = await empleadoService.create(req.body)
+      res.status(201).json({
+        success: true,
+        message: 'Empleado creado exitosamente',
+        data: empleado,
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'Ya existe un empleado con ese CUIL') {
+          return res.status(409).json({
+            success: false,
+            message: error.message,
+          })
+        }
+      }
+      next(error)
     }
-    const empleado = await empleadoService.findByCuil(
-      user.cuil ? user.cuil : '',
-    )
-    if (!empleado) {
-      return res.status(404).json({ message: 'Empleado no encontrado' })
+  }
+
+  /**
+   * Obtener todos los visitadores activos
+   */
+  async getVisitadores(req: Request, res: Response, next: NextFunction) {
+    try {
+      const empleados = await empleadoService.findVisitadores()
+      res.json({
+        success: true,
+        data: empleados,
+        count: empleados.length,
+      })
+    } catch (error) {
+      next(error)
     }
-    res.json(empleado)
   }
 
-  async getAll(req: Request, res: Response) {
-    const empleados = await empleadoService.findAll()
-    res.json(empleados)
-  }
+  /**
+   * Obtener datos del empleado autenticado
+   */
+  async getMe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user
+      if (!user || !user.cuil) {
+        return res.status(401).json({
+          success: false,
+          message: 'Usuario no autenticado',
+        })
+      }
 
-  async getOne(req: Request, res: Response) {
-    const cuil = req.params.cuil
-    const empleado = await empleadoService.findByCuil(cuil)
-    if (!empleado) {
-      return res.status(404).json({ message: 'Empleado no encontrado' })
+      const empleado = await empleadoService.findByCuil(user.cuil)
+      if (!empleado) {
+        return res.status(404).json({
+          success: false,
+          message: 'Empleado no encontrado',
+        })
+      }
+
+      res.json({
+        success: true,
+        data: empleado,
+      })
+    } catch (error) {
+      next(error)
     }
-    res.json(empleado)
   }
 
-  async getDisponiblesParaEntrega(req: Request, res: Response) {
-    const empleados = await empleadoService.findDisponiblesParaEntrega()
-    res.json(empleados)
+  /**
+   * Obtener todos los empleados activos
+   */
+  async getAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const empleados = await empleadoService.findAll()
+      res.json({
+        success: true,
+        data: empleados,
+        count: empleados.length,
+      })
+    } catch (error) {
+      next(error)
+    }
   }
 
-  async update(req: Request, res: Response) {
-    const cuil = req.params.cuil
-    const empleado = await empleadoService.update(cuil, req.body)
-    res.json(empleado)
+  /**
+   * Obtener un empleado por CUIL
+   */
+  async getOne(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { cuil } = req.params
+      const empleado = await empleadoService.findByCuil(cuil)
+
+      if (!empleado) {
+        return res.status(404).json({
+          success: false,
+          message: 'Empleado no encontrado',
+        })
+      }
+
+      res.json({
+        success: true,
+        data: empleado,
+      })
+    } catch (error) {
+      next(error)
+    }
   }
 
-  async remove(req: Request, res: Response) {
-    const cuil = req.params.cuil
-    const empleado = await empleadoService.remove(cuil)
-    res.json(empleado)
+  /**
+   * Obtener empleados disponibles para entrega (VISITADOR o PLANTA)
+   */
+  async getDisponiblesParaEntrega(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const empleados = await empleadoService.findDisponiblesParaEntrega()
+      res.json({
+        success: true,
+        data: empleados,
+        count: empleados.length,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
+   * Actualizar un empleado
+   */
+  async update(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { cuil } = req.params
+      const empleado = await empleadoService.update(cuil, req.body)
+
+      res.json({
+        success: true,
+        message: 'Empleado actualizado exitosamente',
+        data: empleado,
+      })
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === 'Empleado no encontrado'
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: error.message,
+        })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * Desactivar un empleado (soft delete)
+   */
+  async remove(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { cuil } = req.params
+      const empleado = await empleadoService.remove(cuil)
+
+      res.json({
+        success: true,
+        message: 'Empleado desactivado exitosamente',
+        data: empleado,
+      })
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === 'Empleado no encontrado'
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: error.message,
+        })
+      }
+      next(error)
+    }
   }
 }
