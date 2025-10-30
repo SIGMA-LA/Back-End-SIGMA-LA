@@ -14,6 +14,10 @@ clienteRouter.post('/', (req, res) => {
   clienteController.create(req, res)
 })
 
+clienteRouter.get('/buscar', (req, res) => {
+  clienteController.buscar(req, res)
+})
+
 clienteRouter.get(
   '/:cuil',
   validate({ params: cuilParamsSchema }),

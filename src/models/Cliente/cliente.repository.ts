@@ -14,6 +14,20 @@ export class ClienteRepository {
     })
   }
 
+  async buscar(q: string): Promise<cliente[]> {
+    console.log('Buscando clientes con query:', q) // --- IGNORE ---
+    return await this.prisma.cliente.findMany({
+      where: {
+        OR: [
+          { razon_social: { contains: q, mode: 'insensitive' } },
+          { cuil: { contains: q, mode: 'insensitive' } },
+          { nombre: { contains: q, mode: 'insensitive' } },
+          { apellido: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+    })
+  }
+
   async findAll(): Promise<cliente[]> {
     return await this.prisma.cliente.findMany({
       orderBy: { razon_social: 'asc' },

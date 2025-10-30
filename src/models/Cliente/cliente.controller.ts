@@ -20,6 +20,17 @@ export class ClienteController {
     res.status(201).json(cliente)
   }
 
+  async buscar(req: Request, res: Response) {
+    try {
+      const q = req.query.q as string
+      console.log('Buscando clientes con query:', q) // --- IGNORE ---
+      const clientes = await clienteService.buscar(q)
+      res.json(clientes)
+    } catch (error) {
+      res.status(500).json({ message: 'Error al buscar clientes', error })
+    }
+  }
+
   async getAll(req: Request, res: Response) {
     const clientes = await clienteService.findAll()
     res.json(clientes)
