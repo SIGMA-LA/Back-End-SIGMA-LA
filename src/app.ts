@@ -6,7 +6,10 @@ import cookieParser from 'cookie-parser'
 dotenv.config()
 
 import ROUTES from './shared/routes/index.routes.js'
+import authRouter from './models/Auth/auth.routes.js'
+import { authenticateJWT } from './models/Auth/auth.middleware.js'
 import { errorHandler } from './shared/middlewares/errorHandler.js'
+
 const app = express()
 const PORT = process.env.PORT || 4000
 
@@ -19,6 +22,11 @@ app.use(
 
 app.use(express.json())
 app.use(cookieParser())
+
+app.use('/api/auth', authRouter)
+
+app.use(authenticateJWT)
+
 app.use(ROUTES)
 
 // error handler middleware

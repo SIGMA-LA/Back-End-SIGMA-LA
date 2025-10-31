@@ -6,7 +6,7 @@ import {
   updateEmpleadoSchema,
   cuilParamsSchema,
 } from 'sigma-la-schemas'
-import { authenticateJWT, authorizeRoles } from '../Auth/auth.middleware.js'
+import { authorizeRoles } from '../Auth/auth.middleware.js'
 
 const empleadoController = new EmpleadoController()
 const empleadoRouter = Router()
@@ -16,7 +16,7 @@ const empleadoRouter = Router()
  * @desc    Obtener todos los empleados activos
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.get('/', authenticateJWT, (req, res, next) => {
+empleadoRouter.get('/', (req, res, next) => {
   empleadoController.getAll(req, res, next)
 })
 
@@ -25,7 +25,7 @@ empleadoRouter.get('/', authenticateJWT, (req, res, next) => {
  * @desc    Obtener todos los visitadores activos
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.get('/visitadores', authenticateJWT, (req, res, next) => {
+empleadoRouter.get('/visitadores', (req, res, next) => {
   empleadoController.getVisitadores(req, res, next)
 })
 
@@ -34,7 +34,7 @@ empleadoRouter.get('/visitadores', authenticateJWT, (req, res, next) => {
  * @desc    Obtener información del empleado autenticado
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.get('/me', authenticateJWT, (req, res, next) => {
+empleadoRouter.get('/me', (req, res, next) => {
   empleadoController.getMe(req, res, next)
 })
 
@@ -43,13 +43,9 @@ empleadoRouter.get('/me', authenticateJWT, (req, res, next) => {
  * @desc    Obtener empleados disponibles para entrega (VISITADOR o PLANTA)
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.get(
-  '/disponibles-entrega',
-  authenticateJWT,
-  (req, res, next) => {
-    empleadoController.getDisponiblesParaEntrega(req, res, next)
-  },
-)
+empleadoRouter.get('/disponibles-entrega', (req, res, next) => {
+  empleadoController.getDisponiblesParaEntrega(req, res, next)
+})
 
 /**
  * @route   POST /api/empleados
@@ -58,7 +54,6 @@ empleadoRouter.get(
  */
 empleadoRouter.post(
   '/',
-  authenticateJWT,
   authorizeRoles(['ADMIN']),
   validate({ body: createEmpleadoSchema }),
   (req, res, next) => {
@@ -73,7 +68,6 @@ empleadoRouter.post(
  */
 empleadoRouter.get(
   '/:cuil',
-  authenticateJWT,
   validate({ params: cuilParamsSchema }),
   (req, res, next) => {
     empleadoController.getOne(req, res, next)
@@ -87,7 +81,6 @@ empleadoRouter.get(
  */
 empleadoRouter.put(
   '/:cuil',
-  authenticateJWT,
   authorizeRoles(['ADMIN']),
   validate({
     params: cuilParamsSchema,
@@ -105,7 +98,6 @@ empleadoRouter.put(
  */
 empleadoRouter.delete(
   '/:cuil',
-  authenticateJWT,
   authorizeRoles(['ADMIN']),
   validate({ params: cuilParamsSchema }),
   (req, res, next) => {

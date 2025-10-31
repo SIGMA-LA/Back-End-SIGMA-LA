@@ -49,11 +49,8 @@ import visitaRouter from '../../models/Visita/visita.routes.js'
 import entregaEmpleadoRouter from '../../models/EntregaEmpleado/entregaEmpleado.routes.js'
 import visitaEmpleadoRouter from '../../models/VisitaEmpleado/visitaEmpleado.routes.js'
 
-import authRouter from '../../models/Auth/auth.routes.js'
 import routeMid from '../../models/midlewareTest/mid.routes.js'
 import provinciaRouter from '../../models/Provincia/provincia.routes.js'
-
-router.use('/api/auth', authRouter)
 
 router.use('/api/empleados', empleadoRouter)
 router.use('/api/vehiculos', vehiculoRouter)
