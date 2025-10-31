@@ -65,23 +65,12 @@ export class PagoService {
       }
 
       const totalPresupuestado = presupuestoAceptado.valor
-
-      const totalPagado = obra.pago.reduce((sum, p) => sum + p.monto, 0)
-
-      if (totalPagado === 0) {
-        await tx.obra.update({
-          where: { cod_obra },
-          data: { estado: 'PAGADA PARCIALMENTE' },
-        })
-      }
-
-      if (totalPagado > 0 && obra.estado !== 'PRODUCCION FINALIZADA') {
-        throw new Error(
-          'Solo se pueden registrar pagos finales si la obra está en estado "PRODUCCION FINALIZADA".',
-        )
-      }
-
-      const montoRestante = totalPresupuestado - totalPagado
+      const totalPagadoAnteriormente = obra.pago.reduce(
+        (sum, p) => sum + p.monto,
+        0,
+      )
+      const nuevoTotalPagado = totalPagadoAnteriormente + nuevoMonto
+      const montoRestante = totalPresupuestado - totalPagadoAnteriormente
 
       if (nuevoMonto > montoRestante + 0.01) {
         throw new Error(
@@ -89,21 +78,34 @@ export class PagoService {
         )
       }
 
+      const esPagoFinal = nuevoTotalPagado >= totalPresupuestado - 0.01
+
+      if (esPagoFinal && obra.estado !== 'PRODUCCION FINALIZADA') {
+        throw new Error(
+          'El pago total solo puede registrarse si el estado de la obra es "PRODUCCION FINALIZADA".',
+        )
+      }
+
       const nuevoPago = await tx.pago.create({
         data: {
           monto: nuevoMonto,
           fecha_pago: new Date(),
-          obra: {
-            connect: { cod_obra: cod_obra },
-          },
+          obra: { connect: { cod_obra: cod_obra } },
         },
       })
 
-      const nuevoTotalPagado = totalPagado + nuevoMonto
-      if (nuevoTotalPagado >= totalPresupuestado - 0.01) {
+      let nuevoEstadoObra = obra.estado
+
+      if (esPagoFinal) {
+        nuevoEstadoObra = 'PAGADA TOTALMENTE'
+      } else if (nuevoTotalPagado > 0) {
+        nuevoEstadoObra = 'PAGADA PARCIALMENTE'
+      }
+
+      if (obra.estado !== nuevoEstadoObra) {
         await tx.obra.update({
           where: { cod_obra },
-          data: { estado: 'PAGADA TOTALMENTE' },
+          data: { estado: nuevoEstadoObra },
         })
       }
 

@@ -8,9 +8,10 @@ export class EmpleadoRepository {
     this.prisma = prisma
   }
 
-  // Obtener todos los empleados (solo datos públicos)
+  // Obtener todos los empleados activos (solo datos públicos)
   async findAllPublic(): Promise<EmpleadoPayload[]> {
     return await this.prisma.empleado.findMany({
+      where: { activo: true },
       orderBy: { nombre: 'asc' },
       select: {
         cuil: true,
@@ -18,6 +19,7 @@ export class EmpleadoRepository {
         apellido: true,
         rol_actual: true,
         area_trabajo: true,
+        activo: true,
       },
     })
   }
@@ -31,6 +33,7 @@ export class EmpleadoRepository {
         apellido: true,
         rol_actual: true,
         area_trabajo: true,
+        activo: true,
       },
     })
   }
@@ -95,6 +98,7 @@ export class EmpleadoRepository {
         apellido: true,
         rol_actual: true,
         area_trabajo: true,
+        activo: true,
       },
     })
   }

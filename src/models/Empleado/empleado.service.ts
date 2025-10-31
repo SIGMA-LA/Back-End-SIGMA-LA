@@ -1,17 +1,16 @@
 import { EmpleadoRepository } from './empleado.repository.js'
-import { empleado } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 /**
  * Servicio para manejar la lógica de negocio de empleados.
  * @class EmpleadoService
  * @method create - Crea un nuevo empleado validando que el CUIL no exista.
- * @method findAll - Obtiene todos los empleados.
- * @method findByCuil - Obtiene un empleado por su CUIL.
+ * @method findAll - Obtiene todos los empleados activos.
+ * @method findByCuil - Obtiene un empleado activo por su CUIL.
  * @method update - Actualiza un empleado existente verificando que existe.
- * @method remove - Elimina un empleado por su CUIL verificando que existe.
- * @method count - Cuenta el total de empleados registrados.
- * @returns {Promise<empleado | empleado[] | number | null>} - Resultado de la operación.
+ * @method remove - Desactiva un empleado (soft delete).
+ * @method count - Cuenta el total de empleados activos.
+ * @returns {Promise<EmpleadoPayload | EmpleadoPayload[] | number | null>} - Resultado de la operación.
  * @throws {Error} - Si ocurre un error durante la operación.
  */
 
@@ -21,6 +20,7 @@ export interface EmpleadoPayload {
   apellido: string
   rol_actual: string
   area_trabajo: string
+  activo: boolean
 }
 
 export class EmpleadoService {
@@ -37,37 +37,67 @@ export class EmpleadoService {
     apellido: string
     rol_actual: string
     area_trabajo: string
-    contrasenia: string
-  }): Promise<empleado> {
+    contrasenia?: string
+  }): Promise<EmpleadoPayload> {
     const existingEmpleado = await this.empleadoRepository.findByCuil(data.cuil)
     if (existingEmpleado) {
       throw new Error('Ya existe un empleado con ese CUIL')
     }
-    const hashedPassword = await bcrypt.hash(data.contrasenia, 10)
-    return await this.empleadoRepository.create({
-      ...data,
+
+    // Si se proporciona contraseña, hashearla. Si no, dejar en null
+    const hashedPassword = data.contrasenia
+      ? await bcrypt.hash(data.contrasenia, 10)
+      : null
+
+    const empleado = await this.empleadoRepository.create({
+      cuil: data.cuil,
+      nombre: data.nombre,
+      apellido: data.apellido,
+      rol_actual: data.rol_actual,
+      area_trabajo: data.area_trabajo,
       contrasenia: hashedPassword,
     })
+
+    // Retornar sin la contraseña
+    return {
+      cuil: empleado.cuil,
+      nombre: empleado.nombre,
+      apellido: empleado.apellido,
+      rol_actual: empleado.rol_actual,
+      area_trabajo: empleado.area_trabajo,
+      activo: empleado.activo,
+    }
   }
 
   async findVisitadores(): Promise<EmpleadoPayload[]> {
     return await this.empleadoRepository.findByCriteriaPublic({
       rol_actual: 'VISITADOR',
+      activo: true,
     })
   }
-  // Obtener todos los empleados
+
+  // Obtener todos los empleados activos
   async findAll(): Promise<EmpleadoPayload[]> {
     return await this.empleadoRepository.findAllPublic()
   }
 
   // Obtener empleado por CUIL
   async findByCuil(cuil: string): Promise<EmpleadoPayload | null> {
-    return await this.empleadoRepository.findByCuilPublic(cuil)
+    const empleado = await this.empleadoRepository.findByCuilPublic(cuil)
+    if (!empleado) {
+      return null
+    }
+    // Verificar que esté activo
+    if (!empleado.activo) {
+      return null
+    }
+    return empleado
   }
 
   async findDisponiblesParaEntrega(): Promise<EmpleadoPayload[]> {
     return await this.empleadoRepository.findByCriteriaPublic({
       OR: [{ rol_actual: 'VISITADOR' }, { rol_actual: 'PLANTA' }],
+      activo: true,
     })
   }
 
@@ -81,28 +111,54 @@ export class EmpleadoService {
       area_trabajo: string
       contrasenia?: string
     }>,
-  ): Promise<empleado> {
+  ): Promise<EmpleadoPayload> {
     const existingEmpleado =
       await this.empleadoRepository.findByCuilPublic(cuil)
-    if (!existingEmpleado) {
+    if (!existingEmpleado || !existingEmpleado.activo) {
       throw new Error('Empleado no encontrado')
     }
-    if (data.contrasenia) {
-      data.contrasenia = await bcrypt.hash(data.contrasenia, 10)
+
+    // Si se proporciona contraseña, hashearla
+    const updateData = data.contrasenia
+      ? { ...data, contrasenia: await bcrypt.hash(data.contrasenia, 10) }
+      : data
+
+    const empleado = await this.empleadoRepository.update(cuil, updateData)
+
+    // Retornar sin la contraseña
+    return {
+      cuil: empleado.cuil,
+      nombre: empleado.nombre,
+      apellido: empleado.apellido,
+      rol_actual: empleado.rol_actual,
+      area_trabajo: empleado.area_trabajo,
+      activo: empleado.activo,
     }
-    return await this.empleadoRepository.update(cuil, data)
   }
 
-  // Eliminar empleado
-  async remove(cuil: string): Promise<empleado> {
+  // Soft delete - Desactivar empleado
+  async remove(cuil: string): Promise<EmpleadoPayload> {
     const existingEmpleado = await this.empleadoRepository.findByCuil(cuil)
-    if (!existingEmpleado) {
+    if (!existingEmpleado || !existingEmpleado.activo) {
       throw new Error('Empleado no encontrado')
     }
-    return await this.empleadoRepository.delete(cuil)
+
+    const empleado = await this.empleadoRepository.update(cuil, {
+      activo: false,
+    })
+
+    // Retornar sin la contraseña
+    return {
+      cuil: empleado.cuil,
+      nombre: empleado.nombre,
+      apellido: empleado.apellido,
+      rol_actual: empleado.rol_actual,
+      area_trabajo: empleado.area_trabajo,
+      activo: empleado.activo,
+    }
   }
 
-  // Contar total de empleados
+  // Contar total de empleados activos
   async count(): Promise<number> {
     return await this.empleadoRepository.count()
   }

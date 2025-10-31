@@ -27,6 +27,7 @@ model empleado {
   area_trabajo     String             @db.VarChar(50)
   contrasenia      String?            @db.VarChar(255)
   refreshTokenHash String?            @db.VarChar(255)
+  activo           Boolean            @default(true)
   empleado_visita  empleado_visita[]
   entrega_empleado entrega_empleado[]
 }
