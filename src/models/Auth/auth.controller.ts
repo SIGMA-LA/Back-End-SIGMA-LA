@@ -50,15 +50,22 @@ export class AuthController {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         path: '/',
       })
-      res.cookie('usuario', JSON.stringify(empleado), {
+
+      const usuarioSeguro = {
+        cuil: empleado.cuil,
+        nombre: empleado.nombre,
+        apellido: empleado.apellido,
+        rol_actual: empleado.rol_actual,
+      }
+
+      res.cookie('usuario', JSON.stringify(usuarioSeguro), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 8 * 60 * 60 * 1000,
         path: '/',
       })
-
-      res.status(200).json({ empleado })
+      res.status(200).json({ usuario: usuarioSeguro })
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Error desconocido'
