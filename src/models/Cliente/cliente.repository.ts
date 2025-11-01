@@ -25,6 +25,21 @@ export class ClienteRepository {
       where: { cuil: cuil },
     })
   }
+  async buscar(q: string, limit?: number, offset?: number): Promise<cliente[]> {
+    return await this.prisma.cliente.findMany({
+      where: {
+        OR: [
+          { razon_social: { contains: q, mode: 'insensitive' } },
+          { cuil: { contains: q, mode: 'insensitive' } },
+          { nombre: { contains: q, mode: 'insensitive' } },
+          { apellido: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      take: limit,
+      skip: offset,
+      orderBy: { razon_social: 'asc' },
+    })
+  }
 
   async update(
     cuil: string,

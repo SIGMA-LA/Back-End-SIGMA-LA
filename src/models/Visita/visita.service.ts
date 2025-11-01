@@ -47,7 +47,6 @@ export class VisitaService {
     )
 
     const createData = {
-      // ... otros campos de la visita (fecha_hora_visita, motivo_visita, etc.)
       fecha_hora_visita: new Date(data.fecha_hora_visita),
       motivo_visita: data.motivo_visita,
       estado: 'PROGRAMADA',
@@ -58,37 +57,25 @@ export class VisitaService {
       apellido_cliente: data.apellido_cliente,
       telefono_cliente: data.telefono_cliente,
 
-      // Conexiones
       ...(data.cod_obra && { obra: { connect: { cod_obra: data.cod_obra } } }),
       ...(data.cod_localidad && {
         localidad: { connect: { cod_localidad: data.cod_localidad } },
       }),
 
-      // Relación con empleados (esto ya estaba bien)
       empleado_visita: {
         createMany: {
           data: empleadosParaCrear,
           skipDuplicates: true,
         },
       },
-
-      // --- ¡LA CORRECCIÓN FINAL ESTÁ AQUÍ! ---
-      // Relación con el uso del vehículo
       uso_vehiculo_visita: {
         create: {
-          // 1. Conectamos con el vehículo existente a través de la patente.
           vehiculo: {
             connect: {
               patente: data.vehiculo,
             },
           },
-
-          // 2. Proporcionamos los campos OBLIGATORIOS de la tabla 'uso_vehiculo_visita'.
-          //    Estos valores los podemos tomar de la propia visita.
           fecha_hora_ini_uso: new Date(data.fecha_hora_visita),
-
-          // Asumimos que la fecha fin estimada es la fecha fin de la visita.
-          // Si el frontend envía `fechaHasta`, úsala. Si no, usa la fecha de inicio.
           fecha_hora_fin_est: new Date(
             data.fechaHasta || data.fecha_hora_visita,
           ),
@@ -107,6 +94,12 @@ export class VisitaService {
   // Obtener visita por cod_visita
   async findById(cod_visita: number): Promise<visita | null> {
     return await this.visitaRepository.findById(cod_visita)
+  }
+
+  async buscar(q: string, page = 1, pageSize = 25): Promise<visita[]> {
+    const limit = Math.max(1, Math.min(100, pageSize))
+    const offset = (Math.max(1, page) - 1) * limit
+    return await this.visitaRepository.buscar(q, limit, offset)
   }
 
   // Actualizar visita

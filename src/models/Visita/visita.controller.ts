@@ -33,6 +33,28 @@ export class VisitaController {
     res.json(visita)
   }
 
+  async buscar(req: Request, res: Response) {
+    try {
+      const q = String(req.query.q ?? '').trim()
+      const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
+      const pageSize = Math.max(
+        1,
+        Math.min(100, parseInt(String(req.query.pageSize ?? '25'), 10)),
+      )
+
+      if (!q) {
+        return res.status(400).json({ message: 'Parametro "q" es requerido' })
+      }
+
+      const visitas = await visitaService.buscar(q, page, pageSize)
+      return res.status(200).json(visitas)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      return res.status(500).json({ error: message })
+    }
+  }
+
   async update(req: Request, res: Response) {
     const { id } = req.params
     const visita = await visitaService.update(Number(id), req.body)

@@ -148,6 +148,55 @@ export class VisitaRepository {
       },
     })
   }
+
+  async buscar(q: string, limit?: number, offset?: number): Promise<visita[]> {
+    return await this.prisma.visita.findMany({
+      where: {
+        OR: [
+          { direccion_visita: { contains: q, mode: 'insensitive' } },
+          { nombre_cliente: { contains: q, mode: 'insensitive' } },
+          { apellido_cliente: { contains: q, mode: 'insensitive' } },
+          {
+            obra: {
+              cliente: {
+                OR: [
+                  { nombre: { contains: q, mode: 'insensitive' } },
+                  { apellido: { contains: q, mode: 'insensitive' } },
+                  { razon_social: { contains: q, mode: 'insensitive' } },
+                ],
+              },
+            },
+          },
+          {
+            obra: {
+              direccion: { contains: q, mode: 'insensitive' },
+            },
+          },
+        ],
+      },
+      include: {
+        obra: {
+          include: {
+            cliente: true,
+          },
+        },
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
+          },
+        },
+      },
+      take: limit,
+      skip: offset,
+      orderBy: { fecha_hora_visita: 'desc' },
+    })
+  }
+
   async findByEmpleadoAndEstado(
     cuil: string,
     estado: string,

@@ -14,6 +14,10 @@ visitaRouter.post('/', (req, res) => {
   visitaController.create(req, res)
 })
 
+visitaRouter.get('/buscar', (req, res) => {
+  visitaController.buscar(req, res)
+})
+
 visitaRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
   visitaController.getOne(req, res)
 })
