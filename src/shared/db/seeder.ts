@@ -1,567 +1,349 @@
-const API_URL = 'http://localhost:4000'
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
-async function post(url: string, data: Record<string, unknown>) {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Error ${res.status} en ${url}: ${err}`)
-  }
-  return res.json()
-}
+const prisma = new PrismaClient()
 
 async function seed() {
-  // Clientes
-  await post(`${API_URL}/api/clientes`, {
-    cuil: '20111111111',
-    razon_social: 'Cliente Uno',
-    telefono: '+54 9 11 1234 5678',
-    mail: 'uno@cliente.com',
+  console.log('🌱 Iniciando seed...')
+
+  // Clientes (5 clientes)
+  console.log('Creando clientes...')
+  await prisma.cliente.create({
+    data: {
+      cuil: '20111111111',
+      razon_social: 'Constructora ABC S.A.',
+      telefono: '+54 9 11 1234 5678',
+      mail: 'contacto@constructoraabc.com',
+      tipo_cliente: 'EMPRESA',
+    },
   })
-  await post(`${API_URL}/api/clientes`, {
-    cuil: '20222222222',
-    razon_social: 'Cliente Dos',
-    telefono: '+54 9 11 2345 6789',
-    mail: 'dos@cliente.com',
+  await prisma.cliente.create({
+    data: {
+      cuil: '20222222222',
+      razon_social: 'Inmobiliaria XYZ',
+      telefono: '+54 9 11 2345 6789',
+      mail: 'info@inmobiliariaxyz.com',
+      tipo_cliente: 'EMPRESA',
+    },
   })
-  await post(`${API_URL}/api/clientes`, {
-    cuil: '20333333333',
-    razon_social: 'Cliente Tres',
-    telefono: '+54 9 11 3456 7890',
-    mail: 'tres@cliente.com',
+  await prisma.cliente.create({
+    data: {
+      cuil: '20333333333',
+      nombre: 'Juan',
+      apellido: 'Pérez',
+      telefono: '+54 9 11 3456 7890',
+      mail: 'juan.perez@gmail.com',
+      sexo: 'M',
+      tipo_cliente: 'PARTICULAR',
+    },
   })
-  await post(`${API_URL}/api/clientes`, {
-    cuil: '20444444444',
-    razon_social: 'Cliente Cuatro',
-    telefono: '+54 9 11 4567 8901',
-    mail: 'cuatro@cliente.com',
+  await prisma.cliente.create({
+    data: {
+      cuil: '27444444444',
+      nombre: 'María',
+      apellido: 'González',
+      telefono: '+54 9 11 4567 8901',
+      mail: 'maria.gonzalez@hotmail.com',
+      sexo: 'F',
+      tipo_cliente: 'PARTICULAR',
+    },
+  })
+  await prisma.cliente.create({
+    data: {
+      cuil: '20555555555',
+      razon_social: 'Desarrollos Urbanos S.R.L.',
+      telefono: '+54 9 11 5678 9012',
+      mail: 'contacto@desarrollosurbanos.com',
+      tipo_cliente: 'EMPRESA',
+    },
   })
 
-  // Empleados - Roles únicos
-  const roles = ['ADMIN', 'COORDINACION', 'VISITADOR', 'VENTAS']
-  const areas = ['COORDINACION', 'VENTAS', 'PRODUCCION', 'ATENCION_CLIENTE']
-  for (let i = 0; i < roles.length; i++) {
-    await post(`${API_URL}/api/empleados`, {
-      cuil: `2099999999${i}`,
-      nombre: roles[i].charAt(0) + roles[i].slice(1).toLowerCase(),
-      apellido: 'Test',
-      rol_actual: roles[i],
-      area_trabajo: areas[i],
-      contrasenia: 'test1234',
-    })
-  }
+  // Empleados (1 por cada rol)
+  console.log('Creando empleados...')
 
-  // Empleados de PLANTA
-  const nombresPlanta = ['Carlos', 'Miguel', 'Roberto', 'Fernando', 'Diego']
-  const apellidosPlanta = [
-    'Martinez',
-    'Lopez',
-    'Garcia',
-    'Rodriguez',
-    'Gonzalez',
-  ]
-  const areasPlanta = [
-    'MECANIZADO',
-    'CORTE',
-    'ALMACEN',
-    'ENSAMBLE',
-    'PRODUCCION',
-  ]
+  // Hashear contraseñas
+  const adminPassword = await bcrypt.hash('test1234', 10)
+  const coordPassword = await bcrypt.hash('test1234', 10)
+  const ventasPassword = await bcrypt.hash('test1234', 10)
+  const prodPassword = await bcrypt.hash('test1234', 10)
+  const plantaPassword = await bcrypt.hash('test1234', 10)
+  const visitaPassword = await bcrypt.hash('test1234', 10)
 
-  for (let i = 0; i < 5; i++) {
-    await post(`${API_URL}/api/empleados`, {
-      cuil: `209999999${10 + i}`,
-      nombre: nombresPlanta[i],
-      apellido: apellidosPlanta[i],
+  await prisma.empleado.create({
+    data: {
+      cuil: '20999999991',
+      nombre: 'Carlos',
+      apellido: 'Admin',
+      rol_actual: 'ADMIN',
+      area_trabajo: 'ADMINISTRACION',
+      contrasenia: adminPassword,
+    },
+  })
+  await prisma.empleado.create({
+    data: {
+      cuil: '20999999992',
+      nombre: 'Laura',
+      apellido: 'Coordinadora',
+      rol_actual: 'COORDINACION',
+      area_trabajo: 'COORDINACION',
+      contrasenia: coordPassword,
+    },
+  })
+  await prisma.empleado.create({
+    data: {
+      cuil: '20999999993',
+      nombre: 'Martín',
+      apellido: 'Vendedor',
+      rol_actual: 'VENTAS',
+      area_trabajo: 'VENTAS',
+      contrasenia: ventasPassword,
+    },
+  })
+  await prisma.empleado.create({
+    data: {
+      cuil: '20999999994',
+      nombre: 'Ana',
+      apellido: 'Producción',
+      rol_actual: 'PRODUCCION',
+      area_trabajo: 'PRODUCCION',
+      contrasenia: prodPassword,
+    },
+  })
+  await prisma.empleado.create({
+    data: {
+      cuil: '20999999995',
+      nombre: 'Sofía',
+      apellido: 'Visitadora',
+      rol_actual: 'VISITADOR',
+      area_trabajo: 'ATENCION_CLIENTE',
+      contrasenia: visitaPassword,
+    },
+  })
+  await prisma.empleado.create({
+    data: {
+      cuil: '20999999996',
+      nombre: 'Roberto',
+      apellido: 'Operario',
       rol_actual: 'PLANTA',
-      area_trabajo: areasPlanta[i],
-      contrasenia: 'test1234',
+      area_trabajo: 'PLANTA',
+      contrasenia: plantaPassword,
+    },
+  })
+
+  // Vehículos (3 vehículos)
+  console.log('Creando vehículos...')
+  await prisma.vehiculo.create({
+    data: {
+      patente: 'ABC123',
+      tipo_vehiculo: 'CAMIONETA',
+      estado: 'DISPONIBLE',
+    },
+  })
+  await prisma.vehiculo.create({
+    data: {
+      patente: 'DEF456',
+      tipo_vehiculo: 'CAMION',
+      estado: 'DISPONIBLE',
+    },
+  })
+  await prisma.vehiculo.create({
+    data: {
+      patente: 'GHI789',
+      tipo_vehiculo: 'AUTO',
+      estado: 'EN_USO',
+    },
+  })
+
+  // Obras (5 obras)
+  console.log('Creando obras...')
+  const obra1 = await prisma.obra.create({
+    data: {
+      cod_localidad: 1000, // Asumiendo que existe
+      cuil: '20111111111',
+      fecha_ini: new Date('2025-01-15'),
+      estado: 'ACTIVA',
+      direccion: 'Av. Corrientes 1234, CABA',
+      nota_fabrica: null,
+    },
+  })
+  const obra2 = await prisma.obra.create({
+    data: {
+      cod_localidad: 1900, // Asumiendo que existe
+      cuil: '20222222222',
+      fecha_ini: new Date('2025-02-10'),
+      estado: 'EN PRODUCCION',
+      direccion: 'Calle 50 entre 7 y 8, La Plata',
+      nota_fabrica: 'Nota de fábrica aprobada',
+    },
+  })
+  const obra3 = await prisma.obra.create({
+    data: {
+      cod_localidad: 2000, // Asumiendo que existe
+      cuil: '20333333333',
+      fecha_ini: new Date('2025-03-05'),
+      estado: 'ACTIVA',
+      direccion: 'San Martín 567, Rosario',
+      nota_fabrica: null,
+    },
+  })
+  const obra4 = await prisma.obra.create({
+    data: {
+      cod_localidad: 400, // Asumiendo que existe
+      cuil: '27444444444',
+      fecha_ini: new Date('2025-04-20'),
+      estado: 'EN ESPERA DE PAGO',
+      direccion: 'Av. Libertador 890, Mendoza',
+      nota_fabrica: 'Pedido especial',
+    },
+  })
+  const obra5 = await prisma.obra.create({
+    data: {
+      cod_localidad: 500, // Asumiendo que existe
+      cuil: '20555555555',
+      fecha_ini: new Date('2025-05-12'),
+      estado: 'ACTIVA',
+      direccion: 'Belgrano 345, Córdoba',
+      nota_fabrica: null,
+    },
+  })
+
+  const obras = [obra1, obra2, obra3, obra4, obra5]
+
+  // Visitas (2 por cada obra = 10 visitas)
+  console.log('Creando visitas...')
+  for (const obra of obras) {
+    // Visita 1
+    const visita1 = await prisma.visita.create({
+      data: {
+        cod_obra: obra.cod_obra,
+        fecha_hora_visita: new Date(
+          `2025-0${obras.indexOf(obra) + 1}-20T10:00:00`,
+        ),
+        motivo_visita: 'Inspección inicial',
+        estado: 'REALIZADA',
+        observaciones: 'Todo en orden',
+        direccion_visita: obra.direccion,
+        cod_localidad: obra.cod_localidad,
+        nombre_cliente: 'Cliente',
+        apellido_cliente: 'Apellido',
+        telefono_cliente: '+54 9 11 1111 1111',
+        dias_viatico: 1,
+      },
+    })
+
+    // Visita 2
+    const visita2 = await prisma.visita.create({
+      data: {
+        cod_obra: obra.cod_obra,
+        fecha_hora_visita: new Date(
+          `2025-0${obras.indexOf(obra) + 1}-25T14:00:00`,
+        ),
+        motivo_visita: 'Seguimiento',
+        estado: 'REALIZADA',
+        observaciones: 'Avance según lo planeado',
+        direccion_visita: obra.direccion,
+        cod_localidad: obra.cod_localidad,
+        nombre_cliente: 'Cliente',
+        apellido_cliente: 'Apellido',
+        telefono_cliente: '+54 9 11 1111 1111',
+        dias_viatico: 1,
+      },
+    })
+
+    // Asignar empleado VISITADOR a las visitas
+    await prisma.empleado_visita.create({
+      data: {
+        cuil: '20999999995', // Sofía Visitadora
+        cod_visita: visita1.cod_visita,
+      },
+    })
+    await prisma.empleado_visita.create({
+      data: {
+        cuil: '20999999995', // Sofía Visitadora
+        cod_visita: visita2.cod_visita,
+      },
     })
   }
 
-  // Maquinarias
-  await post(`${API_URL}/api/maquinarias`, {
-    cod_maquina: 1,
-    descripcion: 'Excavadora',
-    estado: 'DISPONIBLE',
-  })
-  await post(`${API_URL}/api/maquinarias`, {
-    cod_maquina: 2,
-    descripcion: 'Grua',
-    estado: 'EN_USO',
-  })
-  await post(`${API_URL}/api/maquinarias`, {
-    cod_maquina: 3,
-    descripcion: 'Camión',
-    estado: 'MANTENIMIENTO',
-  })
-
-  // Vehículos
-  await post(`${API_URL}/api/vehiculos`, {
-    patente: 'ABC123',
-    tipo_vehiculo: 'CAMIONETA',
-    estado: 'DISPONIBLE',
-  })
-  await post(`${API_URL}/api/vehiculos`, {
-    patente: 'DEF456',
-    tipo_vehiculo: 'CAMION CHICO',
-    estado: 'EN USO',
-  })
-  await post(`${API_URL}/api/vehiculos`, {
-    patente: 'GHI789',
-    tipo_vehiculo: 'AUTOMOVIL',
-    estado: 'MANTENIMIENTO',
-  })
-
-  // Obras
-  await post(`${API_URL}/api/obras`, {
-    cod_localidad: 2000,
-    cuil: '20111111111',
-    fecha_ini: '2025-09-01',
-    estado: 'ACTIVA',
-    direccion: 'Calle 1',
-    nota_fabrica: 'Nota 1',
-  })
-  await post(`${API_URL}/api/obras`, {
-    cod_localidad: 2210,
-    cuil: '20222222222',
-    fecha_ini: '2025-09-02',
-    estado: 'ACTIVA',
-    direccion: 'Calle 2',
-    nota_fabrica: 'Nota 2',
-  })
-  await post(`${API_URL}/api/obras`, {
-    cod_localidad: 1000,
-    cuil: '20333333333',
-    fecha_ini: '2025-09-03',
-    estado: 'ACTIVA',
-    direccion: 'Calle 3',
-    nota_fabrica: 'Nota 3',
-  })
-  await post(`${API_URL}/api/obras`, {
-    cod_localidad: 1900,
-    cuil: '20444444444',
-    fecha_ini: '2025-09-04',
-    estado: 'EN PRODUCCION',
-    direccion: 'Calle 7 entre 47 y 48',
-    nota_fabrica: null,
-    nota_fabrica_pid: null,
-  })
-  await post(`${API_URL}/api/obras`, {
-    cod_localidad: 500,
-    cuil: '20555555555',
-    fecha_ini: '2025-09-05',
-    estado: 'EN ESPERA DE PAGO',
-    direccion: 'Av. Colón 4500',
-    nota_fabrica:
-      'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
-    nota_fabrica_pid: 'MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx',
-  })
-  await post(`${API_URL}/api/obras`, {
-    cod_localidad: 400,
-    cuil: '20666666666',
-    fecha_ini: '2025-09-06',
-    estado: 'EN ESPERA DE PAGO',
-    direccion: 'Av. Aconquija 1200',
-    nota_fabrica:
-      'https://res.cloudinary.com/dqiqkfr8z/image/upload/v1759612724/MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx.pdf',
-    nota_fabrica_pid: 'MODELO_Parcial_2_-_para_practicar_-_2025_yr9rpx',
-  })
-
-  // Entregas
-  await post(`${API_URL}/api/entregas`, {
-    cod_obra: 1,
-    fecha_hora_entrega: '2025-09-05T09:00',
-    estado: 'PENDIENTE',
-    detalle: 'Entrega inicial',
-    observaciones: 'Preparar documentación',
-  })
-  await post(`${API_URL}/api/entregas`, {
-    cod_obra: 1,
-    fecha_hora_entrega: '2025-09-10T14:00',
-    estado: 'EN CURSO',
-    detalle: 'Entrega parcial',
-    observaciones: 'Faltan accesorios',
-  })
-  await post(`${API_URL}/api/entregas`, {
-    cod_obra: 2,
-    fecha_hora_entrega: '2025-09-12T11:30',
-    estado: 'ENTREGADO',
-    detalle: 'Entrega completa',
-    observaciones: 'Todo conforme',
-  })
-  await post(`${API_URL}/api/entregas`, {
-    cod_obra: 2,
-    fecha_hora_entrega: '2025-09-15T16:00',
-    estado: 'CANCELADO',
-    detalle: 'Entrega cancelada',
-    observaciones: 'Cliente ausente',
-  })
-  await post(`${API_URL}/api/entregas`, {
-    cod_obra: 3,
-    fecha_hora_entrega: '2025-09-18T10:00',
-    estado: 'PENDIENTE',
-    detalle: 'Entrega inicial',
-    observaciones: 'Requiere revisión previa',
-  })
-  await post(`${API_URL}/api/entregas`, {
-    cod_obra: 3,
-    fecha_hora_entrega: '2025-09-20T13:00',
-    estado: 'EN CURSO',
-    detalle: 'Entrega parcial',
-    observaciones: 'Faltan herrajes',
-  })
-  await post(`${API_URL}/api/entregas`, {
-    cod_obra: 4,
-    fecha_hora_entrega: '2025-09-22T15:30',
-    estado: 'ENTREGADO',
-    detalle: 'Entrega completa',
-    observaciones: 'Sin observaciones',
-  })
-  await post(`${API_URL}/api/entregas`, {
-    cod_obra: 4,
-    fecha_hora_entrega: '2025-09-25T09:30',
-    estado: 'PENDIENTE',
-    detalle: 'Entrega adicional',
-    observaciones: 'Agregar manuales',
-  })
-  await post(`${API_URL}/api/entregas`, {
-    cod_obra: 1,
-    fecha_hora_entrega: '2025-09-28T11:00',
-    estado: 'EN CURSO',
-    detalle: 'Entrega parcial',
-    observaciones: 'Cliente solicita cambio',
-  })
-  await post(`${API_URL}/api/entregas`, {
-    cod_obra: 2,
-    fecha_hora_entrega: '2025-09-30T17:00',
-    estado: 'ENTREGADO',
-    detalle: 'Entrega final',
-    observaciones: 'Entrega exitosa',
-  })
-
-  // Visitas
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-06T10:00',
-    cod_obra: 1,
-    motivo_visita: 'MEDICION',
-    estado: 'PROGRAMADA',
-    observaciones: 'Primera medición',
-    direccion_visita: 'Calle 1',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-07T11:30',
-    cod_obra: 2,
-    motivo_visita: 'RE-MEDICION',
-    estado: 'EN CURSO',
-    observaciones: 'Ajuste de medidas',
-    direccion_visita: 'Calle 2',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-08T09:00',
-    cod_obra: 3,
-    motivo_visita: 'REPARACION',
-    estado: 'COMPLETADA',
-    observaciones: 'Reparación de marco',
-    direccion_visita: 'Calle 3',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-09T15:00',
-    cod_obra: 4,
-    motivo_visita: 'ASESORAMIENTO',
-    estado: 'CANCELADA',
-    observaciones: 'Cliente canceló',
-    direccion_visita: 'Calle 4',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-10T13:00',
-    cod_obra: 1,
-    motivo_visita: 'VISITA INICIAL',
-    estado: 'REPROGRAMADA',
-    observaciones: 'Reprogramada por lluvia',
-    direccion_visita: 'Calle 1',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-11T14:30',
-    cod_obra: 2,
-    motivo_visita: 'MEDICION',
-    estado: 'PROGRAMADA',
-    observaciones: 'Medición adicional',
-    direccion_visita: 'Calle 2',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-12T16:00',
-    cod_obra: 3,
-    motivo_visita: 'RE-MEDICION',
-    estado: 'EN CURSO',
-    observaciones: 'Verificar cambios',
-    direccion_visita: 'Calle 3',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-13T12:00',
-    cod_obra: 4,
-    motivo_visita: 'REPARACION',
-    estado: 'COMPLETADA',
-    observaciones: 'Reparación finalizada',
-    direccion_visita: 'Calle 4',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-14T10:30',
-    cod_obra: 1,
-    motivo_visita: 'ASESORAMIENTO',
-    estado: 'CANCELADA',
-    observaciones: 'Cliente no disponible',
-    direccion_visita: 'Calle 1',
-  })
-  await post(`${API_URL}/api/visitas`, {
-    fecha_hora_visita: '2025-09-15T09:30',
-    cod_obra: 2,
-    motivo_visita: 'VISITA INICIAL',
-    estado: 'REPROGRAMADA',
-    observaciones: 'Reprogramada por feriado',
-    direccion_visita: 'Calle 2',
-  })
-
-  // Órdenes de Producción
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 1,
-    fecha_confeccion: '2025-09-05',
-    fecha_validacion: '2025-09-06',
-    url: 'https://docs.luhmann.com/op1.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 1,
-    fecha_confeccion: '2025-09-10',
-    fecha_validacion: '2025-09-11',
-    url: 'https://docs.luhmann.com/op2.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 2,
-    fecha_confeccion: '2025-09-12',
-    fecha_validacion: '2025-09-13',
-    url: 'https://docs.luhmann.com/op3.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 2,
-    fecha_confeccion: '2025-09-15',
-    fecha_validacion: '2025-09-16',
-    url: 'https://docs.luhmann.com/op4.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 3,
-    fecha_confeccion: '2025-09-18',
-    fecha_validacion: '2025-09-19',
-    url: 'https://docs.luhmann.com/op5.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 3,
-    fecha_confeccion: '2025-09-20',
-    fecha_validacion: '2025-09-21',
-    url: 'https://docs.luhmann.com/op6.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 4,
-    fecha_confeccion: '2025-09-22',
-    fecha_validacion: '2025-09-23',
-    url: 'https://docs.luhmann.com/op7.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 4,
-    fecha_confeccion: '2025-09-25',
-    fecha_validacion: '2025-09-26',
-    url: 'https://docs.luhmann.com/op8.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 1,
-    fecha_confeccion: '2025-09-28',
-    fecha_validacion: '2025-09-29',
-    url: 'https://docs.luhmann.com/op9.pdf',
-  })
-  await post(`${API_URL}/api/ordenes-produccion`, {
-    cod_obra: 2,
-    fecha_confeccion: '2025-09-30',
-    fecha_validacion: '2025-10-01',
-    url: 'https://docs.luhmann.com/op10.pdf',
-  })
-
-  // Relaciones Empleado-Entrega
-  const relacionesEntregaEmpleado = [
-    {
-      cuil: '20999999992',
-      cod_entrega: 1,
-      cod_obra: 1,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999910',
-      cod_entrega: 1,
-      cod_obra: 1,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999911',
-      cod_entrega: 1,
-      cod_obra: 1,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999912',
-      cod_entrega: 2,
-      cod_obra: 1,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999913',
-      cod_entrega: 2,
-      cod_obra: 1,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999992',
-      cod_entrega: 3,
-      cod_obra: 2,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999910',
-      cod_entrega: 4,
-      cod_obra: 2,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999914',
-      cod_entrega: 4,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999911',
-      cod_entrega: 4,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999992',
-      cod_entrega: 5,
-      cod_obra: 3,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999912',
-      cod_entrega: 5,
-      cod_obra: 3,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999913',
-      cod_entrega: 5,
-      cod_obra: 3,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999911',
-      cod_entrega: 6,
-      cod_obra: 3,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999914',
-      cod_entrega: 6,
-      cod_obra: 3,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999913',
-      cod_entrega: 7,
-      cod_obra: 4,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999910',
-      cod_entrega: 7,
-      cod_obra: 4,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999992',
-      cod_entrega: 7,
-      cod_obra: 4,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999914',
-      cod_entrega: 8,
-      cod_obra: 4,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999992',
-      cod_entrega: 9,
-      cod_obra: 1,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999912',
-      cod_entrega: 9,
-      cod_obra: 1,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999910',
-      cod_entrega: 10,
-      cod_obra: 2,
-      rol_entrega: 'ENCARGADO',
-    },
-    {
-      cuil: '20999999911',
-      cod_entrega: 10,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999912',
-      cod_entrega: 10,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999913',
-      cod_entrega: 10,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-    {
-      cuil: '20999999914',
-      cod_entrega: 10,
-      cod_obra: 2,
-      rol_entrega: 'ACOMPAÑANTE',
-    },
-  ]
-
-  for (const relacion of relacionesEntregaEmpleado) {
-    await post(`${API_URL}/api/entrega-empleado`, relacion)
+  // Pagos (2 por cada obra = 10 pagos)
+  console.log('Creando pagos...')
+  for (const obra of obras) {
+    await prisma.pago.create({
+      data: {
+        cod_obra: obra.cod_obra,
+        fecha_pago: new Date(`2025-0${obras.indexOf(obra) + 1}-10`),
+        monto: 50000.0,
+      },
+    })
+    await prisma.pago.create({
+      data: {
+        cod_obra: obra.cod_obra,
+        fecha_pago: new Date(`2025-0${obras.indexOf(obra) + 1}-25`),
+        monto: 75000.0,
+      },
+    })
   }
 
-  // Parámetros
-  await post(`${API_URL}/api/parametros`, {
-    cod_parametro: 1,
-    fecha_cambio: '2025-09-01',
-    hora_cambio: '08:00:00',
-    dias_vigencia_presu: 30,
-    viatico_dia_persona: 1000,
-  })
-  await post(`${API_URL}/api/parametros`, {
-    cod_parametro: 2,
-    fecha_cambio: '2025-09-02',
-    hora_cambio: '09:00:00',
-    dias_vigencia_presu: 20,
-    viatico_dia_persona: 800,
-  })
+  // Entregas (2 por cada obra = 10 entregas)
+  console.log('Creando entregas...')
+  for (const obra of obras) {
+    // Entrega 1
+    const entrega1 = await prisma.entrega.create({
+      data: {
+        cod_obra: obra.cod_obra,
+        fecha_hora_entrega: new Date(
+          `2025-0${obras.indexOf(obra) + 1}-22T09:00:00`,
+        ),
+        estado: 'COMPLETADA',
+        detalle: 'Primera entrega',
+        observaciones: 'Entrega sin inconvenientes',
+        dias_viaticos: 2,
+      },
+    })
+
+    // Entrega 2
+    const entrega2 = await prisma.entrega.create({
+      data: {
+        cod_obra: obra.cod_obra,
+        fecha_hora_entrega: new Date(
+          `2025-0${obras.indexOf(obra) + 1}-28T11:00:00`,
+        ),
+        estado: 'COMPLETADA',
+        detalle: 'Segunda entrega',
+        observaciones: 'Material verificado',
+        dias_viaticos: 2,
+      },
+    })
+
+    // Asignar empleado PLANTA a las entregas
+    await prisma.entrega_empleado.create({
+      data: {
+        cuil: '20999999996', // Roberto Operario (PLANTA)
+        cod_obra: obra.cod_obra,
+        cod_entrega: entrega1.cod_entrega,
+        rol_entrega: 'OPERARIO',
+      },
+    })
+    await prisma.entrega_empleado.create({
+      data: {
+        cuil: '20999999996', // Roberto Operario (PLANTA)
+        cod_obra: obra.cod_obra,
+        cod_entrega: entrega2.cod_entrega,
+        rol_entrega: 'OPERARIO',
+      },
+    })
+  }
+
+  console.log('✅ Seed completado con éxito')
 }
 
 seed()
-  .then(() => console.log('Seed completado con éxito'))
-  .catch(e => console.error('Error en seed:', e))
+  .then(() => {
+    console.log('Desconectando Prisma...')
+    return prisma.$disconnect()
+  })
+  .catch(e => {
+    console.error('❌ Error en seed:', e)
+    prisma.$disconnect()
+    process.exit(1)
+  })
