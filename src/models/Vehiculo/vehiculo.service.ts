@@ -32,6 +32,9 @@ export class VehiculoService {
     patente: string
     tipo_vehiculo: string
     estado: string
+    anio: number
+    marca: string
+    modelo: string
   }): Promise<vehiculo> {
     const existingVehiculo = await this.vehiculoRepository.findByPatente(
       data.patente,
@@ -106,6 +109,9 @@ export class VehiculoService {
     data: {
       tipo_vehiculo?: string
       estado?: string
+      anio?: number
+      marca?: string
+      modelo?: string
     },
   ): Promise<vehiculo> {
     const existingVehiculo =
