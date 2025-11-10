@@ -1,7 +1,8 @@
 import Papa from 'papaparse'
 import fs from 'fs/promises'
+import { PrismaClient } from '@prisma/client'
 
-const API_URL = 'http://localhost:4000'
+const prisma = new PrismaClient()
 
 interface LocalidadCSV {
   IDProvincia: number
@@ -40,26 +41,17 @@ const provincias: Provincia[] = [
   { cod: 24, nombre: 'Tucuman' },
 ]
 
-async function post(url: string, data: Record<string, unknown>) {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Error ${res.status} en ${url}: ${err}`)
-  }
-  return res.json()
-}
-
 async function seedLocalidades() {
   // Crear provincias
   for (const provincia of provincias) {
     try {
-      await post(`${API_URL}/api/provincias`, {
-        cod_provincia: provincia.cod,
-        nombre: provincia.nombre,
+      await prisma.provincia.upsert({
+        where: { cod_provincia: provincia.cod },
+        update: {},
+        create: {
+          cod_provincia: provincia.cod,
+          nombre: provincia.nombre,
+        },
       })
     } catch (error) {
       console.error(`Error al crear provincia ${provincia.nombre}:`, error)
@@ -90,9 +82,11 @@ async function seedLocalidades() {
 
     if (idProvincia !== undefined && nombreLocalidad) {
       try {
-        await post(`${API_URL}/api/localidades`, {
-          cod_provincia: idProvincia,
-          nombre_localidad: nombreLocalidad.trim(),
+        await prisma.localidad.create({
+          data: {
+            cod_provincia: idProvincia,
+            nombre_localidad: nombreLocalidad.trim(),
+          },
         })
       } catch (error) {
         console.error(`✗ Error al crear ${nombreLocalidad}:`, error)
@@ -103,5 +97,12 @@ async function seedLocalidades() {
   }
 }
 seedLocalidades()
-  .then(() => console.log('Seed completado con éxito'))
-  .catch(e => console.error('Error en seed:', e))
+  .then(() => {
+    console.log('Seed completado con éxito')
+    return prisma.$disconnect()
+  })
+  .catch(e => {
+    console.error('Error en seed:', e)
+    prisma.$disconnect()
+    process.exit(1)
+  })

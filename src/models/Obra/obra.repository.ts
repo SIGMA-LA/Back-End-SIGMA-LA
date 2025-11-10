@@ -91,6 +91,9 @@ export class ObraRepository {
         cliente: true,
         localidad: true,
         presupuesto: true,
+        visita: true,
+        pago: true,
+        entrega: true,
       },
     })
   }

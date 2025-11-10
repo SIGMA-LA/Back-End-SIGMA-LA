@@ -14,7 +14,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "prepare": "husky",
-    "seed": "pnpx prisma migrate reset --force && timeout /t 3 && pnpx ts-node src/shared/db/localidadesSeeder.ts && pnpx ts-node src/shared/db/seeder.ts"
+    "seed": "pnpx prisma migrate reset --force && timeout /t 3 && pnpx tsx src/shared/db/localidadesSeeder.ts && pnpx tsx src/shared/db/seeder.ts"
   },
   "keywords": [],
   "author": "",
