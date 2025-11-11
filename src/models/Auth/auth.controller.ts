@@ -30,6 +30,7 @@ export class AuthController {
 
   async login(req: Request, res: Response) {
     try {
+      console.log('Login route hit')
       const { cuil, contrasenia } = parse(loginSchema, req.body)
       const { token, refreshToken, empleado } = await this.authService.login(
         cuil,
