@@ -1,10 +1,7 @@
 import { Router } from 'express'
 import { VehiculoController } from './vehiculo.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
-import {
-  createVehiculoSchema,
-  updateVehiculoSchema,
-} from 'sigma-la-schemas'
+import { createVehiculoSchema } from 'sigma-la-schemas'
 const vehiculoController = new VehiculoController()
 const vehiculoRouter = Router()
 
@@ -24,28 +21,16 @@ vehiculoRouter.get('/disponibilidad', (req, res) => {
   vehiculoController.getDisponibilidadPorFecha(req, res)
 })
 
-vehiculoRouter.get(
-  '/:patente',
-  (req, res) => {
-    vehiculoController.getOne(req, res)
-  },
-)
+vehiculoRouter.get('/:patente', (req, res) => {
+  vehiculoController.getOne(req, res)
+})
 
-vehiculoRouter.put(
-  '/:patente',
-  validate({
-    body: updateVehiculoSchema,
-  }),
-  (req, res) => {
-    vehiculoController.update(req, res)
-  },
-)
+vehiculoRouter.put('/:patente', (req, res) => {
+  vehiculoController.update(req, res)
+})
 
-vehiculoRouter.delete(
-  '/:patente',
-  (req, res) => {
-    vehiculoController.remove(req, res)
-  },
-)
+vehiculoRouter.delete('/:patente', (req, res) => {
+  vehiculoController.remove(req, res)
+})
 
 export default vehiculoRouter
