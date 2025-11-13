@@ -30,7 +30,6 @@ export class AuthController {
 
   async login(req: Request, res: Response) {
     try {
-      console.log('Login route hit')
       const { cuil, contrasenia } = parse(loginSchema, req.body)
       const { token, refreshToken, empleado } = await this.authService.login(
         cuil,
@@ -66,7 +65,12 @@ export class AuthController {
         maxAge: 8 * 60 * 60 * 1000,
         path: '/',
       })
-      res.status(200).json({ usuario: usuarioSeguro })
+
+      res.status(200).json({
+        usuario: usuarioSeguro,
+        accessToken: token,
+        refreshToken,
+      })
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Error desconocido'
