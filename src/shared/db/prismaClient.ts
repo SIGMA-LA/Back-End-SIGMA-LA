@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { env } from '../../config/env.js'
 
 /**
  * Global variable declaration for Prisma Client instance
@@ -14,7 +15,7 @@ declare global {
 const createPrismaClient = (): PrismaClient => {
   return new PrismaClient({
     log:
-      process.env.NODE_ENV === 'development'
+      env.NODE_ENV === 'development'
         ? ['query', 'info', 'warn', 'error']
         : ['error'],
     errorFormat: 'pretty',
@@ -30,7 +31,7 @@ const createPrismaClient = (): PrismaClient => {
 export const prisma = globalThis.__prisma ?? createPrismaClient()
 
 // Store in global variable for development hot reloads
-if (process.env.NODE_ENV !== 'production') {
+if (env.NODE_ENV !== 'production') {
   globalThis.__prisma = prisma
 }
 

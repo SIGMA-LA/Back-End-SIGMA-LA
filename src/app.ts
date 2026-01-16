@@ -1,26 +1,21 @@
 import express from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
-
-dotenv.config()
-
+import { env } from './config/env.js'
 import ROUTES from './shared/routes/index.routes.js'
 import authRouter from './models/Auth/auth.routes.js'
 import { authenticateJWT } from './models/Auth/auth.middleware.js'
 import { errorHandler } from './shared/middlewares/errorHandler.js'
 
 const app = express()
-const PORT = process.env.PORT || 4000
-
+const PORT = env.PORT
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: env.FRONTEND_URL,
     credentials: true,
   }),
 )
-
 
 app.use(express.json())
 app.use(cookieParser())

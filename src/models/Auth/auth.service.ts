@@ -3,13 +3,9 @@ import { empleado } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
+import { env } from '../../config/env.js'
 
-const JWT_SECRET = process.env.JWT_SECRET as string
 const JWT_EXPIRES_IN = '8h'
-
-if (!JWT_SECRET) {
-  throw new Error('La variable de entorno JWT_SECRET no está definida.')
-}
 
 /**
  * Servicio para manejar la autenticación de empleados.
@@ -68,7 +64,7 @@ export class AuthService {
 
     const refreshToken = jwt.sign(
       { cuil: empleado.cuil, jti: uuidv4() },
-      process.env.NODE_AUTH_REFRESH_TOKEN!,
+      env.NODE_AUTH_REFRESH_TOKEN,
       { expiresIn: '30d' },
     )
     const hash = await bcrypt.hash(refreshToken, 10)
@@ -105,7 +101,7 @@ export class AuthService {
         cuil: empleado.cuil,
         rol_actual: empleado.rol_actual,
       },
-      JWT_SECRET,
+      env.JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN },
     )
   }
@@ -129,7 +125,7 @@ export class AuthService {
     try {
       const payload = jwt.verify(
         refreshToken,
-        process.env.REFRESH_TOKEN_SECRET!,
+        env.NODE_AUTH_REFRESH_TOKEN,
       ) as jwt.JwtPayload
       const empleado = await this.empleadoRepository.findByCuil(payload.cuil)
       if (!empleado || !empleado.refreshTokenHash) {

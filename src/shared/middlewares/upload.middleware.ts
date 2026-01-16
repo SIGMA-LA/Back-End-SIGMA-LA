@@ -1,17 +1,18 @@
 import { CloudinaryUploader } from './commonUpload/cloudynary.strategy.js'
 import { IUploadStrategy } from './commonUpload/iuploadStrategy.js'
+import { env } from '../../config/env.js'
 
 let uploadStrategy: IUploadStrategy
 
-const storageProvider = process.env.STORAGE_PROVIDER || 'cloudinary' // 'cloudinary' por defecto
-
-switch (storageProvider.toLowerCase()) {
+switch (env.STORAGE_PROVIDER.toLowerCase()) {
   case 'cloudinary':
     uploadStrategy = new CloudinaryUploader()
     break
 
   default:
-    throw new Error(`Proveedor de almacenamiento no válido: ${storageProvider}`)
+    throw new Error(
+      `Proveedor de almacenamiento no válido: ${env.STORAGE_PROVIDER}`,
+    )
 }
 
 // Exportamos el resultado de getUploader(), que es la instancia de Multer lista para usar.

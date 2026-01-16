@@ -1,7 +1,6 @@
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'jwt_default_secret'
+import { env } from '../../config/env.js'
 
 /**
  * Middleware para verificar autenticación por JWT.
@@ -25,7 +24,7 @@ export function authenticateJWT(
     return res.status(401).json({ error: 'Token no proporcionado' })
   }
   try {
-    const user = jwt.verify(token, JWT_SECRET) as JwtPayload
+    const user = jwt.verify(token, env.JWT_SECRET) as JwtPayload
     req.user = user
     next()
   } catch {
