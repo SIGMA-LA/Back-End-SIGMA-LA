@@ -1,5 +1,6 @@
 import { PresupuestoService } from './presupuesto.service.js'
 import { Request, Response } from 'express'
+import { env } from '../../config/env.js'
 
 const presupuestoService = new PresupuestoService()
 
@@ -80,8 +81,7 @@ export class PresupuestoController {
         res.status(400).json({
           message: 'Error al actualizar presupuesto',
           error: error.message,
-          stack:
-            process.env.NODE_ENV === 'development' ? error.stack : undefined,
+          stack: env.NODE_ENV === 'development' ? error.stack : undefined,
         })
       } else {
         res.status(400).json({

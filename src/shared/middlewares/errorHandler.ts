@@ -1,4 +1,5 @@
 import express from 'express'
+import { env } from '../../config/env.js'
 
 export const errorHandler = (
   err: Error,
@@ -15,8 +16,6 @@ export const errorHandler = (
   res.status(500).json({
     error: 'Internal server error',
     message:
-      process.env.NODE_ENV === 'development'
-        ? err.message
-        : 'Something went wrong',
+      env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
   })
 }

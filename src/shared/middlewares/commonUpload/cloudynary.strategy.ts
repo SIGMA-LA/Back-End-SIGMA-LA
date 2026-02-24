@@ -2,27 +2,17 @@ import { v2 as cloudinary } from 'cloudinary'
 import multer from 'multer'
 import { CloudinaryStorage } from 'multer-storage-cloudinary'
 import { IUploadStrategy } from './iuploadStrategy.js'
+import { env } from '../../../config/env.js'
 
 export class CloudinaryUploader implements IUploadStrategy {
   private uploader: multer.Multer
 
   constructor() {
-    // 1. Validar que las credenciales existan
-    if (
-      !process.env.CLOUDINARY_CLOUD_NAME ||
-      !process.env.CLOUDINARY_API_KEY ||
-      !process.env.CLOUDINARY_API_SECRET
-    ) {
-      throw new Error(
-        'Las credenciales de Cloudinary no están definidas en las variables de entorno.',
-      )
-    }
-
-    // 2. Configurar el SDK de Cloudinary
+    // Configurar el SDK de Cloudinary
     cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
+      cloud_name: env.CLOUDINARY_CLOUD_NAME,
+      api_key: env.CLOUDINARY_API_KEY,
+      api_secret: env.CLOUDINARY_API_SECRET,
     })
 
     // 3. Configurar el motor de almacenamiento para multer

@@ -2,6 +2,7 @@ import { AuthService } from './auth.service.js'
 import { registerSchema, loginSchema } from './auth.schemas.js'
 import { parse } from 'valibot'
 import { Request, Response } from 'express'
+import { env } from '../../config/env.js'
 
 /**
  * Controlador para manejar los endpoints de autenticación.
@@ -38,14 +39,14 @@ export class AuthController {
 
       res.cookie('accessToken', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 8 * 60 * 60 * 1000,
         path: '/',
       })
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 30 * 24 * 60 * 60 * 1000,
         path: '/',
@@ -60,7 +61,7 @@ export class AuthController {
 
       res.cookie('usuario', JSON.stringify(usuarioSeguro), {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 8 * 60 * 60 * 1000,
         path: '/',
@@ -114,7 +115,7 @@ export class AuthController {
       const { token } = await this.authService.refreshAccessToken(refreshToken)
       res.cookie('accessToken', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 8 * 60 * 60 * 1000,
       })

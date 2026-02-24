@@ -31,7 +31,11 @@ Desarrollado en Node.js con Express, Prisma y TypeScript.
    pnpm install
    ```
 
-2. Configurar las variables de entorno en `.env`.
+2. Configurar las variables de entorno:
+   - Copia el archivo `.env.example` a `.env`
+   - Completa todas las variables requeridas
+   - Los secretos JWT deben generarse con: `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`
+   - Las variables se validan automáticamente al iniciar la app
 
 3. Ejecutar migraciones y seed:
 
@@ -43,5 +47,7 @@ Desarrollado en Node.js con Express, Prisma y TypeScript.
    ```bash
    pnpm run start:dev
    ```
+
+**Nota:** Las variables de entorno se validan antes de iniciar el servidor. Si falta alguna variable requerida o su formato es inválido, la aplicación no arrancará. Todas las variables se consumen desde el objeto `env` exportado en `src/config/env.ts`.
 
 ---
