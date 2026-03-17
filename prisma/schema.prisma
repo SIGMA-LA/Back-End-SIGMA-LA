@@ -171,7 +171,7 @@ model uso_vehiculo_entrega {
   fecha_hora_fin_real DateTime? @db.Timestamp(6)
   cod_entrega         Int
   obraCod_obra        Int?
-  fecha_hora_fin_est  DateTime  @db.Timestamp(6)
+  fecha_hora_ini_est  DateTime  @db.Timestamp(6)
   entrega             entrega   @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
   obra                obra?     @relation(fields: [obraCod_obra], references: [cod_obra])
   vehiculo            vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)

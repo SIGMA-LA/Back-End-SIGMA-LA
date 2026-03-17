@@ -95,12 +95,13 @@ export class EntregaService {
             })),
           },
         }),
-        ...(vehiculos &&
+      ...(vehiculos &&
         vehiculos.length > 0 && {
           uso_vehiculo_entrega: {
             create: vehiculos.map(patente => ({
               vehiculo: { connect: { patente: patente } },
               fecha_hora_ini_uso: fechaParaPrisma,
+              fecha_hora_ini_est: fechaParaPrisma,
               fecha_hora_fin_est: fechaFinEstimada,
               obra: { connect: { cod_obra: cod_obra } },
             })),
