@@ -58,13 +58,19 @@ obraRouter.post('/:id/nota-fabrica', (req, res) => {
 // Eliminar nota de fábrica de una obra
 obraRouter.delete('/:id/nota-fabrica', (req, res) => {
   validate({ params: idParamsSchema })(req, res, async () => {
-    const id = parseInt(req.params.id, 10)
-    const obra = await obraController.getOneById(id)
-    if (!obra) {
-      return res.status(404).json({ message: 'Obra no encontrada' })
+    try {
+      const id = parseInt(req.params.id, 10)
+      const obra = await obraController.getOneById(id)
+      if (!obra) {
+        return res.status(404).json({ message: 'Obra no encontrada' })
+      }
+      await deleteUploadedFile(obra.nota_fabrica_pid?.toString() || '')
+      obraController.deleteNotaFabrica(req, res)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido'
+      res.status(500).json({ error: message })
     }
-    await deleteUploadedFile(obra.nota_fabrica_pid?.toString() || '')
-    obraController.deleteNotaFabrica(req, res)
   })
 })
 

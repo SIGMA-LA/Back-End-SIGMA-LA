@@ -14,17 +14,14 @@ export class VehiculoRepository {
     })
   }
 
-  async findAllWithUsageInRange(
-    fechaInicio: Date,
-    fechaFin: Date,
-  ) {
+  async findAllWithUsageInRange(fechaInicio: Date, fechaFin: Date) {
     return await this.prisma.vehiculo.findMany({
       include: {
         uso_vehiculo_entrega: {
           where: {
             AND: [
               { fecha_hora_ini_uso: { lt: fechaFin } },
-              { fecha_hora_fin_est: { gt: fechaInicio } },
+              { fecha_hora_ini_est: { gt: fechaInicio } },
             ],
           },
         },

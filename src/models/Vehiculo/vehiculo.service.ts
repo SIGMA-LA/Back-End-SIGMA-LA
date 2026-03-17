@@ -1,5 +1,9 @@
 import { VehiculoRepository } from './vehiculo.repository.js'
-import { vehiculo } from '@prisma/client'
+import {
+  vehiculo,
+  uso_vehiculo_entrega,
+  uso_vehiculo_visita,
+} from '@prisma/client'
 
 export type AvailabilityStatus = 'DISPONIBLE' | 'ADVERTENCIA' | 'NO_DISPONIBLE'
 
@@ -70,16 +74,22 @@ export class VehiculoService {
       let warningMessage: string | undefined = undefined
 
       const allUsages = [
-        ...vehiculo.uso_vehiculo_entrega,
-        ...vehiculo.uso_vehiculo_visita,
+        ...(vehiculo.uso_vehiculo_entrega ?? []),
+        ...(vehiculo.uso_vehiculo_visita ?? []),
       ]
 
       if (allUsages.length > 0) {
-        const hayConflictoDirecto = allUsages.some(
-          uso =>
+        const hayConflictoDirecto = allUsages.some(uso => {
+          const fechaFinUso =
+            'fecha_hora_fin_est' in uso
+              ? (uso as uso_vehiculo_visita).fecha_hora_fin_est
+              : (uso as uso_vehiculo_entrega).fecha_hora_ini_est
+
+          return (
             new Date(uso.fecha_hora_ini_uso) < fechaFin &&
-            new Date(uso.fecha_hora_fin_est) > fechaInicio,
-        )
+            new Date(fechaFinUso) > fechaInicio
+          )
+        })
 
         if (hayConflictoDirecto) {
           availabilityStatus = 'NO_DISPONIBLE'
