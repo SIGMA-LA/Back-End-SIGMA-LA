@@ -101,6 +101,77 @@ export class EmpleadoService {
     })
   }
 
+  async verificarDisponibilidadEmpleados(
+    cuiles: string[],
+    fechaInicio: Date,
+    fechaFin: Date,
+  ): Promise<void> {
+    if (cuiles.length === 0) return
+
+    // Buscar usos desde 30 días atrás por si hay entregas o visitas muy largas
+    const thirtyDaysAgo = new Date(
+      fechaInicio.getTime() - 30 * 24 * 60 * 60 * 1000,
+    )
+    const empleadosConUsos = await this.empleadoRepository.findUsagesInRange(
+      cuiles,
+      thirtyDaysAgo,
+    )
+
+    const empleadosEnConflicto: string[] = []
+
+    for (const empleado of empleadosConUsos) {
+      let hayConflicto = false
+
+      // Check entregas
+      for (const ee of empleado.entrega_empleado) {
+        const entrega = ee.entrega
+        if (!entrega) continue
+
+        const ini = new Date(entrega.fecha_hora_entrega)
+        const dias =
+          entrega.dias_viaticos && entrega.dias_viaticos > 0
+            ? entrega.dias_viaticos
+            : 1
+        const fin = new Date(ini.getTime() + dias * 24 * 60 * 60 * 1000)
+
+        if (ini < fechaFin && fechaInicio < fin) {
+          hayConflicto = true
+          break
+        }
+      }
+
+      // Check visitas
+      if (!hayConflicto) {
+        for (const ev of empleado.empleado_visita) {
+          const visita = ev.visita
+          if (!visita) continue
+
+          const ini = new Date(visita.fecha_hora_visita)
+          const dias =
+            visita.dias_viatico && visita.dias_viatico > 0
+              ? visita.dias_viatico
+              : 1
+          const fin = new Date(ini.getTime() + dias * 24 * 60 * 60 * 1000)
+
+          if (ini < fechaFin && fechaInicio < fin) {
+            hayConflicto = true
+            break
+          }
+        }
+      }
+
+      if (hayConflicto) {
+        empleadosEnConflicto.push(`${empleado.nombre} ${empleado.apellido}`)
+      }
+    }
+
+    if (empleadosEnConflicto.length > 0) {
+      throw new Error(
+        `Conflicto de personal. Los siguientes empleados ya tienen asignada otra obra o visita en la fecha solicitada: ${empleadosEnConflicto.join(', ')}`,
+      )
+    }
+  }
+
   // Actualizar empleado
   async update(
     cuil: string,
