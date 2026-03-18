@@ -64,6 +64,14 @@ export class EntregaService {
       )
     }
 
+    if (vehiculos && vehiculos.length > 0) {
+      await this.vehiculoService.verificarDisponibilidadVehiculos(
+        vehiculos,
+        fechaParaPrisma,
+        fechaFinEstimada,
+      )
+    }
+
     const payload: Prisma.entregaCreateInput = {
       detalle: entregaData.detalle,
       estado: entregaData.estado,
@@ -101,8 +109,7 @@ export class EntregaService {
             create: vehiculos.map(patente => ({
               vehiculo: { connect: { patente: patente } },
               fecha_hora_ini_uso: fechaParaPrisma,
-              fecha_hora_ini_est: fechaParaPrisma,
-              fecha_hora_fin_est: fechaFinEstimada,
+              fecha_hora_ini_est: fechaFinEstimada,
               obra: { connect: { cod_obra: cod_obra } },
             })),
           },
