@@ -95,6 +95,7 @@ model maquinaria {
 model obra {
   cod_obra             Int                    @id @default(autoincrement())
   cuil                 String
+  cuil_arquitecto      String?                @db.VarChar(50)
   fecha_ini            DateTime               @db.Date
   estado               String                 @db.VarChar(50)
   fecha_cancelacion    DateTime?              @db.Date
