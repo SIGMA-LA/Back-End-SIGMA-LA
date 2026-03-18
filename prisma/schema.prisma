@@ -16,7 +16,8 @@ model cliente {
   nombre       String? @db.VarChar(50)
   sexo         String? @db.VarChar(20)
   tipo_cliente String  @db.VarChar(50)
-  obra         obra[]
+  obra         obra[]  @relation("ObraCliente")
+  obraArquitecto obra[] @relation("ObraArquitecto")
 }
 
 model empleado {
@@ -106,7 +107,8 @@ model obra {
   entrega              entrega[]
   entrega_empleado     entrega_empleado[]
   localidad            localidad              @relation(fields: [cod_localidad], references: [cod_localidad], onDelete: NoAction, onUpdate: NoAction)
-  cliente              cliente                @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+  cliente              cliente                @relation("ObraCliente", fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+  arquitecto           cliente?               @relation("ObraArquitecto", fields: [cuil_arquitecto], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
   orden_de_produccion  orden_de_produccion[]
   pago                 pago[]
   presupuesto          presupuesto[]
