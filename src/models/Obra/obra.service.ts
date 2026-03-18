@@ -4,6 +4,7 @@ import { ObraRepository } from './obra.repository.js'
 type ObraCreateInputExtended = Prisma.obraCreateInput & {
   cuil?: string
   cuil_cliente?: string
+  cuil_arquitecto?: string
   cod_localidad?: number
   presupuestos?: {
     valor: number
@@ -71,32 +72,83 @@ export class ObraService {
 
   // ----------- CRUD DE OBRAS -----------
 
-  /** Crea una nueva obra */
   async create(data: ObraCreateInputExtended): Promise<obra> {
-    const { cuil, cuil_cliente, cod_localidad, presupuestos, ...rest } = data
+    const {
+      cuil,
+      cuil_cliente,
+      cuil_arquitecto,
+      cod_localidad,
+      presupuestos,
+      presupuesto,
+      ...rest
+    } = data
+
+    // Procesar los datos de presupuestos desde ambas posibles key y castear las fechas a Date
+    let parsedPresupuestosCreate = undefined
+    if (presupuestos && Array.isArray(presupuestos)) {
+      parsedPresupuestosCreate = presupuestos.map(
+        (p: {
+          valor: number
+          fecha_emision?: string | Date
+          fecha_aceptacion?: string | Date
+        }) => ({
+          valor: p.valor,
+          fecha_emision: p.fecha_emision
+            ? new Date(p.fecha_emision + 'T00:00:00.000Z')
+            : new Date(),
+          fecha_aceptacion: p.fecha_aceptacion
+            ? new Date(p.fecha_aceptacion + 'T00:00:00.000Z')
+            : null,
+        }),
+      )
+    } else if (presupuesto?.create && Array.isArray(presupuesto.create)) {
+      parsedPresupuestosCreate = presupuesto.create.map(
+        (p: {
+          nro_presupuesto?: number
+          valor: number
+          fecha_emision: string | Date
+          fecha_aceptacion?: string | Date | null
+          [key: string]: unknown
+        }) => {
+          const pRest = { ...p }
+          delete pRest.nro_presupuesto
+          if (
+            typeof pRest.fecha_emision === 'string' &&
+            /^\d{4}-\d{2}-\d{2}$/.test(pRest.fecha_emision)
+          ) {
+            pRest.fecha_emision = new Date(
+              pRest.fecha_emision + 'T00:00:00.000Z',
+            )
+          }
+          if (
+            typeof pRest.fecha_aceptacion === 'string' &&
+            /^\d{4}-\d{2}-\d{2}$/.test(pRest.fecha_aceptacion)
+          ) {
+            pRest.fecha_aceptacion = new Date(
+              pRest.fecha_aceptacion + 'T00:00:00.000Z',
+            )
+          }
+          return pRest
+        },
+      )
+    }
 
     const prismaData: Prisma.obraCreateInput = {
       ...rest,
       ...((cuil || cuil_cliente) && {
         cliente: { connect: { cuil: cuil || cuil_cliente } },
       }),
+      ...(cuil_arquitecto && {
+        arquitecto: { connect: { cuil: cuil_arquitecto } },
+      }),
       ...(cod_localidad && {
         localidad: { connect: { cod_localidad: Number(cod_localidad) } },
       }),
-      ...(presupuestos &&
-        Array.isArray(presupuestos) && {
-          presupuesto: {
-            create: presupuestos.map(p => ({
-              valor: p.valor,
-              fecha_emision: p.fecha_emision
-                ? new Date(p.fecha_emision)
-                : new Date(),
-              fecha_aceptacion: p.fecha_aceptacion
-                ? new Date(p.fecha_aceptacion)
-                : null,
-            })),
-          },
-        }),
+      ...(parsedPresupuestosCreate && {
+        presupuesto: {
+          create: parsedPresupuestosCreate,
+        },
+      }),
     }
 
     if (
