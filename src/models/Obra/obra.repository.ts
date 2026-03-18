@@ -18,6 +18,7 @@ export class ObraRepository {
       orderBy: { cod_obra: 'desc' },
       include: {
         cliente: true,
+        arquitecto: true,
         localidad: {
           include: {
             provincia: true,
@@ -38,7 +39,15 @@ export class ObraRepository {
   }) {
     if (!estado && !cod_localidad) {
       return this.prisma.obra.findMany({
-        include: { cliente: true, localidad: true },
+        include: {
+          cliente: true,
+          arquitecto: true,
+          localidad: {
+            include: {
+              provincia: true,
+            },
+          },
+        },
         orderBy: { fecha_ini: 'desc' },
       })
     }
@@ -49,6 +58,7 @@ export class ObraRepository {
       },
       include: {
         cliente: true,
+        arquitecto: true,
         localidad: {
           include: {
             provincia: true,
@@ -72,6 +82,7 @@ export class ObraRepository {
       },
       include: {
         cliente: true,
+        arquitecto: true,
         localidad: {
           include: {
             provincia: true,
@@ -89,6 +100,7 @@ export class ObraRepository {
       where: { cod_obra: id },
       include: {
         cliente: true,
+        arquitecto: true,
         localidad: true,
         presupuesto: true,
         visita: true,
