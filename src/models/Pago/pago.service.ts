@@ -127,6 +127,7 @@ export class PagoService {
   }
 
   async findAll(filters?: {
+    search?: string
     cliente?: string
     fechaDesde?: string
     fechaHasta?: string

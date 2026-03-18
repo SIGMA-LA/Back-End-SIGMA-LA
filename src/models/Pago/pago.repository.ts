@@ -29,6 +29,7 @@ export class PagoRepository {
   }
 
   async findAllWithFilters(filters: {
+    search?: string
     cliente?: string
     fechaDesde?: string
     fechaHasta?: string
@@ -97,6 +98,36 @@ export class PagoRepository {
             ],
           },
         },
+      })
+    }
+
+    if (filters.search) {
+      andConditions.push({
+        OR: [
+          {
+            obra: {
+              direccion: { contains: filters.search, mode: 'insensitive' },
+            },
+          },
+          {
+            obra: {
+              cliente: {
+                OR: [
+                  {
+                    razon_social: {
+                      contains: filters.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  { nombre: { contains: filters.search, mode: 'insensitive' } },
+                  {
+                    apellido: { contains: filters.search, mode: 'insensitive' },
+                  },
+                ],
+              },
+            },
+          },
+        ],
       })
     }
 
