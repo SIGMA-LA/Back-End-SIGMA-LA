@@ -3,7 +3,13 @@ import { ObraRepository } from './obra.repository.js'
 
 type ObraCreateInputExtended = Prisma.obraCreateInput & {
   cuil?: string
+  cuil_cliente?: string
   cod_localidad?: number
+  presupuestos?: {
+    valor: number
+    fecha_emision?: string | Date
+    fecha_aceptacion?: string | Date
+  }[]
 }
 
 /**
@@ -67,14 +73,30 @@ export class ObraService {
 
   /** Crea una nueva obra */
   async create(data: ObraCreateInputExtended): Promise<obra> {
-    const { cuil, cod_localidad, ...rest } = data
+    const { cuil, cuil_cliente, cod_localidad, presupuestos, ...rest } = data
 
     const prismaData: Prisma.obraCreateInput = {
       ...rest,
-      ...(cuil && { cliente: { connect: { cuil } } }),
+      ...((cuil || cuil_cliente) && {
+        cliente: { connect: { cuil: cuil || cuil_cliente } },
+      }),
       ...(cod_localidad && {
         localidad: { connect: { cod_localidad: Number(cod_localidad) } },
       }),
+      ...(presupuestos &&
+        Array.isArray(presupuestos) && {
+          presupuesto: {
+            create: presupuestos.map(p => ({
+              valor: p.valor,
+              fecha_emision: p.fecha_emision
+                ? new Date(p.fecha_emision)
+                : new Date(),
+              fecha_aceptacion: p.fecha_aceptacion
+                ? new Date(p.fecha_aceptacion)
+                : null,
+            })),
+          },
+        }),
     }
 
     if (
