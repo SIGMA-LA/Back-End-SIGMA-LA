@@ -21,6 +21,33 @@ empleadoRouter.get('/', (req, res, next) => {
 })
 
 /**
+ * @route   GET /api/empleados/configuraciones
+ * @desc    Obtener las configuraciones de los empleados
+ * @access  Privado (requiere autenticación)
+ */
+empleadoRouter.get('/configuraciones/perfil', (req, res, next) => {
+  empleadoController.getPerfil(req, res, next)
+})
+
+/**
+ * @route   PUT /api/empleados/configuraciones/password
+ * @desc    Actualizar la contraseña del empleado
+ * @access  Privado (requiere autenticación)
+ */
+empleadoRouter.put('/configuraciones/password', (req, res, next) => {
+  empleadoController.updatePassword(req, res, next)
+})
+
+/**
+ * @route   PUT /api/empleados/configuraciones/perfil
+ * @desc    Actualizar el perfil del empleado
+ * @access  Privado (requiere autenticación)
+ */
+empleadoRouter.put('/configuraciones/perfil', (req, res, next) => {
+  empleadoController.updatePerfil(req, res, next)
+})
+
+/**
  * @route   GET /api/empleados/visitadores
  * @desc    Obtener todos los visitadores activos
  * @access  Privado (requiere autenticación)
