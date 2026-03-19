@@ -21,6 +21,15 @@ empleadoRouter.get('/', (req, res, next) => {
 })
 
 /**
+ * @route   GET /api/empleados/configuraciones
+ * @desc    Obtener las configuraciones de los empleados
+ * @access  Privado (requiere autenticación)
+ */
+empleadoRouter.get('/configuraciones/perfil', (req, res, next) => {
+  empleadoController.getPerfil(req, res, next)
+})
+
+/**
  * @route   GET /api/empleados/visitadores
  * @desc    Obtener todos los visitadores activos
  * @access  Privado (requiere autenticación)

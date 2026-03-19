@@ -34,6 +34,43 @@ export class EmpleadoController {
     }
   }
 
+  async getPerfil(req: Request, res: Response, next: NextFunction) {
+    try {
+      // 1. Extraer el CUIL del usuario autenticado en el token
+      const user = req.user
+      if (!user || !user.cuil) {
+        return res.status(401).json({
+          success: false,
+          message: 'Usuario no autenticado',
+        })
+      }
+
+      // 2. Pasarle ese CUIL al service
+      const configuraciones = await empleadoService.getPerfil(user.cuil)
+
+      if (!configuraciones) {
+        return res.status(404).json({
+          success: false,
+          message: 'Perfil no encontrado',
+        })
+      }
+
+      // 3. Devolver los datos al Frontend
+      // OJO: tu frontend espera recibir un objeto directo { nombre, apellido, cuil } por el fetchWithErrorHandling,
+      // te lo dejo como { success, data } por ahora como en tu boilerplate original, pero te recomendaría ajustarlo si falla.
+      res.json({
+        success: true,
+        data: {
+          nombre: configuraciones.nombre,
+          apellido: configuraciones.apellido,
+          cuil: configuraciones.cuil,
+        },
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
   /**
    * Obtener todos los visitadores activos
    */

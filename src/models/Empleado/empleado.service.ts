@@ -81,6 +81,10 @@ export class EmpleadoService {
     return await this.empleadoRepository.findAllPublic()
   }
 
+  async getPerfil(cuil: string): Promise<EmpleadoPayload | null> {
+    return await this.empleadoRepository.findPerfil(cuil)
+  }
+
   // Obtener empleado por CUIL
   async findByCuil(cuil: string): Promise<EmpleadoPayload | null> {
     const empleado = await this.empleadoRepository.findByCuilPublic(cuil)
