@@ -61,12 +61,6 @@ export class EntregaService {
       throw new Error(`Obra no encontrada (ID: ${cod_obra})`)
     }
 
-    if (obra.estado !== 'PAGADA TOTALMENTE') {
-      throw new Error(
-        `Error de validación: Sólo se pueden generar entregas para obras que se encuentren PAGADA TOTALMENTE. (Estado actual: ${obra.estado})`,
-      )
-    }
-
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
 
     const diasDeUso = dias_viaticos && dias_viaticos > 0 ? dias_viaticos : 1
