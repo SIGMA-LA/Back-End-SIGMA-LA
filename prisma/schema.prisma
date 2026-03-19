@@ -8,16 +8,16 @@ datasource db {
 }
 
 model cliente {
-  cuil         String  @id
-  razon_social String? @db.VarChar(50)
-  telefono     String  @db.VarChar(20)
-  mail         String  @db.VarChar(100)
-  apellido     String? @db.VarChar(50)
-  nombre       String? @db.VarChar(50)
-  sexo         String? @db.VarChar(20)
-  tipo_cliente String  @db.VarChar(50)
-  obra         obra[]  @relation("ObraCliente")
-  obraArquitecto obra[] @relation("ObraArquitecto")
+  cuil           String  @id
+  razon_social   String? @db.VarChar(50)
+  telefono       String  @db.VarChar(20)
+  mail           String  @db.VarChar(100)
+  apellido       String? @db.VarChar(50)
+  nombre         String? @db.VarChar(50)
+  sexo           String? @db.VarChar(20)
+  tipo_cliente   String  @db.VarChar(50)
+  obraArquitecto obra[]  @relation("ObraArquitecto")
+  obra           obra[]  @relation("ObraCliente")
 }
 
 model empleado {
@@ -96,7 +96,6 @@ model maquinaria {
 model obra {
   cod_obra             Int                    @id @default(autoincrement())
   cuil                 String
-  cuil_arquitecto      String?                @db.VarChar(50)
   fecha_ini            DateTime               @db.Date
   estado               String                 @db.VarChar(50)
   fecha_cancelacion    DateTime?              @db.Date
@@ -104,11 +103,12 @@ model obra {
   nota_fabrica         String?                @db.VarChar(255)
   nota_fabrica_pid     String?                @db.VarChar(255)
   cod_localidad        Int
+  cuil_arquitecto      String?                @db.VarChar(50)
   entrega              entrega[]
   entrega_empleado     entrega_empleado[]
   localidad            localidad              @relation(fields: [cod_localidad], references: [cod_localidad], onDelete: NoAction, onUpdate: NoAction)
-  cliente              cliente                @relation("ObraCliente", fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
   arquitecto           cliente?               @relation("ObraArquitecto", fields: [cuil_arquitecto], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+  cliente              cliente                @relation("ObraCliente", fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
   orden_de_produccion  orden_de_produccion[]
   pago                 pago[]
   presupuesto          presupuesto[]

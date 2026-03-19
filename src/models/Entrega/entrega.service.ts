@@ -3,6 +3,7 @@ import { entrega, Prisma } from '@prisma/client'
 import { MaquinariaService } from '../Maquinaria/maquinaria.service.js'
 import { prisma } from '../../shared/db/prismaClient.js'
 import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
+import { EmpleadoService } from '../Empleado/empleado.service.js'
 
 /**
  * Servicio para manejar la lógica de negocio de entregas.
@@ -20,11 +21,13 @@ export class EntregaService {
   private entregaRepository: EntregaRepository
   private maquinariaService: MaquinariaService
   private vehiculoService: VehiculoService
+  private empleadoService: EmpleadoService
 
   constructor() {
     this.entregaRepository = new EntregaRepository()
     this.maquinariaService = new MaquinariaService()
     this.vehiculoService = new VehiculoService()
+    this.empleadoService = new EmpleadoService()
   }
 
   async create(data: {
@@ -48,6 +51,16 @@ export class EntregaService {
       dias_viaticos,
       ...entregaData
     } = data
+
+    // Validate Obra status
+    const obra = await prisma.obra.findUnique({
+      where: { cod_obra },
+    })
+
+    if (!obra) {
+      throw new Error(`Obra no encontrada (ID: ${cod_obra})`)
+    }
+
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
 
     const diasDeUso = dias_viaticos && dias_viaticos > 0 ? dias_viaticos : 1
@@ -56,11 +69,56 @@ export class EntregaService {
       fechaParaPrisma.getTime() + horasDeUsoEnMs,
     )
 
+    if (!vehiculos || vehiculos.length === 0) {
+      throw new Error(
+        'Error de validación: Debe asignar obligatoriamente al menos un vehículo a la entrega',
+      )
+    }
+
+    const checks = []
+    const cuilesEmpleados = empleados.map(emp => emp.cuil)
+
+    if (cuilesEmpleados.length > 0) {
+      checks.push(
+        this.empleadoService
+          .verificarDisponibilidadEmpleados(
+            cuilesEmpleados,
+            fechaParaPrisma,
+            fechaFinEstimada,
+          )
+          .catch(err => err.message),
+      )
+    }
+
     if (maquinarias && maquinarias.length > 0) {
-      await this.maquinariaService.verificarDisponibilidadMaquinarias(
-        maquinarias,
-        fechaParaPrisma,
-        fechaFinEstimada,
+      checks.push(
+        this.maquinariaService
+          .verificarDisponibilidadMaquinarias(
+            maquinarias,
+            fechaParaPrisma,
+            fechaFinEstimada,
+          )
+          .catch(err => err.message),
+      )
+    }
+
+    if (vehiculos && vehiculos.length > 0) {
+      checks.push(
+        this.vehiculoService
+          .verificarDisponibilidadVehiculos(
+            vehiculos,
+            fechaParaPrisma,
+            fechaFinEstimada,
+          )
+          .catch(err => err.message),
+      )
+    }
+
+    const results = await Promise.all(checks)
+    const errMessages = results.filter(Boolean) as string[]
+    if (errMessages.length > 0) {
+      throw new Error(
+        `Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`,
       )
     }
 
@@ -101,8 +159,7 @@ export class EntregaService {
             create: vehiculos.map(patente => ({
               vehiculo: { connect: { patente: patente } },
               fecha_hora_ini_uso: fechaParaPrisma,
-              fecha_hora_ini_est: fechaParaPrisma,
-              fecha_hora_fin_est: fechaFinEstimada,
+              fecha_hora_ini_est: fechaFinEstimada,
               obra: { connect: { cod_obra: cod_obra } },
             })),
           },

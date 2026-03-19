@@ -37,6 +37,40 @@ export class VehiculoRepository {
     })
   }
 
+  async findConflictingUsageForPatentes(
+    patentes: string[],
+    fechaInicio: Date,
+    fechaFin: Date,
+  ) {
+    return await this.prisma.vehiculo.findMany({
+      where: {
+        patente: { in: patentes },
+        OR: [
+          {
+            uso_vehiculo_entrega: {
+              some: {
+                AND: [
+                  { fecha_hora_ini_uso: { lt: fechaFin } },
+                  { fecha_hora_ini_est: { gt: fechaInicio } },
+                ],
+              },
+            },
+          },
+          {
+            uso_vehiculo_visita: {
+              some: {
+                AND: [
+                  { fecha_hora_ini_uso: { lt: fechaFin } },
+                  { fecha_hora_fin_est: { gt: fechaInicio } },
+                ],
+              },
+            },
+          },
+        ],
+      },
+    })
+  }
+
   // Obtener vehiculo por patente
   async findByPatente(patente: string): Promise<vehiculo | null> {
     return await this.prisma.vehiculo.findUnique({

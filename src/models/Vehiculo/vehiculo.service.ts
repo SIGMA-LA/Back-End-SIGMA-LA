@@ -108,6 +108,32 @@ export class VehiculoService {
     })
   }
 
+  async verificarDisponibilidadVehiculos(
+    patentes: string[],
+    fechaInicio: Date,
+    fechaFin: Date,
+  ): Promise<void> {
+    if (patentes.length === 0) {
+      return
+    }
+
+    const conflictos =
+      await this.vehiculoRepository.findConflictingUsageForPatentes(
+        patentes,
+        fechaInicio,
+        fechaFin,
+      )
+
+    if (conflictos.length > 0) {
+      const vehiculosEnConflicto = conflictos
+        .map(v => `'${v.patente}'`)
+        .join(', ')
+      throw new Error(
+        `Conflicto de horario. Los siguientes vehículos ya están en uso en la fecha seleccionada: ${vehiculosEnConflicto}`,
+      )
+    }
+  }
+
   // Obtener vehiculo por patente
   async findByPatente(patente: string): Promise<vehiculo | null> {
     return await this.vehiculoRepository.findByPatente(patente)

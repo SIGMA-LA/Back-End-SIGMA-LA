@@ -23,6 +23,38 @@ export class EmpleadoRepository {
       },
     })
   }
+
+  // Buscar usos en un rango de tiempo
+  async findUsagesInRange(cuiles: string[], timeWindowStart: Date) {
+    return await this.prisma.empleado.findMany({
+      where: { cuil: { in: cuiles } },
+      include: {
+        entrega_empleado: {
+          include: {
+            entrega: true,
+          },
+          where: {
+            entrega: {
+              fecha_hora_entrega: { gt: timeWindowStart },
+              estado: { in: ['PENDIENTE', 'EN CURSO'] },
+            },
+          },
+        },
+        empleado_visita: {
+          include: {
+            visita: true,
+          },
+          where: {
+            visita: {
+              fecha_hora_visita: { gt: timeWindowStart },
+              estado: { in: ['PROGRAMADA', 'EN CURSO', 'REPROGRAMADA'] },
+            },
+          },
+        },
+      },
+    })
+  }
+
   // Obtener empleado por CUIL (solo datos públicos)
   async findByCuilPublic(cuil: string): Promise<EmpleadoPayload | null> {
     return await this.prisma.empleado.findUnique({
