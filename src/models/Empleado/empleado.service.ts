@@ -211,6 +211,30 @@ export class EmpleadoService {
     }
   }
 
+  // Actualizar contraseña
+  async updatePassword(
+    cuil: string,
+    currentPass: string,
+    newPass: string,
+  ): Promise<void> {
+    const empleado = await this.empleadoRepository.findByCuil(cuil)
+    if (!empleado || !empleado.activo) {
+      throw new Error('Empleado no encontrado')
+    }
+
+    if (!empleado.contrasenia) {
+      throw new Error('El empleado no posee una contraseña configurable')
+    }
+
+    const isMatch = await bcrypt.compare(currentPass, empleado.contrasenia)
+    if (!isMatch) {
+      throw new Error('La contraseña actual es incorrecta')
+    }
+
+    const hashedNew = await bcrypt.hash(newPass, 10)
+    await this.empleadoRepository.update(cuil, { contrasenia: hashedNew })
+  }
+
   // Soft delete - Desactivar empleado
   async remove(cuil: string): Promise<EmpleadoPayload> {
     const existingEmpleado = await this.empleadoRepository.findByCuil(cuil)

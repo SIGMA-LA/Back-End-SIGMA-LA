@@ -72,6 +72,86 @@ export class EmpleadoController {
   }
 
   /**
+   * Actualizar la contraseña del empleado autenticado
+   */
+  async updatePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user
+      if (!user || !user.cuil) {
+        return res.status(401).json({
+          success: false,
+          message: 'Usuario no autenticado',
+        })
+      }
+
+      const { currentPassword, newPassword } = req.body
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Faltan parámetros para actualizar la contraseña',
+        })
+      }
+
+      await empleadoService.updatePassword(
+        user.cuil,
+        currentPassword,
+        newPassword,
+      )
+
+      res.json({
+        success: true,
+        message: 'Contraseña actualizada exitosamente',
+      })
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === 'La contraseña actual es incorrecta'
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: error.message,
+        })
+      }
+      next(error)
+    }
+  }
+
+  /**
+   * Actualizar el perfil del empleado autenticado
+   */
+  async updatePerfil(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user
+      if (!user || !user.cuil) {
+        return res.status(401).json({
+          success: false,
+          message: 'Usuario no autenticado',
+        })
+      }
+
+      // El cuil NO se puede cambiar porque es el PK, entonces omitimos el cuil del body
+      const { nombre, apellido } = req.body
+
+      const updatedEmpleado = await empleadoService.update(user.cuil, {
+        nombre,
+        apellido,
+      })
+
+      // Tu Front-end action va a esperar esto como resultado de data
+      res.json({
+        success: true,
+        data: {
+          nombre: updatedEmpleado.nombre,
+          apellido: updatedEmpleado.apellido,
+          cuil: updatedEmpleado.cuil,
+        },
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
    * Obtener todos los visitadores activos
    */
   async getVisitadores(req: Request, res: Response, next: NextFunction) {
