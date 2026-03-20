@@ -280,6 +280,11 @@ export class ObraRepository {
 
   /** Elimina una obra por ID (baja física) */
   async delete(id: number): Promise<obra> {
+    // Borramos el presupuesto asociado a la obra que es el unico registro que tiene
+    await this.prisma.presupuesto.deleteMany({
+      where: { cod_obra: id },
+    })
+    // Borramos la obra
     return await this.prisma.obra.delete({
       where: { cod_obra: id },
     })
