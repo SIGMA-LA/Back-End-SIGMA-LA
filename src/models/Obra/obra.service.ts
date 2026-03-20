@@ -177,6 +177,7 @@ export class ObraService {
         totalPagado,
         saldoPendiente,
         porcentajePagado,
+        cantidad_pagos: obra.pago.length,
       }
     })
   }
