@@ -26,6 +26,7 @@ export class PagoController {
   async getAll(req: Request, res: Response) {
     try {
       const filters = {
+        search: req.query.search as string,
         cliente: req.query.cliente as string,
         fechaDesde: req.query.fechaDesde as string,
         fechaHasta: req.query.fechaHasta as string,
@@ -61,6 +62,9 @@ export class PagoController {
       }
       if (filters.obra) {
         filters.obra = filters.obra.replace(/[<>{}]/g, '')
+      }
+      if (filters.search) {
+        filters.search = filters.search.replace(/[<>{}]/g, '')
       }
 
       Object.keys(filters).forEach(key => {

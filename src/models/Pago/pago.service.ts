@@ -72,6 +72,16 @@ export class PagoService {
       const nuevoTotalPagado = totalPagadoAnteriormente + nuevoMonto
       const montoRestante = totalPresupuestado - totalPagadoAnteriormente
 
+      if (obra.pago.length === 0) {
+        const montoRequerido = totalPresupuestado * 0.7
+        // Check equivalence with 2 decimal precision tolerance due to floats
+        if (Math.abs(nuevoMonto - montoRequerido) > 0.01) {
+          throw new Error(
+            `El primer pago debe ser exactamente del 70% del presupuesto (${montoRequerido.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}).`
+          )
+        }
+      }
+
       if (nuevoMonto > montoRestante + 0.01) {
         throw new Error(
           `El monto del pago (${nuevoMonto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}) excede el saldo restante (${montoRestante.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}).`,
@@ -127,6 +137,7 @@ export class PagoService {
   }
 
   async findAll(filters?: {
+    search?: string
     cliente?: string
     fechaDesde?: string
     fechaHasta?: string
