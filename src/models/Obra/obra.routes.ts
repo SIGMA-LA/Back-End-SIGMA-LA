@@ -5,7 +5,7 @@ import {
   upload,
   deleteUploadedFile,
 } from '../../shared/middlewares/upload.middleware.js'
-import { updateObraSchema, idParamsSchema } from 'sigma-la-schemas'
+import { idParamsSchema } from 'sigma-la-schemas'
 
 const obraController = new ObraController()
 const obraRouter = Router()
@@ -106,7 +106,6 @@ obraRouter.put(
   '/:id',
   validate({
     params: idParamsSchema,
-    body: updateObraSchema,
   }),
   (req, res) => {
     obraController.update(req, res)

@@ -181,19 +181,13 @@ export class ObraService {
     return this.repository.bajaLogica(id)
   }
 
-  /** Elimina una obra por ID (baja física) */
-  async remove(id: number): Promise<obra> {
+  /** Elimina una obra por ID */
+  async remove(id: number) {
     const existingObra = await this.repository.findById(id)
     if (!existingObra) {
       throw new Error('No existe una obra con el código proporcionado.')
     }
-
-    const dataToUpdate = {
-      estado: 'CANCELADA',
-      fecha_cancelacion: new Date(),
-    }
-
-    return await this.repository.update(id, dataToUpdate)
+    return await this.repository.delete(id)
   }
 
   async findObrasConPresupuestoAceptado(search?: string) {
