@@ -15,6 +15,10 @@ vehiculoRouter.get('/disponibilidad', (req, res) => {
   vehiculoController.getDisponibilidadPorFecha(req, res)
 })
 
+vehiculoRouter.get('/disponibles', (req, res) => {
+  vehiculoController.getDisponibles(req, res)
+})
+
 vehiculoRouter.get('/:patente', (req, res) => {
   vehiculoController.getOne(req, res)
 })
