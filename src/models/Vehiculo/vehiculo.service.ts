@@ -55,6 +55,11 @@ export class VehiculoService {
     return await this.vehiculoRepository.findAll()
   }
 
+  // Obtener todos los vehiculos disponibles
+  async findDisponibles(): Promise<vehiculo[]> {
+    return await this.vehiculoRepository.findByEstado('DISPONIBLE')
+  }
+
   async findDisponibilidadPorFecha(
     fechaInicio: Date,
     fechaFin: Date,

@@ -24,6 +24,11 @@ export class VehiculoController {
     res.json(vehiculos)
   }
 
+  async getDisponibles(req: Request, res: Response) {
+    const vehiculos = await vehiculoService.findDisponibles()
+    res.json(vehiculos)
+  }
+
   async getDisponibilidadPorFecha(req: Request, res: Response) {
     try {
       const { fecha_hora_inicio, fecha_hora_fin } = req.query
@@ -57,9 +62,7 @@ export class VehiculoController {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Error desconocido'
-      res
-        .status(500)
-        .json({ error: message, code: 'FETCH_AVAILABILITY_ERROR' })
+      res.status(500).json({ error: message, code: 'FETCH_AVAILABILITY_ERROR' })
     }
   }
 
