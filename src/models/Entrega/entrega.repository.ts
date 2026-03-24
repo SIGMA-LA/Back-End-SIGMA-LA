@@ -13,8 +13,38 @@ export class EntregaRepository {
     return this.prisma.entrega.create({ data })
   }
 
-  async findAll(): Promise<entrega[]> {
+  async findAll(search?: string, estado?: string): Promise<entrega[]> {
+    const whereClause: Prisma.entregaWhereInput = {}
+
+    if (estado) {
+      whereClause.estado = estado
+    }
+
+    if (search) {
+      whereClause.OR = [
+        { detalle: { contains: search, mode: 'insensitive' } },
+        { observaciones: { contains: search, mode: 'insensitive' } },
+        {
+          obra: {
+            OR: [
+              { direccion: { contains: search, mode: 'insensitive' } },
+              {
+                cliente: {
+                  OR: [
+                    { nombre: { contains: search, mode: 'insensitive' } },
+                    { apellido: { contains: search, mode: 'insensitive' } },
+                    { razon_social: { contains: search, mode: 'insensitive' } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ]
+    }
+
     return this.prisma.entrega.findMany({
+      where: whereClause,
       orderBy: { fecha_hora_entrega: 'desc' },
       include: {
         obra: {
@@ -38,20 +68,20 @@ export class EntregaRepository {
           include: {
             maquinaria: {
               select: {
-                descripcion: true
-              }
-            }
-          }
+                descripcion: true,
+              },
+            },
+          },
         },
         uso_vehiculo_entrega: {
           include: {
             vehiculo: {
               select: {
                 patente: true,
-                tipo_vehiculo: true
-              }
-            }
-          }
+                tipo_vehiculo: true,
+              },
+            },
+          },
         },
         orden_de_produccion: true,
       },
@@ -61,20 +91,53 @@ export class EntregaRepository {
   async getByEmpleadoEstado(
     cuil_empleado: string,
     estado: string,
+    search?: string,
+    date?: string,
   ): Promise<entrega[]> {
-    return this.prisma.entrega.findMany({
-      where: {
-        AND: [
-          { estado: estado },
-          {
-            entrega_empleado: {
-              some: {
-                cuil: cuil_empleado,
-              },
-            },
-          },
-        ],
+    const whereClause: Prisma.entregaWhereInput = {
+      estado: estado,
+      entrega_empleado: {
+        some: {
+          cuil: cuil_empleado,
+        },
       },
+    }
+
+    if (date) {
+      const startOfDay = new Date(date)
+      const endOfDay = new Date(date)
+      endOfDay.setDate(endOfDay.getDate() + 1)
+      whereClause.fecha_hora_entrega = {
+        gte: startOfDay,
+        lt: endOfDay,
+      }
+    }
+
+    if (search) {
+      whereClause.OR = [
+        { detalle: { contains: search, mode: 'insensitive' } },
+        { observaciones: { contains: search, mode: 'insensitive' } },
+        {
+          obra: {
+            OR: [
+              { direccion: { contains: search, mode: 'insensitive' } },
+              {
+                cliente: {
+                  OR: [
+                    { nombre: { contains: search, mode: 'insensitive' } },
+                    { apellido: { contains: search, mode: 'insensitive' } },
+                    { razon_social: { contains: search, mode: 'insensitive' } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ]
+    }
+
+    return this.prisma.entrega.findMany({
+      where: whereClause,
       include: {
         entrega_empleado: {
           include: {
@@ -104,6 +167,7 @@ export class EntregaRepository {
           },
         },
       },
+      orderBy: { fecha_hora_entrega: 'desc' },
     })
   }
 

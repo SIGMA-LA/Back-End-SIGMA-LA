@@ -20,7 +20,12 @@ export class VehiculoController {
   }
 
   async getAll(req: Request, res: Response) {
-    const vehiculos = await vehiculoService.findAll()
+    const { search, estado } = req.query
+    const filters = {
+      search: search as string | undefined,
+      estado: estado as string | undefined,
+    }
+    const vehiculos = await vehiculoService.findAll(filters)
     res.json(vehiculos)
   }
 

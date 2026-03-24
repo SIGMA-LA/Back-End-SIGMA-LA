@@ -199,17 +199,56 @@ export class VisitaRepository {
 
   async findByEmpleadoAndEstado(
     cuil: string,
-    estado: string,
+    estado: string | string[],
+    search?: string,
+    date?: string,
   ): Promise<visita[]> {
-    return await this.prisma.visita.findMany({
-      where: {
-        estado: estado,
-        empleado_visita: {
-          some: {
-            cuil: cuil,
-          },
+    const whereClause: Prisma.visitaWhereInput = {
+      estado: Array.isArray(estado) ? { in: estado } : estado,
+      empleado_visita: {
+        some: {
+          cuil: cuil,
         },
       },
+    }
+
+    if (date) {
+      const startOfDay = new Date(date)
+      const endOfDay = new Date(date)
+      endOfDay.setDate(endOfDay.getDate() + 1)
+      whereClause.fecha_hora_visita = {
+        gte: startOfDay,
+        lt: endOfDay,
+      }
+    }
+
+    if (search) {
+      whereClause.OR = [
+        { direccion_visita: { contains: search, mode: 'insensitive' } },
+        { nombre_cliente: { contains: search, mode: 'insensitive' } },
+        { apellido_cliente: { contains: search, mode: 'insensitive' } },
+        { motivo_visita: { contains: search, mode: 'insensitive' } },
+        {
+          obra: {
+            OR: [
+              { direccion: { contains: search, mode: 'insensitive' } },
+              {
+                cliente: {
+                  OR: [
+                    { nombre: { contains: search, mode: 'insensitive' } },
+                    { apellido: { contains: search, mode: 'insensitive' } },
+                    { razon_social: { contains: search, mode: 'insensitive' } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ]
+    }
+
+    return await this.prisma.visita.findMany({
+      where: whereClause,
       include: {
         obra: {
           select: {
@@ -250,15 +289,60 @@ export class VisitaRepository {
   }
 
   // Obtener todas las visitas de un empleado
-  async findByEmpleado(cuil: string): Promise<visita[]> {
-    return await this.prisma.visita.findMany({
-      where: {
-        empleado_visita: {
-          some: {
-            cuil: cuil,
-          },
+  async findByEmpleado(
+    cuil: string,
+    estados?: string[],
+    search?: string,
+    date?: string,
+  ): Promise<visita[]> {
+    const whereClause: Prisma.visitaWhereInput = {
+      empleado_visita: {
+        some: {
+          cuil: cuil,
         },
       },
+    }
+    if (estados && estados.length > 0) {
+      whereClause.estado = { in: estados }
+    }
+
+    if (date) {
+      const startOfDay = new Date(date)
+      const endOfDay = new Date(date)
+      endOfDay.setDate(endOfDay.getDate() + 1)
+      whereClause.fecha_hora_visita = {
+        gte: startOfDay,
+        lt: endOfDay,
+      }
+    }
+
+    if (search) {
+      whereClause.OR = [
+        { direccion_visita: { contains: search, mode: 'insensitive' } },
+        { nombre_cliente: { contains: search, mode: 'insensitive' } },
+        { apellido_cliente: { contains: search, mode: 'insensitive' } },
+        { motivo_visita: { contains: search, mode: 'insensitive' } },
+        {
+          obra: {
+            OR: [
+              { direccion: { contains: search, mode: 'insensitive' } },
+              {
+                cliente: {
+                  OR: [
+                    { nombre: { contains: search, mode: 'insensitive' } },
+                    { apellido: { contains: search, mode: 'insensitive' } },
+                    { razon_social: { contains: search, mode: 'insensitive' } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ]
+    }
+
+    return await this.prisma.visita.findMany({
+      where: whereClause,
       include: {
         obra: {
           select: {

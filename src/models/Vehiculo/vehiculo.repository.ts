@@ -8,8 +8,24 @@ export class VehiculoRepository {
   }
 
   // Obtener todos los vehiculos
-  async findAll(): Promise<vehiculo[]> {
+  async findAll(filters?: {
+    search?: string
+    estado?: string
+  }): Promise<vehiculo[]> {
+    const where: Prisma.vehiculoWhereInput = {}
+    if (filters?.estado) {
+      where.estado = filters.estado
+    }
+    if (filters?.search) {
+      where.OR = [
+        { patente: { contains: filters.search } },
+        { tipo_vehiculo: { contains: filters.search } },
+        { marca: { contains: filters.search } },
+        { modelo: { contains: filters.search } },
+      ]
+    }
     return await this.prisma.vehiculo.findMany({
+      where,
       orderBy: { patente: 'asc' },
     })
   }
@@ -41,6 +57,7 @@ export class VehiculoRepository {
     patentes: string[],
     fechaInicio: Date,
     fechaFin: Date,
+    excludeCodVisita?: number,
   ) {
     return await this.prisma.vehiculo.findMany({
       where: {
@@ -62,6 +79,9 @@ export class VehiculoRepository {
                 AND: [
                   { fecha_hora_ini_uso: { lt: fechaFin } },
                   { fecha_hora_fin_est: { gt: fechaInicio } },
+                  ...(excludeCodVisita
+                    ? [{ cod_visita: { not: excludeCodVisita } }]
+                    : []),
                 ],
               },
             },

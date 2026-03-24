@@ -19,8 +19,19 @@ export class MaquinariaRepository {
     })
   }
 
-  async findAll(): Promise<maquinaria[]> {
+  async findAll(filters?: {
+    search?: string
+    estado?: string
+  }): Promise<maquinaria[]> {
+    const where: Prisma.maquinariaWhereInput = {}
+    if (filters?.estado) {
+      where.estado = filters.estado
+    }
+    if (filters?.search) {
+      where.descripcion = { contains: filters.search }
+    }
     return await this.prisma.maquinaria.findMany({
+      where,
       orderBy: { descripcion: 'asc' },
     })
   }

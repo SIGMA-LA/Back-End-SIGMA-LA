@@ -26,49 +26,70 @@ export class MaquinariaService {
     this.repository = new MaquinariaRepository()
   }
 
-  async findDisponibilidadPorFecha(fechaInicio: Date, fechaFin: Date): Promise<MaquinariaConDisponibilidad[]> {
-    
-    const buffer = 24 * 60 * 60 * 1000;
-    const warningStartTime = new Date(fechaInicio.getTime() - buffer);
-    const warningEndTime = new Date(fechaFin.getTime() + buffer);
+  async findDisponibilidadPorFecha(
+    fechaInicio: Date,
+    fechaFin: Date,
+  ): Promise<MaquinariaConDisponibilidad[]> {
+    const buffer = 24 * 60 * 60 * 1000
+    const warningStartTime = new Date(fechaInicio.getTime() - buffer)
+    const warningEndTime = new Date(fechaFin.getTime() + buffer)
 
-    const maquinariasConUsosCercanos = await this.repository.findAllWithUsageInRange(warningStartTime, warningEndTime);
+    const maquinariasConUsosCercanos =
+      await this.repository.findAllWithUsageInRange(
+        warningStartTime,
+        warningEndTime,
+      )
 
     return maquinariasConUsosCercanos.map(maquina => {
-      let availabilityStatus: AvailabilityStatus = 'DISPONIBLE';
-      let warningMessage: string | undefined = undefined;
+      let availabilityStatus: AvailabilityStatus = 'DISPONIBLE'
+      let warningMessage: string | undefined = undefined
 
       if (maquina.uso_maquinaria.length > 0) {
-        const hayConflictoDirecto = maquina.uso_maquinaria.some(uso =>
-          (new Date(uso.fecha_hora_ini_uso) < fechaFin) && (new Date(uso.fecha_hora_fin_est) > fechaInicio)
-        );
+        const hayConflictoDirecto = maquina.uso_maquinaria.some(
+          uso =>
+            new Date(uso.fecha_hora_ini_uso) < fechaFin &&
+            new Date(uso.fecha_hora_fin_est) > fechaInicio,
+        )
 
         if (hayConflictoDirecto) {
-          availabilityStatus = 'NO_DISPONIBLE';
+          availabilityStatus = 'NO_DISPONIBLE'
         } else {
-          availabilityStatus = 'ADVERTENCIA';
-          warningMessage = 'Esta maquinaria tiene un uso programado dentro de las 24hs de la fecha seleccionada.';
+          availabilityStatus = 'ADVERTENCIA'
+          warningMessage =
+            'Esta maquinaria tiene un uso programado dentro de las 24hs de la fecha seleccionada.'
         }
       }
-      
+
       return {
         ...maquina,
         availabilityStatus,
         warningMessage,
-      };
-    });
+      }
+    })
   }
 
-  async verificarDisponibilidadMaquinarias(maquinariaIds: number[], fechaInicio: Date, fechaFin: Date): Promise<void> {
+  async verificarDisponibilidadMaquinarias(
+    maquinariaIds: number[],
+    fechaInicio: Date,
+    fechaFin: Date,
+  ): Promise<void> {
     if (maquinariaIds.length === 0) {
-      return;
+      return
     }
 
-    const conflictos = await this.repository.findConflictingUsageForIds(maquinariaIds, fechaInicio, fechaFin);
+    const conflictos = await this.repository.findConflictingUsageForIds(
+      maquinariaIds,
+      fechaInicio,
+      fechaFin,
+    )
 
     if (conflictos.length > 0) {
-      const maquinasEnConflicto = conflictos.map(c => `'${c.maquinaria.descripcion}' (ID: ${c.cod_maquina})`).join(', ');
-      throw new Error(`Conflicto de horario. Las siguientes maquinarias ya están en uso en la fecha seleccionada: ${maquinasEnConflicto}`);
+      const maquinasEnConflicto = conflictos
+        .map(c => `'${c.maquinaria.descripcion}' (ID: ${c.cod_maquina})`)
+        .join(', ')
+      throw new Error(
+        `Conflicto de horario. Las siguientes maquinarias ya están en uso en la fecha seleccionada: ${maquinasEnConflicto}`,
+      )
     }
   }
 
@@ -81,8 +102,11 @@ export class MaquinariaService {
     return await this.repository.create(maquinariaData)
   }
 
-  async findAll(): Promise<maquinaria[]> {
-    return this.repository.findAll()
+  async findAll(filters?: {
+    search?: string
+    estado?: string
+  }): Promise<maquinaria[]> {
+    return await this.repository.findAll(filters)
   }
 
   async findById(cod_maquina: number): Promise<maquinaria | null> {
