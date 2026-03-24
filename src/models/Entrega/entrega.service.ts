@@ -37,6 +37,8 @@ export class EntregaService {
     estado: 'PENDIENTE'
     observaciones?: string
     dias_viaticos?: number
+    fecha_salida_estimada?: string
+    fecha_regreso_estimado?: string
     empleados: { cuil: string; rol_entrega: 'ENCARGADO' | 'AYUDANTE' }[]
     maquinarias?: number[]
     vehiculos?: string[]
@@ -49,6 +51,8 @@ export class EntregaService {
       vehiculos,
       cod_op,
       dias_viaticos,
+      fecha_salida_estimada,
+      fecha_regreso_estimado,
       ...entregaData
     } = data
 
@@ -63,11 +67,13 @@ export class EntregaService {
 
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
 
-    const diasDeUso = dias_viaticos && dias_viaticos > 0 ? dias_viaticos : 1
-    const horasDeUsoEnMs = diasDeUso * 24 * 60 * 60 * 1000
-    const fechaFinEstimada = new Date(
-      fechaParaPrisma.getTime() + horasDeUsoEnMs,
-    )
+    const fechaSalidaPrisma = fecha_salida_estimada
+      ? new Date(fecha_salida_estimada)
+      : fechaParaPrisma
+
+    const fechaFinEstimada = fecha_regreso_estimado
+      ? new Date(fecha_regreso_estimado)
+      : new Date(fechaParaPrisma.getTime() + 2 * 60 * 60 * 1000)
 
     if (!vehiculos || vehiculos.length === 0) {
       throw new Error(
@@ -83,7 +89,7 @@ export class EntregaService {
         this.empleadoService
           .verificarDisponibilidadEmpleados(
             cuilesEmpleados,
-            fechaParaPrisma,
+            fechaSalidaPrisma,
             fechaFinEstimada,
           )
           .catch(err => err.message),
@@ -95,7 +101,7 @@ export class EntregaService {
         this.maquinariaService
           .verificarDisponibilidadMaquinarias(
             maquinarias,
-            fechaParaPrisma,
+            fechaSalidaPrisma,
             fechaFinEstimada,
           )
           .catch(err => err.message),
@@ -107,7 +113,7 @@ export class EntregaService {
         this.vehiculoService
           .verificarDisponibilidadVehiculos(
             vehiculos,
-            fechaParaPrisma,
+            fechaSalidaPrisma,
             fechaFinEstimada,
           )
           .catch(err => err.message),
@@ -129,8 +135,8 @@ export class EntregaService {
       ...(entregaData.observaciones && {
         observaciones: entregaData.observaciones,
       }),
-      ...(data.dias_viaticos !== undefined && {
-        dias_viaticos: data.dias_viaticos,
+      ...(dias_viaticos !== undefined && {
+        dias_viaticos: dias_viaticos,
       }),
       obra: {
         connect: { cod_obra: cod_obra },
@@ -147,7 +153,7 @@ export class EntregaService {
           uso_maquinaria: {
             create: maquinarias.map(cod_maquina => ({
               maquinaria: { connect: { cod_maquina: cod_maquina } },
-              fecha_hora_ini_uso: fechaParaPrisma,
+              fecha_hora_ini_uso: fechaSalidaPrisma,
               fecha_hora_fin_est: fechaFinEstimada,
               obra: { connect: { cod_obra: cod_obra } },
             })),
@@ -158,7 +164,7 @@ export class EntregaService {
           uso_vehiculo_entrega: {
             create: vehiculos.map(patente => ({
               vehiculo: { connect: { patente: patente } },
-              fecha_hora_ini_uso: fechaParaPrisma,
+              fecha_hora_ini_uso: fechaSalidaPrisma,
               fecha_hora_ini_est: fechaFinEstimada,
               obra: { connect: { cod_obra: cod_obra } },
             })),
@@ -212,12 +218,15 @@ export class EntregaService {
     cod_entrega: number,
     observaciones?: string,
   ): Promise<entrega> {
+    // Solo actualizamos la entrega y liberamos sus recursos.
+    // Hotfix temporal: Ya NO cerramos la Obra automáticamente aquí, para soportar Entregas Parciales
+    // sin necesidad de alterar el Schema de Prisma actual.
     const [entregaActualizada] = await prisma.$transaction(async tx => {
       const entrega = await tx.entrega.update({
         where: { cod_entrega },
         data: {
           estado: 'ENTREGADO',
-          ...(observaciones && { observaciones }),
+          observaciones: observaciones || 'Entrega completada exitosamente',
         },
       })
 
@@ -226,19 +235,14 @@ export class EntregaService {
         data: { fecha_hora_fin_real: new Date() },
       })
 
-      const otrasEntregasPendientes = await tx.entrega.count({
-        where: {
-          cod_obra: entrega.cod_obra,
-          estado: 'PENDIENTE',
-        },
+      await tx.uso_maquinaria.updateMany({
+        where: { cod_entrega: cod_entrega },
+        data: { fecha_hora_fin_real: new Date() },
       })
 
-      if (otrasEntregasPendientes === 0) {
-        await tx.obra.update({
-          where: { cod_obra: entrega.cod_obra },
-          data: { estado: 'ENTREGADA' },
-        })
-      }
+      // Se elimina el conteo y la actualización del estado de la Obra.
+      // Así evitamos cerrar la Obra permanentemente en entregas parciales
+      // sin requerir migraciones de base de datos de momento.
 
       return [entrega]
     })
@@ -252,12 +256,21 @@ export class EntregaService {
         where: { cod_entrega: cod_entrega },
         data: {
           estado: 'CANCELADO',
-          ...(motivo && { observaciones: `Entrega cancelada: ${motivo}` }),
+          observaciones: motivo
+            ? `Entrega cancelada: ${motivo}`
+            : 'Entrega cancelada',
+          fecha_cancelacion: new Date(),
         },
       })
 
-      await tx.uso_vehiculo_entrega.deleteMany({
+      await tx.uso_vehiculo_entrega.updateMany({
         where: { cod_entrega: cod_entrega },
+        data: { fecha_hora_fin_real: new Date() },
+      })
+
+      await tx.uso_maquinaria.updateMany({
+        where: { cod_entrega: cod_entrega },
+        data: { fecha_hora_fin_real: new Date() },
       })
 
       return [entrega]
