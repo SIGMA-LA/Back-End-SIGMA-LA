@@ -36,6 +36,10 @@ export class ClienteService {
     return await this.repository.findById(cuil)
   }
 
+  async getObrasByCuil(cuil: string) {
+    return await this.repository.getObrasByCuil(cuil)
+  }
+
   async buscar(q: string, page = 1, pageSize = 25): Promise<cliente[]> {
     const limit = Math.max(1, Math.min(100, pageSize))
     const offset = (Math.max(1, page) - 1) * limit
