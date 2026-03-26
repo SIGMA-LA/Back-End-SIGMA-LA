@@ -47,19 +47,6 @@ clienteRouter.get(
 )
 
 /**
- * @route   GET /api/clientes/:cuil/obras
- * @desc    Obtener obras de un cliente por CUIL
- * @access  Privado (requiere autenticación)
- */
-clienteRouter.get(
-  '/:cuil/obras',
-  validate({ params: cuilParamsSchema }),
-  (req, res) => {
-    clienteController.getObrasByCuil(req, res)
-  },
-)
-
-/**
  * @route   PUT /api/clientes/:cuil
  * @desc    Actualizar un cliente
  * @access  Privado (requiere autenticación)

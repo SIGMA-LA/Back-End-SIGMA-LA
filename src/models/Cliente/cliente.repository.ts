@@ -32,37 +32,6 @@ export class ClienteRepository {
     })
   }
 
-  async getObrasByCuil(cuil: string) {
-    return await this.prisma.obra.findMany({
-      where: {
-        cliente: {
-          cuil: cuil,
-        },
-      },
-      orderBy: { cod_obra: 'desc' },
-      include: {
-        presupuesto: {
-          where: {
-            fecha_aceptacion: {
-              not: null,
-            },
-          },
-          orderBy: {
-            fecha_aceptacion: 'desc',
-          },
-          take: 1,
-        },
-        pago: true,
-        visita: true,
-        entrega: true,
-        localidad: {
-          include: {
-            provincia: true,
-          },
-        },
-      },
-    })
-  }
   async buscar(q: string, limit?: number, offset?: number): Promise<cliente[]> {
     return await this.prisma.cliente.findMany({
       where: {
