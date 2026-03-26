@@ -210,8 +210,10 @@ export class EntregaService {
   async getByEmpleadoEstado(
     cuil_empleado: string,
     estado: string,
+    search?: string,
+    date?: string
   ): Promise<entrega[]> {
-    return this.entregaRepository.getByEmpleadoEstado(cuil_empleado, estado)
+    return this.entregaRepository.getByEmpleadoEstado(cuil_empleado, estado, search, date)
   }
 
   async finalizar(

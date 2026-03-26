@@ -61,20 +61,48 @@ export class EntregaRepository {
   async getByEmpleadoEstado(
     cuil_empleado: string,
     estado: string,
+    search?: string,
+    date?: string
   ): Promise<entrega[]> {
-    return this.prisma.entrega.findMany({
-      where: {
-        AND: [
-          { estado: estado },
-          {
-            entrega_empleado: {
-              some: {
-                cuil: cuil_empleado,
-              },
-            },
+    const filters: Prisma.entregaWhereInput[] = [
+      { estado: estado },
+      {
+        entrega_empleado: {
+          some: {
+            cuil: cuil_empleado,
           },
-        ],
+        },
       },
+    ]
+
+    if (search) {
+      filters.push({
+        obra: {
+          OR: [
+            { direccion: { contains: search } },
+            { 
+              localidad: {
+                nombre_localidad: { contains: search }
+              }
+            }
+          ]
+        }
+      })
+    }
+
+    if (date) {
+      const startDate = new Date(`${date}T00:00:00.000Z`)
+      const endDate = new Date(`${date}T23:59:59.999Z`)
+      filters.push({
+        fecha_hora_entrega: {
+          gte: startDate,
+          lte: endDate,
+        }
+      })
+    }
+
+    return this.prisma.entrega.findMany({
+      where: { AND: filters },
       include: {
         entrega_empleado: {
           include: {
