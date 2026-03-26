@@ -70,8 +70,8 @@ clienteRouter.put(
 clienteRouter.delete(
   '/:cuil',
   validate({ params: cuilParamsSchema }),
-  (req, res) => {
-    clienteController.remove(req, res)
+  (req, res, next) => {
+    clienteController.remove(req, res, next)
   },
 )
 

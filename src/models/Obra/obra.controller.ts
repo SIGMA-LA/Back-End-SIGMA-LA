@@ -42,6 +42,19 @@ export class ObraController {
     }
   }
 
+  /** Obtiene obras de un cliente específico */
+  async getByCliente(req: Request, res: Response) {
+    try {
+      const cuil_cliente = req.params.cuil_cliente
+      const obras = await obraService.findByCliente(cuil_cliente)
+      res.json(obras)
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: 'Error al obtener obras por cliente', error })
+    }
+  }
+
   /** Obtiene todas las obras */
   async getAll(req: Request, res: Response) {
     const obras = await obraService.findAll()
