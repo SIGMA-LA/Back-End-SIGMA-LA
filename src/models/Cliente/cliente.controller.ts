@@ -34,18 +34,6 @@ export class ClienteController {
     res.json(cliente)
   }
 
-  async getObrasByCuil(req: Request, res: Response) {
-    try {
-      const cuil = req.params.cuil
-      const obras = await clienteService.getObrasByCuil(cuil)
-      res.json(obras)
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido'
-      return res.status(500).json({ error: message })
-    }
-  }
-
   async buscar(req: Request, res: Response) {
     try {
       const q = String(req.query.q ?? '').trim()
