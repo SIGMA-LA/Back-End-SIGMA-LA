@@ -1,6 +1,12 @@
 import { PrismaClient, cliente, Prisma } from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
 
+export interface ClienteDeleteDependencyCounts {
+  obras: number
+  visitasConObra: number
+  visitasInicialesSinObra: number
+}
+
 export class ClienteRepository {
   private prisma: PrismaClient
 
@@ -55,5 +61,30 @@ export class ClienteRepository {
     return await this.prisma.cliente.delete({
       where: { cuil: cuil },
     })
+  }
+
+  async countDeleteDependencies(
+    cuil: string,
+  ): Promise<ClienteDeleteDependencyCounts> {
+    const [obras, visitasConObra] = await this.prisma.$transaction([
+      this.prisma.obra.count({
+        where: {
+          OR: [{ cuil }, { cuil_arquitecto: cuil }],
+        },
+      }),
+      this.prisma.visita.count({
+        where: {
+          obra: {
+            OR: [{ cuil }, { cuil_arquitecto: cuil }],
+          },
+        },
+      }),
+    ])
+
+    return {
+      obras,
+      visitasConObra,
+      visitasInicialesSinObra: 0,
+    }
   }
 }

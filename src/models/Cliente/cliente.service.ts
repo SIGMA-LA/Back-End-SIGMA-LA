@@ -1,6 +1,17 @@
 import { Prisma, cliente } from '@prisma/client'
 import { ClienteRepository } from './cliente.repository.js'
 
+export interface ClienteDependencyDetails {
+  obras: number
+  visitasConObra: number
+  visitasInicialesSinObra: number
+}
+
+export type ClienteRemoveResult =
+  | { status: 'deleted'; cliente: cliente }
+  | { status: 'not_found' }
+  | { status: 'has_dependencies'; details: ClienteDependencyDetails }
+
 /**
  * Servicio para manejar operaciones CRUD de clientes.
  * @class ClienteService
@@ -53,11 +64,43 @@ export class ClienteService {
     return await this.repository.update(cuil, data)
   }
 
-  async remove(cuil: string): Promise<cliente> {
+  async remove(cuil: string): Promise<ClienteRemoveResult> {
     const existingCliente = await this.repository.findById(cuil)
     if (!existingCliente) {
-      throw new Error('No existe un cliente con el CUIL proporcionado.')
+      return { status: 'not_found' }
     }
-    return await this.repository.delete(cuil)
+
+    const dependencyCounts = await this.repository.countDeleteDependencies(cuil)
+
+    if (
+      dependencyCounts.obras > 0 ||
+      dependencyCounts.visitasConObra > 0 ||
+      dependencyCounts.visitasInicialesSinObra > 0
+    ) {
+      return {
+        status: 'has_dependencies',
+        details: dependencyCounts,
+      }
+    }
+
+    try {
+      const deletedCliente = await this.repository.delete(cuil)
+      return { status: 'deleted', cliente: deletedCliente }
+    } catch (error: unknown) {
+      // Safety net for concurrent writes between dependency check and delete.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2003'
+      ) {
+        const refreshedDependencyCounts =
+          await this.repository.countDeleteDependencies(cuil)
+        return {
+          status: 'has_dependencies',
+          details: refreshedDependencyCounts,
+        }
+      }
+
+      throw error
+    }
   }
 }
