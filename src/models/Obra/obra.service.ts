@@ -35,6 +35,11 @@ export class ObraService {
     return this.repository.buscar(q)
   }
 
+  /** Obtiene obras de un cliente específico */
+  async findByCliente(cuil_cliente: string) {
+    return this.repository.findByCliente(cuil_cliente)
+  }
+
   /** Obtiene todas las obras */
   async findAll(): Promise<obra[]> {
     return this.repository.findAll()

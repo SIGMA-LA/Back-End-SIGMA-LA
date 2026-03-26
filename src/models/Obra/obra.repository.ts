@@ -94,6 +94,25 @@ export class ObraRepository {
     })
   }
 
+  /** Obtiene obras de un cliente específico */
+  async findByCliente(cuil_cliente: string) {
+    return this.prisma.obra.findMany({
+      where: {
+        cliente: {
+          cuil: cuil_cliente,
+        },
+      },
+      include: {
+        localidad: {
+          include: {
+            provincia: true,
+          },
+        },
+      },
+      orderBy: { cod_obra: 'desc' },
+    })
+  }
+
   /** Obtiene una obra por ID */
   async findById(id: number): Promise<obra | null> {
     return await this.prisma.obra.findUnique({
