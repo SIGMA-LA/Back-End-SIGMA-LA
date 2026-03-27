@@ -20,7 +20,8 @@ export class VisitaController {
   }
 
   async getAll(req: Request, res: Response) {
-    const visitas = await visitaService.findAll()
+    const estado = req.query.estado as string | undefined
+    const visitas = await visitaService.findAll(estado)
     res.json(visitas)
   }
 
@@ -46,7 +47,8 @@ export class VisitaController {
         return res.status(400).json({ message: 'Parametro "q" es requerido' })
       }
 
-      const visitas = await visitaService.buscar(q, page, pageSize)
+      const estado = req.query.estado as string | undefined
+      const visitas = await visitaService.buscar(q, page, pageSize, estado)
       return res.status(200).json(visitas)
     } catch (error: unknown) {
       const message =

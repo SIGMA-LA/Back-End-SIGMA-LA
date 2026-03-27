@@ -49,6 +49,7 @@ export class MaquinariaRepository {
         AND: [
           { fecha_hora_ini_uso: { lt: fechaFin } },
           { fecha_hora_fin_est: { gt: fechaInicio } },
+          { entrega: { estado: { not: 'CANCELADO' } } },
         ],
       },
       include: {
@@ -72,6 +73,7 @@ export class MaquinariaRepository {
             AND: [
               { fecha_hora_ini_uso: { lt: fechaFin } },
               { fecha_hora_fin_est: { gt: fechaInicio } },
+              { entrega: { estado: { not: 'CANCELADO' } } },
             ],
           },
         },

@@ -20,6 +20,7 @@ import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 interface CreateVisitaData {
   empleados_visita: string[]
   fecha_hora_visita: string
+  fechaSalida?: string
   motivo_visita: string
   observaciones?: string
   direccion_visita?: string
@@ -129,7 +130,9 @@ export class VisitaService {
               patente: data.vehiculo,
             },
           },
-          fecha_hora_ini_uso: new Date(data.fecha_hora_visita),
+          fecha_hora_ini_uso: new Date(
+            data.fechaSalida || data.fecha_hora_visita,
+          ),
           fecha_hora_fin_est: new Date(
             data.fechaHasta || data.fecha_hora_visita,
           ),
@@ -141,8 +144,8 @@ export class VisitaService {
   }
 
   // Obtener todas las visitas
-  async findAll(): Promise<visita[]> {
-    return await this.visitaRepository.findAll()
+  async findAll(estado?: string): Promise<visita[]> {
+    return await this.visitaRepository.findAll(estado)
   }
 
   // Obtener visita por cod_visita
@@ -150,10 +153,18 @@ export class VisitaService {
     return await this.visitaRepository.findById(cod_visita)
   }
 
-  async buscar(q: string, page = 1, pageSize = 25): Promise<visita[]> {
-    const limit = Math.max(1, Math.min(100, pageSize))
-    const offset = (Math.max(1, page) - 1) * limit
-    return await this.visitaRepository.buscar(q, limit, offset)
+  async buscar(
+    q: string,
+    page = 1,
+    pageSize = 25,
+    estado?: string,
+  ): Promise<visita[]> {
+    return await this.visitaRepository.buscar(
+      q,
+      pageSize,
+      (Math.max(1, page) - 1) * Math.max(1, Math.min(100, pageSize)),
+      estado,
+    )
   }
 
   // Actualizar visita

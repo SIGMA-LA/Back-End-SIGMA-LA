@@ -38,6 +38,7 @@ export class VehiculoRepository {
             AND: [
               { fecha_hora_ini_uso: { lt: fechaFin } },
               { fecha_hora_ini_est: { gt: fechaInicio } },
+              { entrega: { estado: { not: 'CANCELADO' } } },
             ],
           },
         },
@@ -46,6 +47,7 @@ export class VehiculoRepository {
             AND: [
               { fecha_hora_ini_uso: { lt: fechaFin } },
               { fecha_hora_fin_est: { gt: fechaInicio } },
+              { visita: { estado: { not: 'CANCELADA' } } },
             ],
           },
         },
@@ -69,6 +71,7 @@ export class VehiculoRepository {
                 AND: [
                   { fecha_hora_ini_uso: { lt: fechaFin } },
                   { fecha_hora_ini_est: { gt: fechaInicio } },
+                  { entrega: { estado: { not: 'CANCELADO' } } },
                 ],
               },
             },
@@ -79,6 +82,7 @@ export class VehiculoRepository {
                 AND: [
                   { fecha_hora_ini_uso: { lt: fechaFin } },
                   { fecha_hora_fin_est: { gt: fechaInicio } },
+                  { visita: { estado: { not: 'CANCELADA' } } },
                   ...(excludeCodVisita
                     ? [{ cod_visita: { not: excludeCodVisita } }]
                     : []),

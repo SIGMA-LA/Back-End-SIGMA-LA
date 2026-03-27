@@ -92,7 +92,6 @@ export class EntregaRepository {
     cuil_empleado: string,
     estado: string,
     search?: string,
-    date?: string,
   ): Promise<entrega[]> {
     const whereClause: Prisma.entregaWhereInput = {
       estado: estado,
@@ -101,16 +100,6 @@ export class EntregaRepository {
           cuil: cuil_empleado,
         },
       },
-    }
-
-    if (date) {
-      const startOfDay = new Date(date)
-      const endOfDay = new Date(date)
-      endOfDay.setDate(endOfDay.getDate() + 1)
-      whereClause.fecha_hora_entrega = {
-        gte: startOfDay,
-        lt: endOfDay,
-      }
     }
 
     if (search) {
