@@ -59,9 +59,12 @@ export class EntregaController {
 
   async getEntregasByEmpleadoEstado(req: Request, res: Response) {
     const { cuil_empleado, estado } = req.params
+    const { search, date } = req.query as { search?: string; date?: string }
     const entregas = await entregaService.getByEmpleadoEstado(
       cuil_empleado,
       estado,
+      search,
+      date
     )
     res.json(entregas)
   }
