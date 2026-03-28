@@ -102,26 +102,14 @@ export class VisitaRepository {
       include: {
         obra: {
           include: {
-            cliente: {
-              select: {
-                razon_social: true,
-                telefono: true,
-                mail: true,
-              },
-            },
+            cliente: true,
+            localidad: true,
           },
         },
         localidad: true,
         empleado_visita: {
           include: {
-            empleado: {
-              select: {
-                cuil: true,
-                nombre: true,
-                apellido: true,
-                rol_actual: true,
-              },
-            },
+            empleado: true,
           },
         },
         uso_vehiculo_visita: {
@@ -372,32 +360,20 @@ export class VisitaRepository {
       where: whereClause,
       include: {
         obra: {
-          select: {
-            cod_obra: true,
-            direccion: true,
-            cliente: {
-              select: {
-                razon_social: true,
-              },
-            },
+          include: {
+            cliente: true,
+            localidad: true,
           },
         },
         empleado_visita: {
           include: {
-            empleado: {
-              select: {
-                cuil: true,
-                nombre: true,
-                apellido: true,
-                rol_actual: true,
-              },
-            },
+            empleado: true,
           },
         },
-        localidad: {
-          select: {
-            cod_localidad: true,
-            nombre_localidad: true,
+        localidad: true,
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
           },
         },
       },

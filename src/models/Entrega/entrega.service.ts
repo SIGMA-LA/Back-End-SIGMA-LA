@@ -211,11 +211,13 @@ export class EntregaService {
     cuilEmpleado: string,
     estado: string,
     search?: string,
+    date?: string,
   ): Promise<entrega[]> {
     return this.entregaRepository.getByEmpleadoEstado(
       cuilEmpleado,
       estado,
       search,
+      date,
     )
   }
 

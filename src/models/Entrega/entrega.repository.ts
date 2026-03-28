@@ -92,6 +92,7 @@ export class EntregaRepository {
     cuil_empleado: string,
     estado: string,
     search?: string,
+    date?: string,
   ): Promise<entrega[]> {
     const whereClause: Prisma.entregaWhereInput = {
       estado: estado,
@@ -100,6 +101,16 @@ export class EntregaRepository {
           cuil: cuil_empleado,
         },
       },
+    }
+
+    if (date) {
+      const startOfDay = new Date(date)
+      const endOfDay = new Date(date)
+      endOfDay.setDate(endOfDay.getDate() + 1)
+      whereClause.fecha_hora_entrega = {
+        gte: startOfDay,
+        lt: endOfDay,
+      }
     }
 
     if (search) {
@@ -128,6 +139,12 @@ export class EntregaRepository {
     return this.prisma.entrega.findMany({
       where: whereClause,
       include: {
+        obra: {
+          include: {
+            cliente: true,
+            localidad: true,
+          },
+        },
         entrega_empleado: {
           include: {
             empleado: {
@@ -139,22 +156,26 @@ export class EntregaRepository {
             },
           },
         },
-        obra: {
-          select: {
-            cod_obra: true,
-            direccion: true,
-            localidad: {
-              select: { nombre_localidad: true },
-            },
-            cliente: {
+        uso_maquinaria: {
+          include: {
+            maquinaria: {
               select: {
-                razon_social: true,
-                telefono: true,
-                mail: true,
+                descripcion: true,
               },
             },
           },
         },
+        uso_vehiculo_entrega: {
+          include: {
+            vehiculo: {
+              select: {
+                patente: true,
+                tipo_vehiculo: true,
+              },
+            },
+          },
+        },
+        orden_de_produccion: true,
       },
       orderBy: { fecha_hora_entrega: 'desc' },
     })
@@ -163,6 +184,45 @@ export class EntregaRepository {
   async findById(cod_entrega: number): Promise<entrega | null> {
     return this.prisma.entrega.findUnique({
       where: { cod_entrega },
+      include: {
+        obra: {
+          include: {
+            cliente: true,
+            localidad: true,
+          },
+        },
+        entrega_empleado: {
+          include: {
+            empleado: {
+              select: {
+                cuil: true,
+                nombre: true,
+                apellido: true,
+              },
+            },
+          },
+        },
+        uso_maquinaria: {
+          include: {
+            maquinaria: {
+              select: {
+                descripcion: true,
+              },
+            },
+          },
+        },
+        uso_vehiculo_entrega: {
+          include: {
+            vehiculo: {
+              select: {
+                patente: true,
+                tipo_vehiculo: true,
+              },
+            },
+          },
+        },
+        orden_de_produccion: true,
+      },
     })
   }
 
@@ -173,6 +233,45 @@ export class EntregaRepository {
     return this.prisma.entrega.update({
       where: { cod_entrega },
       data,
+      include: {
+        obra: {
+          include: {
+            cliente: true,
+            localidad: true,
+          },
+        },
+        entrega_empleado: {
+          include: {
+            empleado: {
+              select: {
+                cuil: true,
+                nombre: true,
+                apellido: true,
+              },
+            },
+          },
+        },
+        uso_maquinaria: {
+          include: {
+            maquinaria: {
+              select: {
+                descripcion: true,
+              },
+            },
+          },
+        },
+        uso_vehiculo_entrega: {
+          include: {
+            vehiculo: {
+              select: {
+                patente: true,
+                tipo_vehiculo: true,
+              },
+            },
+          },
+        },
+        orden_de_produccion: true,
+      },
     })
   }
 
