@@ -13,6 +13,13 @@ type ObraCreateInputExtended = Prisma.obraCreateInput & {
   }[]
 }
 
+type ObraUpdateInputExtended = Prisma.obraUpdateInput & {
+  cuil?: string
+  cuil_cliente?: string
+  cuil_arquitecto?: string | null
+  cod_localidad?: number | string
+}
+
 /**
  * Servicio para gestionar las operaciones relacionadas con las obras.
  */
@@ -33,6 +40,11 @@ export class ObraService {
   /** Busca obras por texto (dirección, cliente, etc.) */
   async buscar(q: string) {
     return this.repository.buscar(q)
+  }
+
+  /** Obtiene obras de un cliente específico */
+  async findByCliente(cuil_cliente: string) {
+    return this.repository.findByCliente(cuil_cliente)
   }
 
   /** Obtiene todas las obras */
@@ -165,15 +177,47 @@ export class ObraService {
     return await this.repository.create(prismaData)
   }
   /** Actualiza una obra por ID */
-  async update(id: number, data: Prisma.obraUpdateInput): Promise<obra> {
-    if (
-      typeof data.fecha_ini === 'string' &&
-      /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_ini)
-    ) {
-      data.fecha_ini = new Date(data.fecha_ini + 'T00:00:00.000Z')
+  async update(id: number, data: ObraUpdateInputExtended): Promise<obra> {
+    const {
+      cuil,
+      cuil_cliente,
+      cuil_arquitecto,
+      cod_localidad,
+      ...rest
+    } = data
+
+    const prismaData: Prisma.obraUpdateInput = {
+      ...rest,
     }
 
-    return await this.repository.update(id, data)
+    const cuilCliente = cuil || cuil_cliente
+    if (cuilCliente) {
+      prismaData.cliente = { connect: { cuil: cuilCliente } }
+    }
+
+    if (typeof cuil_arquitecto !== 'undefined') {
+      prismaData.arquitecto = cuil_arquitecto
+        ? { connect: { cuil: cuil_arquitecto } }
+        : { disconnect: true }
+    }
+
+    if (typeof cod_localidad !== 'undefined') {
+      const codLocalidadNumber = Number(cod_localidad)
+      if (Number.isFinite(codLocalidadNumber)) {
+        prismaData.localidad = {
+          connect: { cod_localidad: codLocalidadNumber },
+        }
+      }
+    }
+
+    if (
+      typeof prismaData.fecha_ini === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(prismaData.fecha_ini)
+    ) {
+      prismaData.fecha_ini = new Date(prismaData.fecha_ini + 'T00:00:00.000Z')
+    }
+
+    return await this.repository.update(id, prismaData)
   }
 
   /** Baja lógica de una obra (cambia estado a CANCELADA) */

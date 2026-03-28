@@ -13,7 +13,6 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "prepare": "husky",
     "seed": "pnpx prisma migrate reset --force && timeout /t 3 && pnpx tsx src/shared/db/localidadesSeeder.ts && pnpx tsx src/shared/db/seeder.ts"
   },
   "keywords": [],
@@ -54,7 +53,6 @@
     "cross-env": "^10.0.0",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
-    "husky": "^9.1.7",
     "lint-staged": "^16.1.6",
     "prettier": "^3.6.2",
     "prisma": "^6.15.0",

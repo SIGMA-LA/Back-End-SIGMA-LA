@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { ClienteService } from './cliente.service.js'
 
 const clienteService = new ClienteService()
@@ -62,9 +62,37 @@ export class ClienteController {
     res.json(cliente)
   }
 
-  async remove(req: Request, res: Response) {
-    const cuil = req.params.cuil
-    const cliente = await clienteService.remove(cuil)
-    res.json(cliente)
+  async remove(req: Request, res: Response, next?: NextFunction) {
+    try {
+      const cuil = req.params.cuil
+      const result = await clienteService.remove(cuil)
+
+      if (result.status === 'not_found') {
+        return res.status(404).json({
+          code: 'CLIENTE_NO_ENCONTRADO',
+          message: 'Cliente no encontrado',
+        })
+      }
+
+      if (result.status === 'has_dependencies') {
+        return res.status(409).json({
+          code: 'CLIENTE_CON_DEPENDENCIAS',
+          message:
+            'No se puede eliminar el cliente porque tiene obras o visitas asociadas. Debe desvincularlas antes.',
+          details: result.details,
+        })
+      }
+
+      return res.status(204).send()
+    } catch (error: unknown) {
+      if (next) {
+        return next(error)
+      }
+
+      return res.status(500).json({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Error interno del servidor',
+      })
+    }
   }
 }

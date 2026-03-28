@@ -26,6 +26,11 @@ obraRouter.get('/buscar', (req, res) => {
   obraController.buscar(req, res)
 })
 
+// Obtener obras de un cliente específico
+obraRouter.get('/cliente/:cuil', (req, res) => {
+  obraController.getByCliente(req, res)
+})
+
 // Obtener obras listas para pedido de stock
 obraRouter.get('/para-pedido-stock', (req, res) => {
   obraController.getObrasParaPedidoStock(req, res)
