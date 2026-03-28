@@ -56,6 +56,19 @@ export const envSchema = v.object({
   CLOUDINARY_API_SECRET: v.optional(v.string()),
 
   NODE_AUTH_TOKEN: v.optional(v.string()),
+
+  // Configuración de Email (Nodemailer para Dev)
+  SMTP_HOST: v.optional(v.string()),
+  SMTP_PORT: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number('SMTP_PORT debe ser un número')
+    )
+  ),
+  SMTP_USER: v.optional(v.string()),
+  SMTP_PASS: v.optional(v.string()),
+  MAIL_FROM: v.optional(v.string()),
 })
 
 export type Env = v.InferOutput<typeof envSchema>
