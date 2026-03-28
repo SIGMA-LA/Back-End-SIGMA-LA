@@ -109,6 +109,7 @@ export class EmpleadoService {
     cuiles: string[],
     fechaInicio: Date,
     fechaFin: Date,
+    excludeCodVisita?: number,
   ): Promise<void> {
     if (cuiles.length === 0) return
 
@@ -149,6 +150,8 @@ export class EmpleadoService {
         for (const ev of empleado.empleado_visita) {
           const visita = ev.visita
           if (!visita) continue
+          if (excludeCodVisita && visita.cod_visita === excludeCodVisita)
+            continue
 
           const ini = new Date(visita.fecha_hora_visita)
           const dias =

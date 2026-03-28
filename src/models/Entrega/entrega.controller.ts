@@ -32,7 +32,9 @@ export class EntregaController {
   }
 
   async getAll(req: Request, res: Response) {
-    const entregas = await entregaService.findAll()
+    const search = req.query.q as string | undefined
+    const estado = req.query.estado as string | undefined
+    const entregas = await entregaService.findAll(search, estado)
     res.json(entregas)
   }
 

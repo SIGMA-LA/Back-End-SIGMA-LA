@@ -184,8 +184,8 @@ export class EntregaService {
     return this.entregaRepository.create(payload)
   }
 
-  async findAll(): Promise<entrega[]> {
-    return this.entregaRepository.findAll()
+  async findAll(search?: string, estado?: string): Promise<entrega[]> {
+    return this.entregaRepository.findAll(search, estado)
   }
 
   async findById(cod_entrega: number): Promise<entrega | null> {
@@ -208,12 +208,17 @@ export class EntregaService {
   }
 
   async getByEmpleadoEstado(
-    cuil_empleado: string,
+    cuilEmpleado: string,
     estado: string,
     search?: string,
-    date?: string
+    date?: string,
   ): Promise<entrega[]> {
-    return this.entregaRepository.getByEmpleadoEstado(cuil_empleado, estado, search, date)
+    return this.entregaRepository.getByEmpleadoEstado(
+      cuilEmpleado,
+      estado,
+      search,
+      date,
+    )
   }
 
   async finalizar(

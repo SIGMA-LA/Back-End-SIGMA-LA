@@ -20,7 +20,8 @@ export class VisitaController {
   }
 
   async getAll(req: Request, res: Response) {
-    const visitas = await visitaService.findAll()
+    const estado = req.query.estado as string | undefined
+    const visitas = await visitaService.findAll(estado)
     res.json(visitas)
   }
 
@@ -46,7 +47,8 @@ export class VisitaController {
         return res.status(400).json({ message: 'Parametro "q" es requerido' })
       }
 
-      const visitas = await visitaService.buscar(q, page, pageSize)
+      const estado = req.query.estado as string | undefined
+      const visitas = await visitaService.buscar(q, page, pageSize, estado)
       return res.status(200).json(visitas)
     } catch (error: unknown) {
       const message =
@@ -90,11 +92,26 @@ export class VisitaController {
     }
   }
 
-  // Obtener todas las visitas de un empleado
+  // Obtener todas las visitas de un empleado (con filtros opcionales)
   async getVisitasByEmpleado(req: Request, res: Response) {
     try {
       const cuil = req.params.cuil
-      const visitas = await visitaService.getVisitasByEmpleado(cuil)
+      const estado = req.query.estado as string[] | string | undefined
+      const search = req.query.search as string | undefined
+      const date = req.query.date as string | undefined
+
+      const estadosArray = estado
+        ? Array.isArray(estado)
+          ? estado
+          : [estado]
+        : undefined
+
+      const visitas = await visitaService.getVisitasByEmpleado(
+        cuil,
+        estadosArray,
+        search,
+        date,
+      )
       res.status(200).json(visitas)
     } catch (error) {
       res.status(500).json({

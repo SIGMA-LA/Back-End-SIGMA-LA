@@ -8,13 +8,26 @@ export class VisitaRepository {
   }
 
   // Obtener todas las visitas
-  async findAll(): Promise<visita[]> {
+  async findAll(estado?: string): Promise<visita[]> {
+    const whereClause: Prisma.visitaWhereInput = estado
+      ? { estado: { equals: estado, mode: 'insensitive' } }
+      : {}
+
     return await this.prisma.visita.findMany({
+      where: whereClause,
       orderBy: { fecha_hora_visita: 'desc' },
       include: {
-        obra: true,
+        obra: {
+          include: {
+            cliente: true,
+          },
+        },
         localidad: true,
-        empleado_visita: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
@@ -31,9 +44,17 @@ export class VisitaRepository {
         cod_visita,
       },
       include: {
-        obra: true,
+        obra: {
+          include: {
+            cliente: true,
+          },
+        },
         localidad: true,
-        empleado_visita: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
@@ -48,9 +69,17 @@ export class VisitaRepository {
     return await this.prisma.visita.create({
       data,
       include: {
-        obra: true,
+        obra: {
+          include: {
+            cliente: true,
+          },
+        },
         localidad: true,
-        empleado_visita: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
@@ -73,26 +102,14 @@ export class VisitaRepository {
       include: {
         obra: {
           include: {
-            cliente: {
-              select: {
-                razon_social: true,
-                telefono: true,
-                mail: true,
-              },
-            },
+            cliente: true,
+            localidad: true,
           },
         },
         localidad: true,
         empleado_visita: {
           include: {
-            empleado: {
-              select: {
-                cuil: true,
-                nombre: true,
-                apellido: true,
-                rol_actual: true,
-              },
-            },
+            empleado: true,
           },
         },
         uso_vehiculo_visita: {
@@ -149,9 +166,14 @@ export class VisitaRepository {
     })
   }
 
-  async buscar(q: string, limit?: number, offset?: number): Promise<visita[]> {
-    return await this.prisma.visita.findMany({
-      where: {
+  async buscar(
+    q: string,
+    limit?: number,
+    offset?: number,
+    estado?: string,
+  ): Promise<visita[]> {
+    const filters: Prisma.visitaWhereInput[] = [
+      {
         OR: [
           { direccion_visita: { contains: q, mode: 'insensitive' } },
           { nombre_cliente: { contains: q, mode: 'insensitive' } },
@@ -174,6 +196,14 @@ export class VisitaRepository {
           },
         ],
       },
+    ]
+
+    if (estado) {
+      filters.push({ estado: { equals: estado, mode: 'insensitive' } })
+    }
+
+    return await this.prisma.visita.findMany({
+      where: { AND: filters },
       include: {
         obra: {
           include: {
@@ -199,41 +229,65 @@ export class VisitaRepository {
 
   async findByEmpleadoAndEstado(
     cuil: string,
-    estado: string,
+    estado: string | string[],
+    search?: string,
+    date?: string,
   ): Promise<visita[]> {
-    return await this.prisma.visita.findMany({
-      where: {
-        estado: estado,
-        empleado_visita: {
-          some: {
-            cuil: cuil,
-          },
+    const whereClause: Prisma.visitaWhereInput = {
+      estado: Array.isArray(estado) ? { in: estado } : estado,
+      empleado_visita: {
+        some: {
+          cuil: cuil,
         },
       },
+    }
+
+    if (date) {
+      const startOfDay = new Date(date)
+      const endOfDay = new Date(date)
+      endOfDay.setDate(endOfDay.getDate() + 1)
+      whereClause.fecha_hora_visita = {
+        gte: startOfDay,
+        lt: endOfDay,
+      }
+    }
+
+    if (search) {
+      whereClause.OR = [
+        { direccion_visita: { contains: search, mode: 'insensitive' } },
+        { nombre_cliente: { contains: search, mode: 'insensitive' } },
+        { apellido_cliente: { contains: search, mode: 'insensitive' } },
+        { motivo_visita: { contains: search, mode: 'insensitive' } },
+        {
+          obra: {
+            OR: [
+              { direccion: { contains: search, mode: 'insensitive' } },
+              {
+                cliente: {
+                  OR: [
+                    { nombre: { contains: search, mode: 'insensitive' } },
+                    { apellido: { contains: search, mode: 'insensitive' } },
+                    { razon_social: { contains: search, mode: 'insensitive' } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ]
+    }
+
+    return await this.prisma.visita.findMany({
+      where: whereClause,
       include: {
         obra: {
-          select: {
-            cod_obra: true,
-            direccion: true,
-            cliente: {
-              select: {
-                razon_social: true,
-                telefono: true,
-                mail: true,
-              },
-            },
+          include: {
+            cliente: true,
           },
         },
         empleado_visita: {
           include: {
-            empleado: {
-              select: {
-                cuil: true,
-                nombre: true,
-                apellido: true,
-                rol_actual: true,
-              },
-            },
+            empleado: true,
           },
         },
         localidad: {
@@ -250,43 +304,76 @@ export class VisitaRepository {
   }
 
   // Obtener todas las visitas de un empleado
-  async findByEmpleado(cuil: string): Promise<visita[]> {
-    return await this.prisma.visita.findMany({
-      where: {
-        empleado_visita: {
-          some: {
-            cuil: cuil,
-          },
+  async findByEmpleado(
+    cuil: string,
+    estados?: string[],
+    search?: string,
+    date?: string,
+  ): Promise<visita[]> {
+    const whereClause: Prisma.visitaWhereInput = {
+      empleado_visita: {
+        some: {
+          cuil: cuil,
         },
       },
+    }
+    if (estados && estados.length > 0) {
+      whereClause.estado = { in: estados }
+    }
+
+    if (date) {
+      const startOfDay = new Date(date)
+      const endOfDay = new Date(date)
+      endOfDay.setDate(endOfDay.getDate() + 1)
+      whereClause.fecha_hora_visita = {
+        gte: startOfDay,
+        lt: endOfDay,
+      }
+    }
+
+    if (search) {
+      whereClause.OR = [
+        { direccion_visita: { contains: search, mode: 'insensitive' } },
+        { nombre_cliente: { contains: search, mode: 'insensitive' } },
+        { apellido_cliente: { contains: search, mode: 'insensitive' } },
+        { motivo_visita: { contains: search, mode: 'insensitive' } },
+        {
+          obra: {
+            OR: [
+              { direccion: { contains: search, mode: 'insensitive' } },
+              {
+                cliente: {
+                  OR: [
+                    { nombre: { contains: search, mode: 'insensitive' } },
+                    { apellido: { contains: search, mode: 'insensitive' } },
+                    { razon_social: { contains: search, mode: 'insensitive' } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ]
+    }
+
+    return await this.prisma.visita.findMany({
+      where: whereClause,
       include: {
         obra: {
-          select: {
-            cod_obra: true,
-            direccion: true,
-            cliente: {
-              select: {
-                razon_social: true,
-              },
-            },
+          include: {
+            cliente: true,
+            localidad: true,
           },
         },
         empleado_visita: {
           include: {
-            empleado: {
-              select: {
-                cuil: true,
-                nombre: true,
-                apellido: true,
-                rol_actual: true,
-              },
-            },
+            empleado: true,
           },
         },
-        localidad: {
-          select: {
-            cod_localidad: true,
-            nombre_localidad: true,
+        localidad: true,
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
           },
         },
       },

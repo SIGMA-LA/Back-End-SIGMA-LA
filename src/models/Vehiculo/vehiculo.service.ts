@@ -51,8 +51,11 @@ export class VehiculoService {
   }
 
   // Obtener todos los vehiculos
-  async findAll(): Promise<vehiculo[]> {
-    return await this.vehiculoRepository.findAll()
+  async findAll(filters?: {
+    search?: string
+    estado?: string
+  }): Promise<vehiculo[]> {
+    return await this.vehiculoRepository.findAll(filters)
   }
 
   // Obtener todos los vehiculos disponibles
@@ -117,6 +120,7 @@ export class VehiculoService {
     patentes: string[],
     fechaInicio: Date,
     fechaFin: Date,
+    excludeCodVisita?: number,
   ): Promise<void> {
     if (patentes.length === 0) {
       return
@@ -127,6 +131,7 @@ export class VehiculoService {
         patentes,
         fechaInicio,
         fechaFin,
+        excludeCodVisita,
       )
 
     if (conflictos.length > 0) {
