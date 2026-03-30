@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model cliente {
+  cuil           String  @id
+  razon_social   String? @db.VarChar(50)
+  telefono       String  @db.VarChar(20)
+  mail           String  @db.VarChar(100)
+  apellido       String? @db.VarChar(50)
+  nombre         String? @db.VarChar(50)
+  sexo           String? @db.VarChar(20)
+  tipo_cliente   String  @db.VarChar(50)
+  obraArquitecto obra[]  @relation("ObraArquitecto")
+  obra           obra[]  @relation("ObraCliente")
+}
+
+model empleado {
+  cuil             String             @id
+  nombre           String             @db.VarChar(50)
+  apellido         String             @db.VarChar(50)
+  rol_actual       String             @db.VarChar(50)
+  area_trabajo     String             @db.VarChar(50)
+  contrasenia      String?            @db.VarChar(255)
+  refreshTokenHash String?            @db.VarChar(255)
+  activo           Boolean            @default(true)
+  empleado_visita  empleado_visita[]
+  entrega_empleado entrega_empleado[]
+}
+
+model empleado_visita {
+  cuil       String
+  cod_visita Int
+  visita     visita   @relation(fields: [cod_visita], references: [cod_visita], onDelete: NoAction, onUpdate: NoAction)
+  empleado   empleado @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([cuil, cod_visita])
+}
+
+model entrega {
+  cod_obra             Int
+  fecha_hora_entrega   DateTime               @db.Timestamp(6)
+  estado               String                 @db.VarChar(50)
+  observaciones        String?                @db.VarChar(500)
+  detalle              String                 @db.VarChar(50)
+  cod_entrega          Int                    @id @default(autoincrement())
+  dias_viaticos        Int?
+  fecha_cancelacion    DateTime?              @db.Date
+  cod_op               Int?                   @unique
+  obra                 obra                   @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+  orden_de_produccion  orden_de_produccion?   @relation(fields: [cod_op], references: [cod_op])
+  entrega_empleado     entrega_empleado[]
+  uso_maquinaria       uso_maquinaria[]
+  uso_vehiculo_entrega uso_vehiculo_entrega[]
+}
+
+model entrega_empleado {
+  cuil        String
+  cod_obra    Int
+  cod_entrega Int
+  rol_entrega String   @db.VarChar(20)
+  entrega     entrega  @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
+  obra        obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+  empleado    empleado @relation(fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([cod_entrega, cuil])
+}
+
+model provincia {
+  cod_provincia Int         @id
+  nombre        String      @db.VarChar(30)
+  localidad     localidad[]
+}
+
+model localidad {
+  nombre_localidad String    @db.VarChar(255)
+  cod_localidad    Int       @id @default(autoincrement())
+  cod_provincia    Int
+  provincia        provincia @relation(fields: [cod_provincia], references: [cod_provincia], onDelete: NoAction, onUpdate: NoAction)
+  obra             obra[]
+  visita           visita[]
+}
+
+model maquinaria {
+  cod_maquina    Int              @id @default(autoincrement())
+  descripcion    String           @db.VarChar(255)
+  estado         String           @db.VarChar(50)
+  uso_maquinaria uso_maquinaria[]
+}
+
+model obra {
+  cod_obra             Int                    @id @default(autoincrement())
+  cuil                 String
+  fecha_ini            DateTime               @db.Date
+  estado               String                 @db.VarChar(50)
+  fecha_cancelacion    DateTime?              @db.Date
+  direccion            String                 @db.VarChar(500)
+  nota_fabrica         String?                @db.VarChar(255)
+  nota_fabrica_pid     String?                @db.VarChar(255)
+  cod_localidad        Int
+  cuil_arquitecto      String?                @db.VarChar(50)
+  entrega              entrega[]
+  entrega_empleado     entrega_empleado[]
+  localidad            localidad              @relation(fields: [cod_localidad], references: [cod_localidad], onDelete: NoAction, onUpdate: NoAction)
+  arquitecto           cliente?               @relation("ObraArquitecto", fields: [cuil_arquitecto], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+  cliente              cliente                @relation("ObraCliente", fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
+  orden_de_produccion  orden_de_produccion[]
+  pago                 pago[]
+  presupuesto          presupuesto[]
+  uso_maquinaria       uso_maquinaria[]
+  uso_vehiculo_entrega uso_vehiculo_entrega[]
+  visita               visita[]
+}
+
+model orden_de_produccion {
+  cod_obra         Int
+  fecha_confeccion DateTime  @db.Date
+  fecha_validacion DateTime? @db.Date
+  url              String    @db.VarChar(255)
+  cod_op           Int       @id @default(autoincrement())
+  public_id        String?   @db.VarChar(255)
+  estado           String    @default("PENDIENTE") @db.VarChar(255)
+  entrega          entrega?
+  obra             obra      @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model pago {
+  fecha_pago DateTime @db.Date
+  cod_obra   Int
+  monto      Float
+  cod_pago   Int      @id @default(autoincrement())
+  obra       obra     @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model parametro {
+  fecha_cambio        DateTime @db.Date
+  hora_cambio         DateTime @db.Time(6)
+  dias_vigencia_presu Int
+  viatico_dia_persona Float?
+  cod_parametro       Int      @id @default(autoincrement())
+}
+
+model presupuesto {
+  fecha_emision    DateTime  @db.Date
+  cod_obra         Int
+  fecha_aceptacion DateTime? @db.Date
+  valor            Float
+  nro_presupuesto  Int       @id @default(autoincrement())
+  obra             obra      @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model uso_maquinaria {
+  cod_maquina         Int
+  fecha_hora_ini_uso  DateTime   @db.Timestamp(6)
+  fecha_hora_fin_est  DateTime   @db.Timestamp(6)
+  fecha_hora_fin_real DateTime?  @db.Timestamp(6)
+  cod_entrega         Int
+  obraCod_obra        Int?
+  entrega             entrega    @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
+  maquinaria          maquinaria @relation(fields: [cod_maquina], references: [cod_maquina], onDelete: NoAction, onUpdate: NoAction)
+  obra                obra?      @relation(fields: [obraCod_obra], references: [cod_obra])
+
+  @@id([cod_maquina, cod_entrega])
+}
+
+model uso_vehiculo_entrega {
+  patente             String    @db.VarChar(10)
+  fecha_hora_ini_uso  DateTime  @db.Timestamp(6)
+  fecha_hora_fin_real DateTime? @db.Timestamp(6)
+  cod_entrega         Int
+  obraCod_obra        Int?
+  fecha_hora_ini_est  DateTime  @db.Timestamp(6)
+  entrega             entrega   @relation(fields: [cod_entrega], references: [cod_entrega], onDelete: NoAction, onUpdate: NoAction)
+  obra                obra?     @relation(fields: [obraCod_obra], references: [cod_obra])
+  vehiculo            vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([patente, cod_entrega])
+}
+
+model uso_vehiculo_visita {
+  patente             String    @db.VarChar(10)
+  fecha_hora_ini_uso  DateTime  @db.Timestamp(6)
+  fecha_hora_fin_est  DateTime  @db.Timestamp(6)
+  fecha_hora_fin_real DateTime? @db.Timestamp(6)
+  cod_visita          Int
+  visita              visita    @relation(fields: [cod_visita], references: [cod_visita], onDelete: NoAction, onUpdate: NoAction)
+  vehiculo            vehiculo  @relation(fields: [patente], references: [patente], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([patente, cod_visita])
+}
+
+model vehiculo {
+  patente              String                 @id @db.VarChar(10)
+  tipo_vehiculo        String                 @db.VarChar(50)
+  estado               String                 @db.VarChar(50)
+  anio                 Int?
+  marca                String?                @db.VarChar(50)
+  modelo               String?                @db.VarChar(50)
+  uso_vehiculo_entrega uso_vehiculo_entrega[]
+  uso_vehiculo_visita  uso_vehiculo_visita[]
+}
+
+model visita {
+  fecha_hora_visita   DateTime              @db.Timestamp(6)
+  cod_obra            Int?
+  fecha_cancelacion   DateTime?             @db.Date
+  observaciones       String?               @db.VarChar(500)
+  motivo_visita       String                @db.VarChar(50)
+  estado              String                @db.VarChar(50)
+  direccion_visita    String?               @db.VarChar(500)
+  cod_visita          Int                   @id @default(autoincrement())
+  apellido_cliente    String?               @db.VarChar(50)
+  cod_localidad       Int?
+  dias_viatico        Int?
+  nombre_cliente      String?               @db.VarChar(50)
+  telefono_cliente    String?               @db.VarChar(20)
+  empleado_visita     empleado_visita[]
+  uso_vehiculo_visita uso_vehiculo_visita[]
+  localidad           localidad?            @relation(fields: [cod_localidad], references: [cod_localidad], onDelete: NoAction, onUpdate: NoAction)
+  obra                obra?                 @relation(fields: [cod_obra], references: [cod_obra], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([cod_obra])
+  @@index([cod_localidad])
+  @@index([fecha_hora_visita])
+}

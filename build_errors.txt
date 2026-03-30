@@ -1,0 +1,2 @@
+﻿src/models/Vehiculo/vehiculo.service.ts(81,26): error TS2551: Property 'fecha_hora_fin_est' does not exist on type '{ patente: string; fecha_hora_ini_est: Date; fecha_hora_ini_uso: Date; fecha_hora_fin_real: Date | null; cod_entrega: number; obraCod_obra: number | null; } | { ...; }'. Did you mean 'fecha_hora_fin_real'?
+  Property 'fecha_hora_fin_est' does not exist on type '{ patente: string; fecha_hora_ini_est: Date; fecha_hora_ini_uso: Date; fecha_hora_fin_real: Date | null; cod_entrega: number; obraCod_obra: number | null; }'.
