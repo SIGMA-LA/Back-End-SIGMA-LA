@@ -4,6 +4,13 @@ import { parse } from 'valibot'
 import { Request, Response } from 'express'
 import { env } from '../../config/env.js'
 
+const baseCookieOptions = {
+  httpOnly: true,
+  secure: env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  path: '/',
+}
+
 /**
  * Controlador para manejar los endpoints de autenticación.
  * @class AuthController
@@ -38,18 +45,12 @@ export class AuthController {
       )
 
       res.cookie('accessToken', token, {
-        httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        ...baseCookieOptions,
         maxAge: 8 * 60 * 60 * 1000,
-        path: '/',
       })
       res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        ...baseCookieOptions,
         maxAge: 30 * 24 * 60 * 60 * 1000,
-        path: '/',
       })
 
       const usuarioSeguro = {
@@ -60,11 +61,8 @@ export class AuthController {
       }
 
       res.cookie('usuario', JSON.stringify(usuarioSeguro), {
-        httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        ...baseCookieOptions,
         maxAge: 8 * 60 * 60 * 1000,
-        path: '/',
       })
 
       res.status(200).json({
@@ -81,9 +79,9 @@ export class AuthController {
 
   async logout(req: Request, res: Response) {
     try {
-      res.clearCookie('accessToken')
-      res.clearCookie('refreshToken')
-      res.clearCookie('usuario')
+      res.clearCookie('accessToken', baseCookieOptions)
+      res.clearCookie('refreshToken', baseCookieOptions)
+      res.clearCookie('usuario', baseCookieOptions)
       const refreshToken = req.cookies?.refreshToken || req.body.refreshToken
       await this.authService.logout(refreshToken)
       res.status(204).send()
@@ -114,9 +112,7 @@ export class AuthController {
       }
       const { token } = await this.authService.refreshAccessToken(refreshToken)
       res.cookie('accessToken', token, {
-        httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        ...baseCookieOptions,
         maxAge: 8 * 60 * 60 * 1000,
       })
       res.status(200).json({ message: 'Token refrescado' })
