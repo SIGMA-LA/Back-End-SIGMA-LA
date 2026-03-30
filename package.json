@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "eslint . --ext .ts",
-    "start:dev": "cross-env NODE_ENV=development tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/app.js\"",
-    "start:prod": "cross-env NODE_ENV=production node ./dist/app.js",
+    "start:dev": "cross-env NODE_ENV=development tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node --import ./dist/instrument.js ./dist/app.js\"",
+    "start:prod": "cross-env NODE_ENV=production node --import ./dist/instrument.js ./dist/app.js",
     "build": "tsc -p ./tsconfig.json",
     "lint": "eslint . --ext .ts",
     "db:migrate": "prisma migrate dev",
@@ -21,6 +21,8 @@
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
     "@prisma/client": "6.15.0",
+    "@sentry/node": "^10.46.0",
+    "@sentry/profiling-node": "^10.46.0",
     "@types/multer": "^2.0.0",
     "@types/multer-s3": "^3.0.3",
     "bcryptjs": "^3.0.2",
