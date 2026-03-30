@@ -11,15 +11,6 @@ router.get('/', (req, res) => {
   })
 })
 
-// Health check endpoint
-router.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    environment: env.NODE_ENV,
-  })
-})
-
 /* 
 Rutas de entidades - ejemplos de implementación:
 

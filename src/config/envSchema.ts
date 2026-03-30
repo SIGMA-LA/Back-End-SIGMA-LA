@@ -69,6 +69,9 @@ export const envSchema = v.object({
   SMTP_USER: v.optional(v.string()),
   SMTP_PASS: v.optional(v.string()),
   MAIL_FROM: v.optional(v.string()),
+
+  // Sentry Configuration
+  SENTRY_DSN: v.optional(v.string()),
 })
 
 export type Env = v.InferOutput<typeof envSchema>
