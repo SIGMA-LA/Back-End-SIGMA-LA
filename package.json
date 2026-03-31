@@ -5,7 +5,9 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "test": "eslint . --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "start:dev": "cross-env NODE_ENV=development tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node --import ./dist/instrument.js ./dist/app.js\"",
     "start:prod": "cross-env NODE_ENV=production node --import ./dist/instrument.js ./dist/app.js",
     "build": "tsc -p ./tsconfig.json",
@@ -65,7 +67,8 @@
     "tsc-watch": "^7.1.1",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.43.0"
+    "typescript-eslint": "^8.43.0",
+    "vitest": "^4.1.2"
   },
   "lint-staged": {
     "*.ts": [
