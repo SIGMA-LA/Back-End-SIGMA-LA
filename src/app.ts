@@ -73,6 +73,10 @@ Sentry.setupExpressErrorHandler(app)
 // error handler middleware
 app.use(errorHandler)
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`)
-})
+if (env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`)
+  })
+}
+
+export default app
