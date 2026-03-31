@@ -13,6 +13,8 @@ import { EmpleadoService } from '../Empleado/empleado.service.js'
  * @method findById - Obtiene una entrega por cod_entrega.
  * @method update - Actualiza una entrega existente.
  * @method delete - Elimina una entrega por su cod_entrega.
+ * @method agregarOrdenesDeProduccion - Vincula OPs a una entrega existente.
+ * @method quitarOrdenesDeProduccion - Desvincula OPs de una entrega.
  * @returns {Promise<entrega | entrega[] | number | null>} - Resultado de la operación.
  * @throws {Error} - Si ocurre un error durante la operación.
  */
@@ -39,18 +41,20 @@ export class EntregaService {
     dias_viaticos?: number
     fecha_salida_estimada?: string
     fecha_regreso_estimado?: string
+    esFinal?: boolean
     empleados: { cuil: string; rol_entrega: 'ENCARGADO' | 'AYUDANTE' }[]
     maquinarias?: number[]
     vehiculos?: string[]
-    cod_op?: number
+    cod_ops?: number[]
   }): Promise<entrega> {
     const {
       empleados,
       cod_obra,
       maquinarias,
       vehiculos,
-      cod_op,
+      cod_ops,
       dias_viaticos,
+      esFinal,
       fecha_salida_estimada,
       fecha_regreso_estimado,
       ...entregaData
@@ -132,6 +136,7 @@ export class EntregaService {
       detalle: entregaData.detalle,
       estado: entregaData.estado,
       fecha_hora_entrega: fechaParaPrisma,
+      esFinal: esFinal ?? false,
       ...(entregaData.observaciones && {
         observaciones: entregaData.observaciones,
       }),
@@ -150,29 +155,31 @@ export class EntregaService {
       },
       ...(maquinarias &&
         maquinarias.length > 0 && {
-          uso_maquinaria: {
-            create: maquinarias.map(cod_maquina => ({
-              maquinaria: { connect: { cod_maquina: cod_maquina } },
-              fecha_hora_ini_uso: fechaSalidaPrisma,
-              fecha_hora_fin_est: fechaFinEstimada,
-              obra: { connect: { cod_obra: cod_obra } },
-            })),
-          },
-        }),
+        uso_maquinaria: {
+          create: maquinarias.map(cod_maquina => ({
+            maquinaria: { connect: { cod_maquina: cod_maquina } },
+            fecha_hora_ini_uso: fechaSalidaPrisma,
+            fecha_hora_fin_est: fechaFinEstimada,
+            obra: { connect: { cod_obra: cod_obra } },
+          })),
+        },
+      }),
       ...(vehiculos &&
         vehiculos.length > 0 && {
-          uso_vehiculo_entrega: {
-            create: vehiculos.map(patente => ({
-              vehiculo: { connect: { patente: patente } },
-              fecha_hora_ini_uso: fechaSalidaPrisma,
-              fecha_hora_ini_est: fechaFinEstimada,
-              obra: { connect: { cod_obra: cod_obra } },
-            })),
-          },
-        }),
-      ...(cod_op && {
-        orden_de_produccion: {
-          connect: { cod_op: cod_op },
+        uso_vehiculo_entrega: {
+          create: vehiculos.map(patente => ({
+            vehiculo: { connect: { patente: patente } },
+            fecha_hora_ini_uso: fechaSalidaPrisma,
+            fecha_hora_ini_est: fechaFinEstimada,
+            obra: { connect: { cod_obra: cod_obra } },
+          })),
+        },
+      }),
+      // Vincular órdenes de producción al crear (N OPs por entrega)
+      ...(cod_ops &&
+        cod_ops.length > 0 && {
+        ordenes_de_produccion: {
+          connect: cod_ops.map(cod_op => ({ cod_op })),
         },
       }),
     }
@@ -181,6 +188,18 @@ export class EntregaService {
       '--- Payload final enviado a Prisma ---',
       JSON.stringify(payload, null, 2),
     )
+
+    if (esFinal) {
+      return prisma.$transaction(async tx => {
+        const nuevaEntrega = await tx.entrega.create({ data: payload })
+        await tx.obra.update({
+          where: { cod_obra },
+          data: { estado: 'ENTREGADA' },
+        })
+        return nuevaEntrega
+      })
+    }
+
     return this.entregaRepository.create(payload)
   }
 
@@ -221,13 +240,81 @@ export class EntregaService {
     )
   }
 
+  /**
+   * Vincula una o varias órdenes de producción a una entrega existente.
+   * @param cod_entrega - ID de la entrega destino
+   * @param cod_ops - Array de IDs de órdenes de producción a vincular
+   */
+  async agregarOrdenesDeProduccion(
+    cod_entrega: number,
+    cod_ops: number[],
+  ): Promise<entrega> {
+    if (!cod_ops || cod_ops.length === 0) {
+      throw new Error('Debe proporcionar al menos una orden de producción')
+    }
+
+    // Verificar que las OPs existen y no están ya asignadas a otra entrega
+    const ops = await prisma.orden_de_produccion.findMany({
+      where: { cod_op: { in: cod_ops } },
+    })
+
+    if (ops.length !== cod_ops.length) {
+      const encontradas = ops.map(op => op.cod_op)
+      const faltantes = cod_ops.filter(id => !encontradas.includes(id))
+      throw new Error(
+        `Órdenes de producción no encontradas: ${faltantes.join(', ')}`,
+      )
+    }
+
+    const yaAsignadas = ops.filter(
+      op => op.cod_entrega !== null && op.cod_entrega !== cod_entrega,
+    )
+    if (yaAsignadas.length > 0) {
+      throw new Error(
+        `Las siguientes OPs ya están asignadas a otra entrega: ${yaAsignadas.map(op => op.cod_op).join(', ')}`,
+      )
+    }
+
+    return this.entregaRepository.update(cod_entrega, {
+      ordenes_de_produccion: {
+        connect: cod_ops.map(cod_op => ({ cod_op })),
+      },
+    })
+  }
+
+  /**
+   * Desvincula una o varias órdenes de producción de una entrega.
+   * @param cod_entrega - ID de la entrega
+   * @param cod_ops - Array de IDs de órdenes de producción a desvincular
+   */
+  async quitarOrdenesDeProduccion(
+    cod_entrega: number,
+    cod_ops: number[],
+  ): Promise<entrega> {
+    if (!cod_ops || cod_ops.length === 0) {
+      throw new Error('Debe proporcionar al menos una orden de producción')
+    }
+
+    return this.entregaRepository.update(cod_entrega, {
+      ordenes_de_produccion: {
+        disconnect: cod_ops.map(cod_op => ({ cod_op })),
+      },
+    })
+  }
+
   async finalizar(
     cod_entrega: number,
     observaciones?: string,
   ): Promise<entrega> {
-    // Solo actualizamos la entrega y liberamos sus recursos.
-    // Hotfix temporal: Ya NO cerramos la Obra automáticamente aquí, para soportar Entregas Parciales
-    // sin necesidad de alterar el Schema de Prisma actual.
+    const entregaActual = await prisma.entrega.findUnique({
+      where: { cod_entrega },
+      select: { esFinal: true, cod_obra: true },
+    })
+
+    if (!entregaActual) {
+      throw new Error(`Entrega no encontrada (ID: ${cod_entrega})`)
+    }
+
     const [entregaActualizada] = await prisma.$transaction(async tx => {
       const entrega = await tx.entrega.update({
         where: { cod_entrega },
@@ -247,9 +334,13 @@ export class EntregaService {
         data: { fecha_hora_fin_real: new Date() },
       })
 
-      // Se elimina el conteo y la actualización del estado de la Obra.
-      // Así evitamos cerrar la Obra permanentemente en entregas parciales
-      // sin requerir migraciones de base de datos de momento.
+      // Si es la entrega final, cerrar la Obra automáticamente
+      if (entregaActual.esFinal) {
+        await tx.obra.update({
+          where: { cod_obra: entregaActual.cod_obra },
+          data: { estado: 'FINALIZADA' },
+        })
+      }
 
       return [entrega]
     })

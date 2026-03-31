@@ -48,4 +48,13 @@ entregaRouter.patch('/:id/cancelar', (req, res) => {
   entregaController.cancelarEntrega(req, res)
 })
 
+// Gestión de órdenes de producción vinculadas a una entrega
+entregaRouter.patch('/:id/ordenes-produccion', (req, res) => {
+  entregaController.agregarOPs(req, res)
+})
+
+entregaRouter.delete('/:id/ordenes-produccion', (req, res) => {
+  entregaController.quitarOPs(req, res)
+})
+
 export default entregaRouter

@@ -11,6 +11,8 @@ const entregaService = new EntregaService()
  * @method getOne - Maneja la obtención de una entrega por su ID.
  * @method update - Maneja la actualización de una entrega existente.
  * @method remove - Maneja la eliminación de una entrega por su ID.
+ * @method agregarOPs - Vincula órdenes de producción a una entrega.
+ * @method quitarOPs - Desvincula órdenes de producción de una entrega.
  * @returns {Promise<void>} - Respuesta HTTP.
  * @throws {Error} - Si ocurre un error durante la operación.
  */
@@ -66,7 +68,7 @@ export class EntregaController {
       cuil_empleado,
       estado,
       search,
-      date
+      date,
     )
     res.json(entregas)
   }
@@ -95,6 +97,44 @@ export class EntregaController {
       console.error('Error al cancelar entrega:', error)
       const message =
         error instanceof Error ? error.message : 'Error al cancelar la entrega'
+      res.status(400).json({ message })
+    }
+  }
+
+  /** PATCH /:id/ordenes-produccion — vincula OPs a una entrega */
+  async agregarOPs(req: Request, res: Response) {
+    try {
+      const cod_entrega = parseInt(req.params.id)
+      const { cod_ops } = req.body as { cod_ops: number[] }
+      const entrega = await entregaService.agregarOrdenesDeProduccion(
+        cod_entrega,
+        cod_ops,
+      )
+      res.json(entrega)
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Error al agregar órdenes de producción'
+      res.status(400).json({ message })
+    }
+  }
+
+  /** DELETE /:id/ordenes-produccion — desvincula OPs de una entrega */
+  async quitarOPs(req: Request, res: Response) {
+    try {
+      const cod_entrega = parseInt(req.params.id)
+      const { cod_ops } = req.body as { cod_ops: number[] }
+      const entrega = await entregaService.quitarOrdenesDeProduccion(
+        cod_entrega,
+        cod_ops,
+      )
+      res.json(entrega)
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Error al quitar órdenes de producción'
       res.status(400).json({ message })
     }
   }
