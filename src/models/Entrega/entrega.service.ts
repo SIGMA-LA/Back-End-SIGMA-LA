@@ -188,6 +188,18 @@ export class EntregaService {
       '--- Payload final enviado a Prisma ---',
       JSON.stringify(payload, null, 2),
     )
+
+    if (esFinal) {
+      return prisma.$transaction(async tx => {
+        const nuevaEntrega = await tx.entrega.create({ data: payload })
+        await tx.obra.update({
+          where: { cod_obra },
+          data: { estado: 'ENTREGADA' },
+        })
+        return nuevaEntrega
+      })
+    }
+
     return this.entregaRepository.create(payload)
   }
 
