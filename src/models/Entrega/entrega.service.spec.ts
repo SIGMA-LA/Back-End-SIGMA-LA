@@ -18,11 +18,13 @@ vi.mock('../../shared/db/prismaClient', () => {
     entrega: { update: vi.fn() },
     uso_vehiculo_entrega: { updateMany: vi.fn() },
     uso_maquinaria: { updateMany: vi.fn() },
+    obra: { update: vi.fn() },
   }
 
   return {
     prisma: {
       obra: { findUnique: vi.fn() },
+      entrega: { findUnique: vi.fn() },
       $transaction: vi.fn(async (cb) => {
         // Ejecutamos el callback pasando el "transactor" simulado
         return await cb(mockPrismaTx)
@@ -103,12 +105,21 @@ describe('EntregaService - Pruebas Unitarias', () => {
 
   describe('finalizar()', () => {
     it('debería completar y liberar vehículos y maquinarias mediante la transacción prismática', async () => {
+      vi.mocked(prisma.entrega.findUnique).mockResolvedValue({
+        esFinal: false,
+        cod_obra: 1,
+      } as any)
+
       // Configuramos el comportamiento del prisma mock transaccional
       // Nota: vi.mocked no funciona directo con el parametro del callback si no lo extraemos
       // pero el diseño del mock de vi.mocked arriba ya inyecta el comportamiento de resolucion.
       
       const res = await entregaService.finalizar(100, 'Entregado OK')
       
+      expect(prisma.entrega.findUnique).toHaveBeenCalledWith({
+        where: { cod_entrega: 100 },
+        select: { esFinal: true, cod_obra: true },
+      })
       // La transacción debe haberse llamado
       expect(prisma.$transaction).toHaveBeenCalledOnce()
       // En un entorno de mocks complejos, podríamos interceptar `tx.entrega.update`
