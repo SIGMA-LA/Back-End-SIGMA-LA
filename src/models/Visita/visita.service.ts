@@ -1,4 +1,4 @@
-import { VisitaRepository } from './visita.repository.js'
+import { VisitaRepository, VisitaWithRelations } from './visita.repository.js'
 import { visita, Prisma } from '@prisma/client'
 import { EmpleadoService } from '../Empleado/empleado.service.js'
 import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
@@ -37,7 +37,7 @@ export class VisitaService {
   }
 
   // Crear nueva visita
-  async create(data: CreateVisitaData) {
+  async create(data: CreateVisitaData): Promise<VisitaWithRelations> {
     const fechaParaPrisma = new Date(data.fecha_hora_visita)
     const fechaFinEstimada = data.fechaHasta
       ? new Date(data.fechaHasta)
@@ -52,59 +52,24 @@ export class VisitaService {
               1000,
         )
 
-    const checks = []
-
-    if (data.empleados_visita && data.empleados_visita.length > 0) {
-      checks.push(
-        this.empleadoService
-          .verificarDisponibilidadEmpleados(
-            data.empleados_visita,
-            fechaParaPrisma,
-            fechaFinEstimada,
-          )
-          .catch(err => err.message),
-      )
-    }
-
-    if (data.vehiculo) {
-      checks.push(
-        this.vehiculoService
-          .verificarDisponibilidadVehiculos(
-            [data.vehiculo],
-            fechaParaPrisma,
-            fechaFinEstimada,
-          )
-          .catch(err => err.message),
-      )
-    }
-
-    const results = await Promise.all(checks)
-    const errMessages = results.filter(Boolean) as string[]
-    if (errMessages.length > 0) {
-      throw new ValidationError(
-        `Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`,
-        'CONFLICTO_AGENDA'
-      )
-    }
-
-    const createData = {
-      fecha_hora_visita: new Date(data.fecha_hora_visita),
-      motivo_visita: data.motivo_visita,
+    const visitaData: Prisma.visitaCreateInput = {
+      fecha_hora_visita: fechaParaPrisma,
+      motivo_visita: data.motivo_visita || 'OTRO',
       estado: 'PROGRAMADA',
       observaciones: data.observaciones,
       direccion_visita: data.direccion_visita,
-      dias_viatico: data.dias_viatico,
       nombre_cliente: data.nombre_cliente,
       apellido_cliente: data.apellido_cliente,
       telefono_cliente: data.telefono_cliente,
-
-      ...(data.cod_obra && { obra: { connect: { cod_obra: data.cod_obra } } }),
+      dias_viatico: data.dias_viatico || 1,
+      ...(data.cod_obra && {
+        obra: { connect: { cod_obra: data.cod_obra } },
+      }),
       ...(data.cod_localidad && {
         localidad: { connect: { cod_localidad: data.cod_localidad } },
       }),
-
       empleado_visita: {
-        create: data.empleados_visita.map(cuil => ({ cuil })),
+        create: data.empleados_visita.map((cuil: string) => ({ cuil })),
       },
       uso_vehiculo_visita: {
         create: {
@@ -116,32 +81,62 @@ export class VisitaService {
           fecha_hora_ini_uso: new Date(
             data.fechaSalida || data.fecha_hora_visita,
           ),
-          fecha_hora_fin_est: new Date(
-            data.fechaHasta || data.fecha_hora_visita,
-          ),
+          fecha_hora_fin_est: fechaFinEstimada,
         },
       },
     }
 
-    return await this.visitaRepository.create(createData)
+    // Validar disponibilidad antes de crear
+    const fIni = new Date(data.fechaSalida || data.fecha_hora_visita)
+    const fFin = fechaFinEstimada
+
+    const checks = []
+    if (data.empleados_visita.length > 0) {
+      checks.push(
+        this.empleadoService
+          .verificarDisponibilidadEmpleados(data.empleados_visita, fIni, fFin)
+          .catch((err: Error) => err.message),
+      )
+    }
+    if (data.vehiculo) {
+      checks.push(
+        this.vehiculoService
+          .verificarDisponibilidadVehiculos([data.vehiculo], fIni, fFin)
+          .catch((err: Error) => err.message),
+      )
+    }
+
+    const results = await Promise.all(checks)
+    const errMessages = results.filter(
+      (msg): msg is string => typeof msg === 'string',
+    )
+    if (errMessages.length > 0) {
+      throw new ValidationError(
+        `Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`,
+        'CONFLICTO_AGENDA',
+      )
+    }
+
+    return await this.visitaRepository.create(visitaData)
   }
 
   // Obtener todas las visitas
-  async findAll(estado?: string): Promise<visita[]> {
+  async findAll(estado?: string): Promise<VisitaWithRelations[]> {
     return await this.visitaRepository.findAll(estado)
   }
 
   // Obtener visita por cod_visita
-  async findById(cod_visita: number): Promise<visita | null> {
+  async findById(cod_visita: number): Promise<VisitaWithRelations | null> {
     return await this.visitaRepository.findById(cod_visita)
   }
 
+  // Obtener visitas paginadas con búsqueda
   async buscar(
     q: string,
     page = 1,
     pageSize = 25,
     estado?: string,
-  ): Promise<visita[]> {
+  ): Promise<VisitaWithRelations[]> {
     return await this.visitaRepository.buscar(
       q,
       pageSize,
@@ -168,10 +163,8 @@ export class VisitaService {
       fechaHasta?: string
       fechaSalida?: string
     },
-  ): Promise<visita> {
-    const existingVisita = (await this.visitaRepository.findById(
-      cod_visita,
-    )) as any // Using any here to simplify extraction from repository include
+  ): Promise<VisitaWithRelations> {
+    const existingVisita = await this.visitaRepository.findById(cod_visita)
     if (!existingVisita) {
       throw new ValidationError('Visita no encontrada')
     }
@@ -206,7 +199,7 @@ export class VisitaService {
     // 2. Detección de cambios en asignaciones
     const hasPersonnelChanged = !!empleados_visita && (
       empleados_visita.length !== existingVisita.empleado_visita.length ||
-      empleados_visita.some(cuil => !existingVisita.empleado_visita.find((ev: any) => ev.cuil === cuil))
+      empleados_visita.some(cuil => !existingVisita.empleado_visita.find((ev) => ev.cuil === cuil))
     )
 
     const hasVehicleChanged = !!vehiculo && (
@@ -215,15 +208,15 @@ export class VisitaService {
 
     // 3. Validaciones de disponibilidad condicionales
     if (hasDatesChanged || hasPersonnelChanged || hasVehicleChanged) {
-      const cuilesToValidate = empleados_visita || existingVisita.empleado_visita.map((ev: any) => ev.cuil)
+      const cuilesToValidate = empleados_visita || existingVisita.empleado_visita.map((ev) => ev.cuil)
       const vehiculoToValidate = vehiculo || (vUsage ? vUsage.patente : undefined)
 
       const checks = []
       if (cuilesToValidate.length > 0) {
-        checks.push(this.empleadoService.verificarDisponibilidadEmpleados(cuilesToValidate, newFechaSalida, newFechaRetorno, cod_visita).catch(err => err.message))
+        checks.push(this.empleadoService.verificarDisponibilidadEmpleados(cuilesToValidate, newFechaSalida, newFechaRetorno, cod_visita).catch((err: Error) => err.message))
       }
       if (vehiculoToValidate) {
-        checks.push(this.vehiculoService.verificarDisponibilidadVehiculos([vehiculoToValidate], newFechaSalida, newFechaRetorno, cod_visita).catch(err => err.message))
+        checks.push(this.vehiculoService.verificarDisponibilidadVehiculos([vehiculoToValidate], newFechaSalida, newFechaRetorno, cod_visita).catch((err: Error) => err.message))
       }
 
       const results = await Promise.all(checks)
@@ -250,7 +243,7 @@ export class VisitaService {
       updateData.uso_vehiculo_visita = {
         deleteMany: {},
         create: {
-          vehiculo: { connect: { patente: vehiculo || vUsage.patente } },
+          vehiculo: { connect: { patente: vehiculo || (vUsage ? vUsage.patente : '') } },
           fecha_hora_ini_uso: newFechaSalida,
           fecha_hora_fin_est: newFechaRetorno,
         },
@@ -278,12 +271,12 @@ export class VisitaService {
   }
 
   // Obtener visitas por estado
-  async findByEstado(estado: string): Promise<visita[]> {
+  async findByEstado(estado: string): Promise<VisitaWithRelations[]> {
     return await this.visitaRepository.findByEstado(estado)
   }
 
   // Obtener visitas por obra
-  async findByObra(cod_obra: number): Promise<visita[]> {
+  async findByObra(cod_obra: number): Promise<VisitaWithRelations[]> {
     return await this.visitaRepository.findByObra(cod_obra)
   }
 
@@ -292,7 +285,7 @@ export class VisitaService {
     estado: string[] | string,
     search?: string,
     date?: string,
-  ): Promise<visita[]> {
+  ): Promise<VisitaWithRelations[]> {
     const estadosArray = Array.isArray(estado) ? estado : [estado]
     return await this.visitaRepository.findByEmpleadoAndEstado(
       cuil,
@@ -308,7 +301,7 @@ export class VisitaService {
     estados?: string[],
     search?: string,
     date?: string,
-  ): Promise<visita[]> {
+  ): Promise<VisitaWithRelations[]> {
     return await this.visitaRepository.findByEmpleado(
       cuil,
       estados,
@@ -318,11 +311,11 @@ export class VisitaService {
   }
 
   // Obtener visitas asociadas a una obra
-  async getVisitasByObra(cod_obra: number): Promise<visita[]> {
+  async getVisitasByObra(cod_obra: number): Promise<VisitaWithRelations[]> {
     return await this.visitaRepository.findByObra(cod_obra)
   }
 
-  async finalizar(cod_visita: number, observaciones?: string): Promise<visita> {
+  async finalizar(cod_visita: number, observaciones?: string): Promise<VisitaWithRelations> {
     const existingVisita = await this.visitaRepository.findById(cod_visita)
     if (!existingVisita) {
       throw new ValidationError('Visita no encontrada')
@@ -336,7 +329,7 @@ export class VisitaService {
     return await this.visitaRepository.update(cod_visita, updateData)
   }
 
-  async cancelar(cod_visita: number, motivo?: string): Promise<visita> {
+  async cancelar(cod_visita: number, motivo?: string): Promise<VisitaWithRelations> {
     const existingVisita = await this.visitaRepository.findById(cod_visita)
     if (!existingVisita) {
       throw new ValidationError('Visita no encontrada')
