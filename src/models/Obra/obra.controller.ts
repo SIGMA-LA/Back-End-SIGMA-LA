@@ -42,6 +42,21 @@ export class ObraController {
     }
   }
 
+  /** Obtiene obras para creación de entregas según si es parcial o final */
+  async getObrasParaEntrega(req: Request, res: Response) {
+    try {
+      const q = req.query.q as string | undefined
+      const esFinalStr = req.query.esFinal as string
+      
+      const esFinal = esFinalStr === 'true'
+
+      const obras = await obraService.findObrasParaEntrega(q, esFinal)
+      res.json(obras)
+    } catch (error) {
+      res.status(500).json({ message: 'Error al buscar obras para entrega', error })
+    }
+  }
+
   /** Obtiene obras de un cliente específico */
   async getByCliente(req: Request, res: Response) {
     try {

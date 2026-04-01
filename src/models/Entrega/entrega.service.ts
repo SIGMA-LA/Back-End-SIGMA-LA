@@ -338,7 +338,7 @@ export class EntregaService {
       if (entregaActual.esFinal) {
         await tx.obra.update({
           where: { cod_obra: entregaActual.cod_obra },
-          data: { estado: 'FINALIZADA' },
+          data: { estado: 'ENTREGADA' },
         })
       }
 

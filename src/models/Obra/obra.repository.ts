@@ -333,4 +333,70 @@ export class ObraRepository {
       orderBy: { cod_obra: 'desc' },
     })
   }
+
+  /**
+   * Obtiene obras filtradas para creación de entregas según si es parcial o final
+   */
+  async findObrasParaEntrega(search: string | undefined, esFinal: boolean): Promise<obra[]> {
+    const whereConditions: Prisma.obraWhereInput = {}
+
+    // Condición principal del estado
+    if (esFinal) {
+      whereConditions.estado = 'PAGADA TOTALMENTE'
+    } else {
+      whereConditions.estado = {
+        in: ['EN PRODUCCION', 'PRODUCCION FINALIZADA', 'PAGADA TOTALMENTE'],
+      }
+    }
+
+    // Filtro de búsqueda (cliente + dirección) si se provee search
+    if (search) {
+      whereConditions.OR = [
+        {
+          direccion: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          cliente: {
+            OR: [
+              {
+                razon_social: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                nombre: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                apellido: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+        },
+      ]
+    }
+
+    return await this.prisma.obra.findMany({
+      where: whereConditions,
+      orderBy: { cod_obra: 'desc' },
+      include: {
+        cliente: true,
+        localidad: {
+          include: {
+            provincia: true,
+          },
+        },
+      },
+      take: 20, // Limitamos para buen performance
+    })
+  }
 }

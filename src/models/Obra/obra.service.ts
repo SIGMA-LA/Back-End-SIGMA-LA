@@ -272,6 +272,11 @@ export class ObraService {
     })
   }
 
+  /** Obtiene obras para creación de entregas según si es parcial o final */
+  async findObrasParaEntrega(search: string | undefined, esFinal: boolean) {
+    return this.repository.findObrasParaEntrega(search, esFinal)
+  }
+
   /** Obtiene obras de empresas para realizar pedido de stock */
   async findObrasParaPedidoStock() {
     return this.repository.findObrasParaPedidoStock()
