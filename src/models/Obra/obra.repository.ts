@@ -184,13 +184,13 @@ export class ObraRepository {
       })
       andConditions.push({
         estado: {
-          notIn: ['FINALIZADA', 'PRODUCCION FINALIZADA'],
+          notIn: ['FINALIZADA'],
         },
       })
     }
 
     if (filters.estado === 'FINALIZADA') {
-      andConditions.push({ estado: 'PRODUCCION FINALIZADA' })
+      andConditions.push({ estado: 'FINALIZADA' })
     }
 
     if (filters.fechaDesde || filters.fechaHasta) {
