@@ -33,7 +33,7 @@ describe('Integration Tests - Obra Routes', () => {
       expect(response.status).toBe(401)
     })
 
-    it('debería devolver 201 y lista de obras', async () => {
+    it('debería devolver 200 y lista de obras', async () => {
       vi.spyOn(ObraRepository.prototype, 'findAll').mockResolvedValue([
         { cod_obra: 1, direccion: 'Calle Falsa 123', estado: 'ACTIVA' } as any,
         { cod_obra: 2, direccion: 'Av. Siempre Viva', estado: 'EN PRODUCCION' } as any,
@@ -43,7 +43,7 @@ describe('Integration Tests - Obra Routes', () => {
         .get('/api/obras')
         .set('Authorization', `Bearer ${token}`)
 
-      expect(response.status).toBe(201) // ObraController.getAll usa res.status(201)
+      expect(response.status).toBe(200)
       expect(response.body).toHaveLength(2)
     })
   })

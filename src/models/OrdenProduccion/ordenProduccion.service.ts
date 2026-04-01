@@ -1,5 +1,8 @@
 import { orden_de_produccion, Prisma } from '@prisma/client'
-import { OrdenProduccionRepository } from './ordenProduccion.repository.js'
+import {
+  OrdenProduccionFilters,
+  OrdenProduccionRepository,
+} from './ordenProduccion.repository.js'
 import { prisma } from '../../shared/db/prismaClient.js'
 
 export class OrdenProduccionService {
@@ -28,8 +31,10 @@ export class OrdenProduccionService {
     return await this.repository.create(prismaData)
   }
 
-  async findAll(): Promise<orden_de_produccion[]> {
-    return this.repository.findAll()
+  async findAll(
+    filters?: OrdenProduccionFilters,
+  ): Promise<orden_de_produccion[]> {
+    return this.repository.findAll(filters)
   }
 
   async findById(cod_op: number): Promise<orden_de_produccion | null> {

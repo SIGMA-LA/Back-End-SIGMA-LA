@@ -24,18 +24,6 @@ ordenProduccionRouter.post('/',
   }
 )
 
-ordenProduccionRouter.get('/:cod_orden', (req, res) => {
-  ordenProduccionController.getOne(req, res)
-})
-
-ordenProduccionRouter.put('/:cod_orden', (req, res) => {
-  ordenProduccionController.update(req, res)
-})
-
-ordenProduccionRouter.delete('/:cod_orden', (req, res) => {
-  ordenProduccionController.remove(req, res)
-})
-
 ordenProduccionRouter.get('/obra/:cod_obra/finalizada', (req, res) => {
   ordenProduccionController.getByObraAndFinalizada(req, res)
 })
@@ -50,6 +38,18 @@ ordenProduccionRouter.post('/:cod_op/iniciar', (req, res) => {
 
 ordenProduccionRouter.post('/:cod_op/finalizar', (req, res) => {
   ordenProduccionController.finalizarProduccion(req, res)
+})
+
+ordenProduccionRouter.get('/:cod_op', (req, res) => {
+  ordenProduccionController.getOne(req, res)
+})
+
+ordenProduccionRouter.put('/:cod_op', (req, res) => {
+  ordenProduccionController.update(req, res)
+})
+
+ordenProduccionRouter.delete('/:cod_op', (req, res) => {
+  ordenProduccionController.remove(req, res)
 })
 
 export default ordenProduccionRouter

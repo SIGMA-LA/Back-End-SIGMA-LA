@@ -1,6 +1,17 @@
 import { PrismaClient, obra, Prisma } from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
 
+export type NotasFabricaEstado =
+  | 'SIN_ORDEN'
+  | 'EN_PRODUCCION'
+  | 'FINALIZADA'
+
+export interface NotasFabricaFilters {
+  estado: NotasFabricaEstado
+  fechaDesde?: string
+  fechaHasta?: string
+}
+
 /**
  * Repositorio para acceder a la base de datos de obras.
  */
@@ -136,12 +147,83 @@ export class ObraRepository {
     id: number,
     path: string,
     filename: string,
-  ): Promise<void> {
-    await this.prisma.obra.update({
+  ): Promise<obra> {
+    return await this.prisma.obra.update({
       where: { cod_obra: id },
       data: {
         nota_fabrica: path,
         nota_fabrica_pid: filename,
+      },
+    })
+  }
+
+  async findNotasFabrica(filters: NotasFabricaFilters): Promise<obra[]> {
+    const andConditions: Prisma.obraWhereInput[] = [
+      {
+        OR: [{ nota_fabrica: { not: null } }, { nota_fabrica_pid: { not: null } }],
+      },
+    ]
+
+    if (filters.estado === 'SIN_ORDEN') {
+      andConditions.push({
+        orden_de_produccion: {
+          none: {},
+        },
+      })
+    }
+
+    if (filters.estado === 'EN_PRODUCCION') {
+      andConditions.push({
+        orden_de_produccion: {
+          some: {
+            estado: {
+              not: 'FINALIZADA',
+            },
+          },
+        },
+      })
+      andConditions.push({
+        estado: {
+          notIn: ['FINALIZADA'],
+        },
+      })
+    }
+
+    if (filters.estado === 'FINALIZADA') {
+      andConditions.push({ estado: 'FINALIZADA' })
+    }
+
+    if (filters.fechaDesde || filters.fechaHasta) {
+      const fechaIniFilter: Prisma.DateTimeFilter = {}
+
+      if (filters.fechaDesde) {
+        const fechaDesde = new Date(`${filters.fechaDesde}T00:00:00`)
+        fechaIniFilter.gte = fechaDesde
+      }
+
+      if (filters.fechaHasta) {
+        const fechaHasta = new Date(`${filters.fechaHasta}T23:59:59.999`)
+        fechaIniFilter.lte = fechaHasta
+      }
+
+      andConditions.push({ fecha_ini: fechaIniFilter })
+    }
+
+    return await this.prisma.obra.findMany({
+      where: {
+        AND: andConditions,
+      },
+      orderBy: { cod_obra: 'desc' },
+      include: {
+        cliente: true,
+        arquitecto: true,
+        localidad: {
+          include: {
+            provincia: true,
+          },
+        },
+        presupuesto: true,
+        pago: true,
       },
     })
   }

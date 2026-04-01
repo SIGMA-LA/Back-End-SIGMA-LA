@@ -1,5 +1,8 @@
 import { obra, Prisma } from '@prisma/client'
-import { ObraRepository } from './obra.repository.js'
+import {
+  NotasFabricaFilters,
+  ObraRepository,
+} from './obra.repository.js'
 
 type ObraCreateInputExtended = Prisma.obraCreateInput & {
   cuil?: string
@@ -59,14 +62,22 @@ export class ObraService {
 
   // ----------- NOTA DE FÁBRICA -----------
 
+  /** Obtiene obras para la pantalla de Notas de Fábrica */
+  async findNotasFabrica(filtros: NotasFabricaFilters): Promise<obra[]> {
+    return this.repository.findNotasFabrica(filtros)
+  }
+
   /** Sube nota de fábrica a una obra */
-  async subirNotaFabrica(id: number, file: Express.Multer.File): Promise<void> {
-    await this.repository.subirNotaFabrica(id, file.path, file.filename)
+  async subirNotaFabrica(
+    id: number,
+    file: Express.Multer.File,
+  ): Promise<obra> {
+    return this.repository.subirNotaFabrica(id, file.path, file.filename)
   }
 
   /** Elimina la nota de fábrica de una obra */
-  async deleteNotaFabrica(id: number) {
-    await this.repository.update(id, {
+  async deleteNotaFabrica(id: number): Promise<obra> {
+    return this.repository.update(id, {
       nota_fabrica: null,
       nota_fabrica_pid: null,
     })

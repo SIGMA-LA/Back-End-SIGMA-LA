@@ -1,7 +1,14 @@
 import { ObraService } from './obra.service.js'
 import { Request, Response } from 'express'
+import type { NotasFabricaFilters } from './obra.repository.js'
 
 const obraService = new ObraService()
+type NotasFabricaEstado = NotasFabricaFilters['estado']
+const NOTAS_FABRICA_ESTADOS = [
+  'SIN_ORDEN',
+  'EN_PRODUCCION',
+  'FINALIZADA',
+] as const
 
 /**
  * Controlador para manejar las rutas de las obras.
@@ -58,7 +65,7 @@ export class ObraController {
   /** Obtiene todas las obras */
   async getAll(req: Request, res: Response) {
     const obras = await obraService.findAll()
-    res.status(201).json(obras)
+    res.status(200).json(obras)
   }
 
   /** Obtiene una obra por ID (usado internamente) */
@@ -78,21 +85,125 @@ export class ObraController {
 
   // ----------- NOTA DE FÁBRICA -----------
 
+  /** Obtiene obras para Notas de Fábrica según filtros de frontend */
+  async getNotasFabrica(req: Request, res: Response) {
+    try {
+      const { estado, fechaDesde, fechaHasta } = req.query as {
+        estado?: string
+        fechaDesde?: string
+        fechaHasta?: string
+      }
+
+      const allowedQueryParams = new Set(['estado', 'fechaDesde', 'fechaHasta'])
+      const invalidQueryParams = Object.keys(req.query).filter(
+        key => !allowedQueryParams.has(key),
+      )
+
+      if (invalidQueryParams.length > 0) {
+        return res.status(400).json({
+          message:
+            'Parámetros no permitidos. Solo se aceptan estado, fechaDesde y fechaHasta',
+        })
+      }
+
+      const normalizeQueryValue = (value?: string) => {
+        if (!value) return undefined
+        const normalized = value.trim()
+        if (!normalized) return undefined
+        if (normalized === 'undefined' || normalized === 'null') return undefined
+        return normalized
+      }
+
+      const normalizedEstado = normalizeQueryValue(estado)
+      const normalizedFechaDesde = normalizeQueryValue(fechaDesde)
+      const normalizedFechaHasta = normalizeQueryValue(fechaHasta)
+
+      if (!normalizedEstado) {
+        return res.status(400).json({
+          message: 'El query param "estado" es obligatorio',
+        })
+      }
+
+      if (
+        !NOTAS_FABRICA_ESTADOS.includes(normalizedEstado as NotasFabricaEstado)
+      ) {
+        return res.status(400).json({
+          message:
+            'El estado debe ser SIN_ORDEN, EN_PRODUCCION o FINALIZADA',
+        })
+      }
+
+      const fechaDesdeDate = normalizedFechaDesde
+        ? new Date(normalizedFechaDesde)
+        : null
+      const fechaHastaDate = normalizedFechaHasta
+        ? new Date(normalizedFechaHasta)
+        : null
+
+      if (normalizedFechaDesde && Number.isNaN(fechaDesdeDate?.getTime())) {
+        return res.status(400).json({ message: 'fechaDesde inválida' })
+      }
+
+      if (normalizedFechaHasta && Number.isNaN(fechaHastaDate?.getTime())) {
+        return res.status(400).json({ message: 'fechaHasta inválida' })
+      }
+
+      if (
+        fechaDesdeDate &&
+        fechaHastaDate &&
+        fechaDesdeDate.getTime() > fechaHastaDate.getTime()
+      ) {
+        return res.status(400).json({
+          message: 'fechaDesde no puede ser mayor a fechaHasta',
+        })
+      }
+
+      const obras = await obraService.findNotasFabrica({
+        estado: normalizedEstado as NotasFabricaEstado,
+        fechaDesde: normalizedFechaDesde,
+        fechaHasta: normalizedFechaHasta,
+      })
+
+      res.status(200).json(obras)
+    } catch (error) {
+      res.status(500).json({
+        message: 'Error al obtener notas de fábrica',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
+
   /** Sube nota de fábrica a una obra */
   async subirNotaFabrica(req: Request, res: Response) {
-    const id = parseInt(req.params.id, 10)
+    const codObra = Number.parseInt(req.params.cod_obra, 10)
+
+    if (Number.isNaN(codObra)) {
+      return res.status(400).json({ message: 'Código de obra inválido' })
+    }
+
     if (!req.file) {
       return res.status(400).json({ message: 'No se ha subido ningún archivo' })
     }
-    await obraService.subirNotaFabrica(id, req.file)
-    res.status(201).json({ message: 'Archivo subido correctamente' })
+
+    const obraExistente = await obraService.findById(codObra)
+    if (!obraExistente) {
+      return res.status(404).json({ message: 'Obra no encontrada' })
+    }
+
+    const obra = await obraService.subirNotaFabrica(codObra, req.file)
+    res.status(201).json(obra)
   }
 
   /** Elimina la nota de fábrica de una obra */
   async deleteNotaFabrica(req: Request, res: Response) {
-    const id = parseInt(req.params.id, 10)
-    await obraService.deleteNotaFabrica(id)
-    res.json({ message: 'Nota de fábrica eliminada correctamente' })
+    const codObra = Number.parseInt(req.params.cod_obra, 10)
+
+    if (Number.isNaN(codObra)) {
+      return res.status(400).json({ message: 'Código de obra inválido' })
+    }
+
+    const obra = await obraService.deleteNotaFabrica(codObra)
+    res.status(200).json(obra)
   }
 
   /** Obtiene obras con nota de fábrica y orden en proceso */
