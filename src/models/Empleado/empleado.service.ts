@@ -1,5 +1,6 @@
 import { EmpleadoRepository } from './empleado.repository.js'
 import bcrypt from 'bcryptjs'
+import { ValidationError } from '../../shared/errors/validationError.js'
 
 /**
  * Servicio para manejar la lógica de negocio de empleados.
@@ -41,7 +42,7 @@ export class EmpleadoService {
   }): Promise<EmpleadoPayload> {
     const existingEmpleado = await this.empleadoRepository.findByCuil(data.cuil)
     if (existingEmpleado) {
-      throw new Error('Ya existe un empleado con ese CUIL')
+      throw new ValidationError('Ya existe un empleado con ese CUIL', 'CONFLICTO_CUIL')
     }
 
     // Si se proporciona contraseña, hashearla. Si no, dejar en null
@@ -110,6 +111,7 @@ export class EmpleadoService {
     fechaInicio: Date,
     fechaFin: Date,
     excludeCodVisita?: number,
+    excludeCodEntrega?: number,
   ): Promise<void> {
     if (cuiles.length === 0) return
 
@@ -131,6 +133,8 @@ export class EmpleadoService {
       for (const ee of empleado.entrega_empleado) {
         const entrega = ee.entrega
         if (!entrega) continue
+        if (excludeCodEntrega && entrega.cod_entrega === excludeCodEntrega)
+          continue
 
         const ini = new Date(entrega.fecha_hora_entrega)
         const dias =
@@ -173,8 +177,9 @@ export class EmpleadoService {
     }
 
     if (empleadosEnConflicto.length > 0) {
-      throw new Error(
+      throw new ValidationError(
         `Conflicto de personal. Los siguientes empleados ya tienen asignada otra obra o visita en la fecha solicitada: ${empleadosEnConflicto.join(', ')}`,
+        'CONFLICTO_PERSONAL',
       )
     }
   }
