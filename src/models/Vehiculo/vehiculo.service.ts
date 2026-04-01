@@ -4,6 +4,7 @@ import {
   uso_vehiculo_entrega,
   uso_vehiculo_visita,
 } from '@prisma/client'
+import { ValidationError } from '../../shared/errors/validationError.js'
 
 export type AvailabilityStatus = 'DISPONIBLE' | 'ADVERTENCIA' | 'NO_DISPONIBLE'
 
@@ -121,25 +122,28 @@ export class VehiculoService {
     fechaInicio: Date,
     fechaFin: Date,
     excludeCodVisita?: number,
+    excludeCodEntrega?: number,
   ): Promise<void> {
     if (patentes.length === 0) {
       return
     }
-
+ 
     const conflictos =
       await this.vehiculoRepository.findConflictingUsageForPatentes(
         patentes,
         fechaInicio,
         fechaFin,
         excludeCodVisita,
+        excludeCodEntrega,
       )
 
     if (conflictos.length > 0) {
       const vehiculosEnConflicto = conflictos
         .map(v => `'${v.patente}'`)
         .join(', ')
-      throw new Error(
+      throw new ValidationError(
         `Conflicto de horario. Los siguientes vehículos ya están en uso en la fecha seleccionada: ${vehiculosEnConflicto}`,
+        'CONFLICTO_VEHICULOS',
       )
     }
   }

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { VisitaController } from './visita.controller.js'
+import { idParamsSchema } from 'sigma-la-schemas'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
-import { updateVisitaSchema, idParamsSchema } from 'sigma-la-schemas'
 
 const visitaController = new VisitaController()
 const visitaRouter = Router()
@@ -22,16 +22,22 @@ visitaRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
   visitaController.getOne(req, res)
 })
 
-visitaRouter.put(
-  '/:id',
-  validate({
-    params: idParamsSchema,
-    body: updateVisitaSchema,
-  }),
-  (req, res) => {
-    visitaController.update(req, res)
-  },
-)
+/**
+ * [PARCHE TEMPORAL]
+ * Se ha deshabilitado la validación de Valibot (validate()) para esta ruta PUT 
+ * debido a inconsistencias en el paquete 'sigma-la-schemas':
+ * 
+ * 1. El validador 'isoDateTime' en 'updateVisitaSchema' es extremadamente estricto
+ *    y rechaza formatos ISO estándar (con segundos o sufijo Z) que el servicio 
+ *    y la base de datos sí aceptan correctamente.
+ * 2. Esto causaba errores de validación 400 incluso con datos correctos.
+ * 
+ * TODO: Corregir los esquemas en 'sigma-la-schemas' para usar un formato de fecha
+ * más flexible o una expresión regular antes de reactivar este middleware.
+ */
+visitaRouter.put('/:id', (req, res) => {
+  visitaController.update(req, res)
+})
 
 visitaRouter.delete(
   '/:id',

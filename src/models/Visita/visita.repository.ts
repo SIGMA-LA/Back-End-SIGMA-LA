@@ -1,6 +1,28 @@
 import { PrismaClient, visita, Prisma } from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
 
+export type VisitaWithRelations = Prisma.visitaGetPayload<{
+  include: {
+    obra: {
+      include: {
+        cliente: true,
+        localidad: true,
+      },
+    },
+    localidad: true,
+    empleado_visita: {
+      include: {
+        empleado: true,
+      },
+    },
+    uso_vehiculo_visita: {
+      include: {
+        vehiculo: true,
+      },
+    },
+  },
+}>
+
 export class VisitaRepository {
   private prisma: PrismaClient
   constructor() {
@@ -8,7 +30,7 @@ export class VisitaRepository {
   }
 
   // Obtener todas las visitas
-  async findAll(estado?: string): Promise<visita[]> {
+  async findAll(estado?: string): Promise<VisitaWithRelations[]> {
     const whereClause: Prisma.visitaWhereInput = estado
       ? { estado: { equals: estado, mode: 'insensitive' } }
       : {}
@@ -20,6 +42,7 @@ export class VisitaRepository {
         obra: {
           include: {
             cliente: true,
+            localidad: true,
           },
         },
         localidad: true,
@@ -34,11 +57,11 @@ export class VisitaRepository {
           },
         },
       },
-    })
+    }) as VisitaWithRelations[]
   }
 
   // Obtener visita por cod_visita
-  async findById(cod_visita: number): Promise<visita | null> {
+  async findById(cod_visita: number): Promise<VisitaWithRelations | null> {
     return await this.prisma.visita.findUnique({
       where: {
         cod_visita,
@@ -47,6 +70,7 @@ export class VisitaRepository {
         obra: {
           include: {
             cliente: true,
+            localidad: true,
           },
         },
         localidad: true,
@@ -61,17 +85,18 @@ export class VisitaRepository {
           },
         },
       },
-    })
+    }) as VisitaWithRelations | null
   }
 
   // Crear nueva visita
-  async create(data: Prisma.visitaCreateInput): Promise<visita> {
+  async create(data: Prisma.visitaCreateInput): Promise<VisitaWithRelations> {
     return await this.prisma.visita.create({
       data,
       include: {
         obra: {
           include: {
             cliente: true,
+            localidad: true,
           },
         },
         localidad: true,
@@ -86,14 +111,14 @@ export class VisitaRepository {
           },
         },
       },
-    })
+    }) as VisitaWithRelations
   }
 
   // Actualizar visita
   async update(
     cod_visita: number,
     data: Prisma.visitaUpdateInput,
-  ): Promise<visita> {
+  ): Promise<VisitaWithRelations> {
     return await this.prisma.visita.update({
       where: {
         cod_visita,
@@ -118,7 +143,7 @@ export class VisitaRepository {
           },
         },
       },
-    })
+    }) as VisitaWithRelations
   }
 
   // Eliminar visita
@@ -131,39 +156,57 @@ export class VisitaRepository {
   }
 
   // Buscar por estado
-  async findByEstado(estado: string): Promise<visita[]> {
+  async findByEstado(estado: string): Promise<VisitaWithRelations[]> {
     return await this.prisma.visita.findMany({
       where: { estado },
       orderBy: { fecha_hora_visita: 'desc' },
       include: {
-        obra: true,
+        obra: {
+          include: {
+            cliente: true,
+            localidad: true,
+          },
+        },
         localidad: true,
-        empleado_visita: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
           },
         },
       },
-    })
+    }) as VisitaWithRelations[]
   }
 
   // Buscar por obra
-  async findByObra(cod_obra: number): Promise<visita[]> {
+  async findByObra(cod_obra: number): Promise<VisitaWithRelations[]> {
     return await this.prisma.visita.findMany({
       where: { cod_obra },
       orderBy: { fecha_hora_visita: 'desc' },
       include: {
-        obra: true,
+        obra: {
+          include: {
+            cliente: true,
+            localidad: true,
+          },
+        },
         localidad: true,
-        empleado_visita: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
         uso_vehiculo_visita: {
           include: {
             vehiculo: true,
           },
         },
       },
-    })
+    }) as VisitaWithRelations[]
   }
 
   async buscar(
@@ -171,7 +214,7 @@ export class VisitaRepository {
     limit?: number,
     offset?: number,
     estado?: string,
-  ): Promise<visita[]> {
+  ): Promise<VisitaWithRelations[]> {
     const filters: Prisma.visitaWhereInput[] = [
       {
         OR: [
@@ -208,8 +251,10 @@ export class VisitaRepository {
         obra: {
           include: {
             cliente: true,
+            localidad: true,
           },
         },
+        localidad: true,
         empleado_visita: {
           include: {
             empleado: true,
@@ -224,7 +269,7 @@ export class VisitaRepository {
       take: limit,
       skip: offset,
       orderBy: { fecha_hora_visita: 'desc' },
-    })
+    }) as VisitaWithRelations[]
   }
 
   async findByEmpleadoAndEstado(
@@ -232,7 +277,7 @@ export class VisitaRepository {
     estado: string | string[],
     search?: string,
     date?: string,
-  ): Promise<visita[]> {
+  ): Promise<VisitaWithRelations[]> {
     const whereClause: Prisma.visitaWhereInput = {
       estado: Array.isArray(estado) ? { in: estado } : estado,
       empleado_visita: {
@@ -283,24 +328,25 @@ export class VisitaRepository {
         obra: {
           include: {
             cliente: true,
+            localidad: true,
           },
         },
+        localidad: true,
         empleado_visita: {
           include: {
             empleado: true,
           },
         },
-        localidad: {
-          select: {
-            cod_localidad: true,
-            nombre_localidad: true,
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
           },
         },
       },
       orderBy: {
         fecha_hora_visita: 'desc',
       },
-    })
+    }) as VisitaWithRelations[]
   }
 
   // Obtener todas las visitas de un empleado
@@ -309,7 +355,7 @@ export class VisitaRepository {
     estados?: string[],
     search?: string,
     date?: string,
-  ): Promise<visita[]> {
+  ): Promise<VisitaWithRelations[]> {
     const whereClause: Prisma.visitaWhereInput = {
       empleado_visita: {
         some: {
@@ -380,7 +426,7 @@ export class VisitaRepository {
       orderBy: {
         fecha_hora_visita: 'desc',
       },
-    })
+    }) as VisitaWithRelations[]
   }
 }
 

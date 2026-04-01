@@ -60,6 +60,7 @@ export class VehiculoRepository {
     fechaInicio: Date,
     fechaFin: Date,
     excludeCodVisita?: number,
+    excludeCodEntrega?: number,
   ) {
     return await this.prisma.vehiculo.findMany({
       where: {
@@ -72,6 +73,9 @@ export class VehiculoRepository {
                   { fecha_hora_ini_uso: { lt: fechaFin } },
                   { fecha_hora_ini_est: { gt: fechaInicio } },
                   { entrega: { estado: { not: 'CANCELADO' } } },
+                  ...(excludeCodEntrega
+                    ? [{ cod_entrega: { not: excludeCodEntrega } }]
+                    : []),
                 ],
               },
             },

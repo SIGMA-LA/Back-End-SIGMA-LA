@@ -1,24 +1,14 @@
-import { EntregaRepository } from './entrega.repository.js'
+import { EntregaRepository, type EntregaWithRelations } from './entrega.repository.js'
 import { entrega, Prisma } from '@prisma/client'
 import { MaquinariaService } from '../Maquinaria/maquinaria.service.js'
 import { prisma } from '../../shared/db/prismaClient.js'
 import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 import { EmpleadoService } from '../Empleado/empleado.service.js'
+import { ValidationError } from '../../shared/errors/validationError.js'
 
 /**
  * Servicio para manejar la lógica de negocio de entregas.
- * @class EntregaService
- * @method create - Crea una nueva entrega.
- * @method findAll - Obtiene todas las entregas.
- * @method findById - Obtiene una entrega por cod_entrega.
- * @method update - Actualiza una entrega existente.
- * @method delete - Elimina una entrega por su cod_entrega.
- * @method agregarOrdenesDeProduccion - Vincula OPs a una entrega existente.
- * @method quitarOrdenesDeProduccion - Desvincula OPs de una entrega.
- * @returns {Promise<entrega | entrega[] | number | null>} - Resultado de la operación.
- * @throws {Error} - Si ocurre un error durante la operación.
  */
-
 export class EntregaService {
   private entregaRepository: EntregaRepository
   private maquinariaService: MaquinariaService
@@ -42,11 +32,11 @@ export class EntregaService {
     fecha_salida_estimada?: string
     fecha_regreso_estimado?: string
     esFinal?: boolean
-    empleados: { cuil: string; rol_entrega: 'ENCARGADO' | 'AYUDANTE' }[]
+    empleados: { cuil: string; rol_entrega: 'ENCARGADO' | 'ACOMPANANTE' }[]
     maquinarias?: number[]
     vehiculos?: string[]
     cod_ops?: number[]
-  }): Promise<entrega> {
+  }): Promise<EntregaWithRelations> {
     const {
       empleados,
       cod_obra,
@@ -60,142 +50,84 @@ export class EntregaService {
       ...entregaData
     } = data
 
-    // Validate Obra status
-    const obra = await prisma.obra.findUnique({
-      where: { cod_obra },
-    })
-
-    if (!obra) {
-      throw new Error(`Obra no encontrada (ID: ${cod_obra})`)
-    }
+    const obra = await prisma.obra.findUnique({ where: { cod_obra } })
+    if (!obra) throw new ValidationError(`Obra no encontrada (ID: ${cod_obra})`)
 
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
-
-    const fechaSalidaPrisma = fecha_salida_estimada
-      ? new Date(fecha_salida_estimada)
-      : fechaParaPrisma
-
-    const fechaFinEstimada = fecha_regreso_estimado
-      ? new Date(fecha_regreso_estimado)
-      : new Date(fechaParaPrisma.getTime() + 2 * 60 * 60 * 1000)
+    const fechaSalidaPrisma = fecha_salida_estimada ? new Date(fecha_salida_estimada) : fechaParaPrisma
+    const fechaFinEstimada = fecha_regreso_estimado ? new Date(fecha_regreso_estimado) : new Date(fechaParaPrisma.getTime() + 2 * 60 * 60 * 1000)
 
     if (!vehiculos || vehiculos.length === 0) {
-      throw new Error(
-        'Error de validación: Debe asignar obligatoriamente al menos un vehículo a la entrega',
-      )
+      throw new ValidationError('Debe asignar obligatoriamente al menos un vehículo a la entrega', 'ERROR_VEHICULO')
     }
 
     const checks = []
     const cuilesEmpleados = empleados.map(emp => emp.cuil)
 
     if (cuilesEmpleados.length > 0) {
-      checks.push(
-        this.empleadoService
-          .verificarDisponibilidadEmpleados(
-            cuilesEmpleados,
-            fechaSalidaPrisma,
-            fechaFinEstimada,
-          )
-          .catch(err => err.message),
-      )
+      checks.push(this.empleadoService.verificarDisponibilidadEmpleados(cuilesEmpleados, fechaSalidaPrisma, fechaFinEstimada).catch(err => err.message))
     }
-
     if (maquinarias && maquinarias.length > 0) {
-      checks.push(
-        this.maquinariaService
-          .verificarDisponibilidadMaquinarias(
-            maquinarias,
-            fechaSalidaPrisma,
-            fechaFinEstimada,
-          )
-          .catch(err => err.message),
-      )
+      checks.push(this.maquinariaService.verificarDisponibilidadMaquinarias(maquinarias, fechaSalidaPrisma, fechaFinEstimada).catch(err => err.message))
     }
-
     if (vehiculos && vehiculos.length > 0) {
-      checks.push(
-        this.vehiculoService
-          .verificarDisponibilidadVehiculos(
-            vehiculos,
-            fechaSalidaPrisma,
-            fechaFinEstimada,
-          )
-          .catch(err => err.message),
-      )
+      checks.push(this.vehiculoService.verificarDisponibilidadVehiculos(vehiculos, fechaSalidaPrisma, fechaFinEstimada).catch(err => err.message))
     }
 
     const results = await Promise.all(checks)
     const errMessages = results.filter(Boolean) as string[]
-    if (errMessages.length > 0) {
-      throw new Error(
-        `Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`,
-      )
-    }
+    if (errMessages.length > 0) throw new ValidationError(`Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`, 'CONFLICTO_AGENDA')
 
     const payload: Prisma.entregaCreateInput = {
       detalle: entregaData.detalle,
       estado: entregaData.estado,
       fecha_hora_entrega: fechaParaPrisma,
       esFinal: esFinal ?? false,
-      ...(entregaData.observaciones && {
-        observaciones: entregaData.observaciones,
-      }),
-      ...(dias_viaticos !== undefined && {
-        dias_viaticos: dias_viaticos,
-      }),
-      obra: {
-        connect: { cod_obra: cod_obra },
-      },
+      ...(entregaData.observaciones && { observaciones: entregaData.observaciones }),
+      ...(dias_viaticos !== undefined && { dias_viaticos }),
+      obra: { connect: { cod_obra } },
       entrega_empleado: {
         create: empleados.map(emp => ({
           rol_entrega: emp.rol_entrega,
           empleado: { connect: { cuil: emp.cuil } },
-          obra: { connect: { cod_obra: cod_obra } },
+          obra: { connect: { cod_obra } },
         })),
       },
-      ...(maquinarias &&
-        maquinarias.length > 0 && {
+      ...(maquinarias && maquinarias.length > 0 && {
         uso_maquinaria: {
           create: maquinarias.map(cod_maquina => ({
-            maquinaria: { connect: { cod_maquina: cod_maquina } },
+            maquinaria: { connect: { cod_maquina } },
             fecha_hora_ini_uso: fechaSalidaPrisma,
             fecha_hora_fin_est: fechaFinEstimada,
-            obra: { connect: { cod_obra: cod_obra } },
+            obra: { connect: { cod_obra } },
           })),
         },
       }),
-      ...(vehiculos &&
-        vehiculos.length > 0 && {
+      ...(vehiculos && vehiculos.length > 0 && {
         uso_vehiculo_entrega: {
           create: vehiculos.map(patente => ({
-            vehiculo: { connect: { patente: patente } },
+            vehiculo: { connect: { patente } },
             fecha_hora_ini_uso: fechaSalidaPrisma,
             fecha_hora_ini_est: fechaFinEstimada,
-            obra: { connect: { cod_obra: cod_obra } },
+            obra: { connect: { cod_obra } },
           })),
         },
       }),
-      // Vincular órdenes de producción al crear (N OPs por entrega)
-      ...(cod_ops &&
-        cod_ops.length > 0 && {
-        ordenes_de_produccion: {
-          connect: cod_ops.map(cod_op => ({ cod_op })),
-        },
+      ...(cod_ops && cod_ops.length > 0 && {
+        ordenes_de_produccion: { connect: cod_ops.map(cod_op => ({ cod_op })) },
       }),
     }
 
-    console.log(
-      '--- Payload final enviado a Prisma ---',
-      JSON.stringify(payload, null, 2),
-    )
-
     if (esFinal) {
       return prisma.$transaction(async tx => {
-        const nuevaEntrega = await tx.entrega.create({ data: payload })
-        await tx.obra.update({
-          where: { cod_obra },
-          data: { estado: 'ENTREGADA' },
-        })
+        const nuevaEntrega = await tx.entrega.create({ data: payload, include: {
+          obra: { include: { cliente: true, localidad: true } },
+          entrega_empleado: { include: { empleado: { select: { cuil: true, nombre: true, apellido: true } } } },
+          uso_maquinaria: { include: { maquinaria: { select: { descripcion: true } } } },
+          uso_vehiculo_entrega: { include: { vehiculo: { select: { patente: true, tipo_vehiculo: true } } } },
+          ordenes_de_produccion: true,
+        }}) as EntregaWithRelations
+        await tx.obra.update({ where: { cod_obra }, data: { estado: 'ENTREGADA' } })
         return nuevaEntrega
       })
     }
@@ -203,177 +135,209 @@ export class EntregaService {
     return this.entregaRepository.create(payload)
   }
 
-  async findAll(search?: string, estado?: string): Promise<entrega[]> {
+  async findAll(search?: string, estado?: string): Promise<EntregaWithRelations[]> {
     return this.entregaRepository.findAll(search, estado)
   }
 
-  async findById(cod_entrega: number): Promise<entrega | null> {
+  async findById(cod_entrega: number): Promise<EntregaWithRelations | null> {
     return this.entregaRepository.findById(cod_entrega)
   }
 
-  async update(
-    cod_entrega: number,
-    data: Prisma.entregaUpdateInput,
-  ): Promise<entrega> {
-    if (data.fecha_hora_entrega) {
-      const fechaISO = new Date(data.fecha_hora_entrega as string).toISOString()
-      data.fecha_hora_entrega = fechaISO
+  async update(cod_entrega: number, data: {
+    fecha_hora_entrega?: string
+    detalle?: string
+    observaciones?: string
+    dias_viaticos?: number
+    estado?: string
+    vehiculos?: string[]
+    maquinarias?: number[]
+    empleados?: { cuil: string; rol_entrega: 'ENCARGADO' | 'ACOMPANANTE' }[]
+    fecha_salida_estimada?: string
+    fecha_regreso_estimado?: string
+    cod_ops?: number[]
+  }): Promise<EntregaWithRelations> {
+    const existingEntrega = await this.entregaRepository.findById(cod_entrega)
+    if (!existingEntrega) throw new ValidationError('Entrega no encontrada')
+
+    const { fecha_hora_entrega, fecha_salida_estimada, fecha_regreso_estimado, vehiculos, maquinarias, empleados, cod_ops, ...simpleFields } = data
+
+    // 1. Detección de cambios en fechas
+    const newFechaEntrega = fecha_hora_entrega ? new Date(fecha_hora_entrega) : new Date(existingEntrega.fecha_hora_entrega)
+    const vUsage = existingEntrega.uso_vehiculo_entrega?.[0]
+    const curFechaSalida = vUsage ? new Date(vUsage.fecha_hora_ini_uso) : new Date(existingEntrega.fecha_hora_entrega)
+    const curFechaRetorno = vUsage ? new Date(vUsage.fecha_hora_ini_est) : new Date(new Date(existingEntrega.fecha_hora_entrega).getTime() + 2 * 60 * 60 * 1000)
+
+    const newFechaSalida = fecha_salida_estimada ? new Date(fecha_salida_estimada) : curFechaSalida
+    const newFechaRetorno = fecha_regreso_estimado ? new Date(fecha_regreso_estimado) : curFechaRetorno
+
+    const hasDatesChanged = 
+      newFechaEntrega.getTime() !== new Date(existingEntrega.fecha_hora_entrega).getTime() ||
+      newFechaSalida.getTime() !== curFechaSalida.getTime() ||
+      newFechaRetorno.getTime() !== curFechaRetorno.getTime()
+
+    // 2. Detección de cambios en asignaciones de recursos
+    const hasVehiclesChanged = !!vehiculos && (
+      vehiculos.length !== existingEntrega.uso_vehiculo_entrega.length ||
+      vehiculos.some(v => !existingEntrega.uso_vehiculo_entrega.find(ev => ev.patente === v))
+    )
+
+    const hasMachineryChanged = !!maquinarias && (
+      maquinarias.length !== existingEntrega.uso_maquinaria.length ||
+      maquinarias.some(m => !existingEntrega.uso_maquinaria.find(em => em.cod_maquina === m))
+    )
+
+    const hasPersonnelChanged = !!empleados && (
+      empleados.length !== existingEntrega.entrega_empleado.length ||
+      empleados.some(e => !existingEntrega.entrega_empleado.find(ee => ee.cuil === e.cuil && ee.rol_entrega === e.rol_entrega))
+    )
+
+    // 3. Validaciones de disponibilidad condicionales
+    if (hasDatesChanged || hasVehiclesChanged || hasMachineryChanged || hasPersonnelChanged) {
+      const vehiculosToValidate = vehiculos || existingEntrega.uso_vehiculo_entrega.map(v => v.patente)
+      const maquinariasToValidate = maquinarias || existingEntrega.uso_maquinaria.map(m => m.cod_maquina)
+      const cuilesToValidate = empleados?.map(e => e.cuil) || existingEntrega.entrega_empleado.map(e => e.cuil)
+
+      const checks = []
+      if (cuilesToValidate.length > 0) {
+        checks.push(this.empleadoService.verificarDisponibilidadEmpleados(cuilesToValidate, newFechaSalida, newFechaRetorno, undefined, cod_entrega).catch(err => err.message))
+      }
+      if (maquinariasToValidate.length > 0) {
+        checks.push(this.maquinariaService.verificarDisponibilidadMaquinarias(maquinariasToValidate, newFechaSalida, newFechaRetorno, cod_entrega).catch(err => err.message))
+      }
+      if (vehiculosToValidate.length > 0) {
+        checks.push(this.vehiculoService.verificarDisponibilidadVehiculos(vehiculosToValidate, newFechaSalida, newFechaRetorno, undefined, cod_entrega).catch(err => err.message))
+      }
+
+      const results = await Promise.all(checks)
+      const errMessages = results.filter((msg): msg is string => typeof msg === 'string')
+      if (errMessages.length > 0) throw new ValidationError(`Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`, 'CONFLICTO_AGENDA')
     }
-    return this.entregaRepository.update(cod_entrega, data)
+
+    // 4. Preparación de actualización
+    const updateData: Prisma.entregaUpdateInput = {
+      ...simpleFields,
+      ...(fecha_hora_entrega && { fecha_hora_entrega: newFechaEntrega }),
+    }
+
+    if (hasPersonnelChanged && empleados) {
+      updateData.entrega_empleado = {
+        deleteMany: {},
+        create: empleados.map(emp => ({
+          rol_entrega: emp.rol_entrega,
+          empleado: { connect: { cuil: emp.cuil } },
+          obra: { connect: { cod_obra: existingEntrega.cod_obra } },
+        })),
+      }
+    }
+
+    if (hasMachineryChanged && maquinarias) {
+      updateData.uso_maquinaria = {
+        deleteMany: {},
+        create: maquinarias.map(cod_maquina => ({
+          maquinaria: { connect: { cod_maquina } },
+          fecha_hora_ini_uso: newFechaSalida,
+          fecha_hora_fin_est: newFechaRetorno,
+          obra: { connect: { cod_obra: existingEntrega.cod_obra } },
+        })),
+      }
+    } else if (hasDatesChanged && !hasMachineryChanged) {
+      updateData.uso_maquinaria = {
+        updateMany: {
+          where: { cod_entrega },
+          data: { fecha_hora_ini_uso: newFechaSalida, fecha_hora_fin_est: newFechaRetorno }
+        }
+      }
+    }
+
+    if (hasVehiclesChanged && vehiculos) {
+      updateData.uso_vehiculo_entrega = {
+        deleteMany: {},
+        create: vehiculos.map(patente => ({
+          vehiculo: { connect: { patente } },
+          fecha_hora_ini_uso: newFechaSalida,
+          fecha_hora_ini_est: newFechaRetorno,
+          obra: { connect: { cod_obra: existingEntrega.cod_obra } },
+        })),
+      }
+    } else if (hasDatesChanged && !hasVehiclesChanged) {
+      updateData.uso_vehiculo_entrega = {
+        updateMany: {
+          where: { cod_entrega },
+          data: { fecha_hora_ini_uso: newFechaSalida, fecha_hora_ini_est: newFechaRetorno }
+        }
+      }
+    }
+
+    // 5. Sincronización de Ordenes de Producción
+    if (cod_ops) {
+      const currentOps = existingEntrega.ordenes_de_produccion.map(op => op.cod_op)
+      const disconnectOps = currentOps.filter(id => !cod_ops.includes(id))
+      const connectOps = cod_ops.filter(id => !currentOps.includes(id))
+
+      if (disconnectOps.length > 0 || connectOps.length > 0) {
+        updateData.ordenes_de_produccion = {
+          disconnect: disconnectOps.map(cod_op => ({ cod_op })),
+          connect: connectOps.map(cod_op => ({ cod_op }))
+        }
+      }
+    }
+
+    return this.entregaRepository.update(cod_entrega, updateData)
   }
 
   async delete(cod_entrega: number): Promise<entrega> {
     return this.entregaRepository.delete(cod_entrega)
   }
 
-  async getByEmpleadoEstado(
-    cuilEmpleado: string,
-    estado: string,
-    search?: string,
-    date?: string,
-  ): Promise<entrega[]> {
-    return this.entregaRepository.getByEmpleadoEstado(
-      cuilEmpleado,
-      estado,
-      search,
-      date,
-    )
+  async getByEmpleadoEstado(cuilEmpleado: string, estado: string, search?: string, date?: string): Promise<entrega[]> {
+    return this.entregaRepository.getByEmpleadoEstado(cuilEmpleado, estado, search, date)
   }
 
-  /**
-   * Vincula una o varias órdenes de producción a una entrega existente.
-   * @param cod_entrega - ID de la entrega destino
-   * @param cod_ops - Array de IDs de órdenes de producción a vincular
-   */
-  async agregarOrdenesDeProduccion(
-    cod_entrega: number,
-    cod_ops: number[],
-  ): Promise<entrega> {
-    if (!cod_ops || cod_ops.length === 0) {
-      throw new Error('Debe proporcionar al menos una orden de producción')
-    }
-
-    // Verificar que las OPs existen y no están ya asignadas a otra entrega
-    const ops = await prisma.orden_de_produccion.findMany({
-      where: { cod_op: { in: cod_ops } },
-    })
-
-    if (ops.length !== cod_ops.length) {
-      const encontradas = ops.map(op => op.cod_op)
-      const faltantes = cod_ops.filter(id => !encontradas.includes(id))
-      throw new Error(
-        `Órdenes de producción no encontradas: ${faltantes.join(', ')}`,
-      )
-    }
-
-    const yaAsignadas = ops.filter(
-      op => op.cod_entrega !== null && op.cod_entrega !== cod_entrega,
-    )
-    if (yaAsignadas.length > 0) {
-      throw new Error(
-        `Las siguientes OPs ya están asignadas a otra entrega: ${yaAsignadas.map(op => op.cod_op).join(', ')}`,
-      )
-    }
-
-    return this.entregaRepository.update(cod_entrega, {
-      ordenes_de_produccion: {
-        connect: cod_ops.map(cod_op => ({ cod_op })),
-      },
-    })
+  async agregarOrdenesDeProduccion(cod_entrega: number, cod_ops: number[]): Promise<entrega> {
+    if (!cod_ops || cod_ops.length === 0) throw new ValidationError('Debe proporcionar al menos una orden de producción')
+    const ops = await prisma.orden_de_produccion.findMany({ where: { cod_op: { in: cod_ops } } })
+    if (ops.length !== cod_ops.length) throw new ValidationError('Una o más órdenes de producción no existen')
+    const yaAsignadas = ops.filter(op => op.cod_entrega !== null && op.cod_entrega !== cod_entrega)
+    if (yaAsignadas.length > 0) throw new ValidationError(`Las siguientes OPs ya están asignadas a otra entrega: ${yaAsignadas.map(op => op.cod_op).join(', ')}`)
+    return this.entregaRepository.update(cod_entrega, { ordenes_de_produccion: { connect: cod_ops.map(cod_op => ({ cod_op })) } })
   }
 
-  /**
-   * Desvincula una o varias órdenes de producción de una entrega.
-   * @param cod_entrega - ID de la entrega
-   * @param cod_ops - Array de IDs de órdenes de producción a desvincular
-   */
-  async quitarOrdenesDeProduccion(
-    cod_entrega: number,
-    cod_ops: number[],
-  ): Promise<entrega> {
-    if (!cod_ops || cod_ops.length === 0) {
-      throw new Error('Debe proporcionar al menos una orden de producción')
-    }
-
-    return this.entregaRepository.update(cod_entrega, {
-      ordenes_de_produccion: {
-        disconnect: cod_ops.map(cod_op => ({ cod_op })),
-      },
-    })
+  async quitarOrdenesDeProduccion(cod_entrega: number, cod_ops: number[]): Promise<entrega> {
+    if (!cod_ops || cod_ops.length === 0) throw new ValidationError('Debe proporcionar al menos una orden de producción')
+    return this.entregaRepository.update(cod_entrega, { ordenes_de_produccion: { disconnect: cod_ops.map(cod_op => ({ cod_op })) } })
   }
 
-  async finalizar(
-    cod_entrega: number,
-    observaciones?: string,
-  ): Promise<entrega> {
-    const entregaActual = await prisma.entrega.findUnique({
-      where: { cod_entrega },
-      select: { esFinal: true, cod_obra: true },
-    })
+  async finalizar(cod_entrega: number, observaciones?: string): Promise<entrega> {
+    const entregaActual = await prisma.entrega.findUnique({ where: { cod_entrega }, select: { esFinal: true, cod_obra: true } })
+    if (!entregaActual) throw new ValidationError(`Entrega no encontrada (ID: ${cod_entrega})`)
 
-    if (!entregaActual) {
-      throw new Error(`Entrega no encontrada (ID: ${cod_entrega})`)
-    }
-
-    const [entregaActualizada] = await prisma.$transaction(async tx => {
-      const entrega = await tx.entrega.update({
+    return (await prisma.$transaction(async tx => {
+      const updated = await tx.entrega.update({
         where: { cod_entrega },
-        data: {
-          estado: 'ENTREGADO',
-          observaciones: observaciones || 'Entrega completada exitosamente',
-        },
+        data: { estado: 'ENTREGADO', observaciones: observaciones || 'Entrega completada exitosamente' }
       })
-
-      await tx.uso_vehiculo_entrega.updateMany({
-        where: { cod_entrega: cod_entrega },
-        data: { fecha_hora_fin_real: new Date() },
-      })
-
-      await tx.uso_maquinaria.updateMany({
-        where: { cod_entrega: cod_entrega },
-        data: { fecha_hora_fin_real: new Date() },
-      })
-
-      // Si es la entrega final, cerrar la Obra automáticamente
+      await tx.uso_vehiculo_entrega.updateMany({ where: { cod_entrega }, data: { fecha_hora_fin_real: new Date() } })
+      await tx.uso_maquinaria.updateMany({ where: { cod_entrega }, data: { fecha_hora_fin_real: new Date() } })
       if (entregaActual.esFinal) {
-        await tx.obra.update({
-          where: { cod_obra: entregaActual.cod_obra },
-          data: { estado: 'FINALIZADA' },
-        })
+        await tx.obra.update({ where: { cod_obra: entregaActual.cod_obra }, data: { estado: 'ENTREGADA' } })
       }
-
-      return [entrega]
-    })
-
-    return entregaActualizada
+      return updated
+    }))
   }
 
   async cancelar(cod_entrega: number, motivo?: string): Promise<entrega> {
-    const [entregaCancelada] = await prisma.$transaction(async tx => {
-      const entrega = await tx.entrega.update({
-        where: { cod_entrega: cod_entrega },
+    return (await prisma.$transaction(async tx => {
+      const updated = await tx.entrega.update({
+        where: { cod_entrega },
         data: {
           estado: 'CANCELADO',
-          observaciones: motivo
-            ? `Entrega cancelada: ${motivo}`
-            : 'Entrega cancelada',
-          fecha_cancelacion: new Date(),
-        },
+          observaciones: motivo ? `Entrega cancelada: ${motivo}` : 'Entrega cancelada',
+          fecha_cancelacion: new Date()
+        }
       })
-
-      await tx.uso_vehiculo_entrega.updateMany({
-        where: { cod_entrega: cod_entrega },
-        data: { fecha_hora_fin_real: new Date() },
-      })
-
-      await tx.uso_maquinaria.updateMany({
-        where: { cod_entrega: cod_entrega },
-        data: { fecha_hora_fin_real: new Date() },
-      })
-
-      return [entrega]
-    })
-
-    return entregaCancelada
+      await tx.uso_vehiculo_entrega.updateMany({ where: { cod_entrega }, data: { fecha_hora_fin_real: new Date() } })
+      await tx.uso_maquinaria.updateMany({ where: { cod_entrega }, data: { fecha_hora_fin_real: new Date() } })
+      return updated
+    }))
   }
 }

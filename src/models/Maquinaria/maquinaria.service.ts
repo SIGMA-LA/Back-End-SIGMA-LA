@@ -1,5 +1,6 @@
 import { Prisma, maquinaria } from '@prisma/client'
 import { MaquinariaRepository } from './maquinaria.repository.js'
+import { ValidationError } from '../../shared/errors/validationError.js'
 
 export type AvailabilityStatus = 'DISPONIBLE' | 'ADVERTENCIA' | 'NO_DISPONIBLE'
 
@@ -72,23 +73,26 @@ export class MaquinariaService {
     maquinariaIds: number[],
     fechaInicio: Date,
     fechaFin: Date,
+    excludeCodEntrega?: number,
   ): Promise<void> {
     if (maquinariaIds.length === 0) {
       return
     }
-
+ 
     const conflictos = await this.repository.findConflictingUsageForIds(
       maquinariaIds,
       fechaInicio,
       fechaFin,
+      excludeCodEntrega,
     )
 
     if (conflictos.length > 0) {
       const maquinasEnConflicto = conflictos
         .map(c => `'${c.maquinaria.descripcion}' (ID: ${c.cod_maquina})`)
         .join(', ')
-      throw new Error(
+      throw new ValidationError(
         `Conflicto de horario. Las siguientes maquinarias ya están en uso en la fecha seleccionada: ${maquinasEnConflicto}`,
+        'CONFLICTO_MAQUINARIA'
       )
     }
   }

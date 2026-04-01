@@ -42,6 +42,10 @@ const defaultInclude = {
   ordenes_de_produccion: true,
 } satisfies Prisma.entregaInclude
 
+export type EntregaWithRelations = Prisma.entregaGetPayload<{
+  include: typeof defaultInclude
+}>
+
 export class EntregaRepository {
   private prisma: PrismaClient
 
@@ -49,11 +53,11 @@ export class EntregaRepository {
     this.prisma = prisma
   }
 
-  async create(data: Prisma.entregaCreateInput): Promise<entrega> {
-    return this.prisma.entrega.create({ data })
+  async create(data: Prisma.entregaCreateInput): Promise<EntregaWithRelations> {
+    return this.prisma.entrega.create({ data, include: defaultInclude })
   }
 
-  async findAll(search?: string, estado?: string): Promise<entrega[]> {
+  async findAll(search?: string, estado?: string): Promise<EntregaWithRelations[]> {
     const whereClause: Prisma.entregaWhereInput = {}
 
     if (estado) {
@@ -95,7 +99,7 @@ export class EntregaRepository {
     estado: string,
     search?: string,
     date?: string,
-  ): Promise<entrega[]> {
+  ): Promise<EntregaWithRelations[]> {
     const whereClause: Prisma.entregaWhereInput = {
       estado: estado,
       entrega_empleado: {
@@ -145,7 +149,7 @@ export class EntregaRepository {
     })
   }
 
-  async findById(cod_entrega: number): Promise<entrega | null> {
+  async findById(cod_entrega: number): Promise<EntregaWithRelations | null> {
     return this.prisma.entrega.findUnique({
       where: { cod_entrega },
       include: defaultInclude,
@@ -155,7 +159,7 @@ export class EntregaRepository {
   async update(
     cod_entrega: number,
     data: Prisma.entregaUpdateInput,
-  ): Promise<entrega> {
+  ): Promise<EntregaWithRelations> {
     return this.prisma.entrega.update({
       where: { cod_entrega },
       data,

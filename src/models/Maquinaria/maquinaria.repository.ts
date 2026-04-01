@@ -40,6 +40,7 @@ export class MaquinariaRepository {
     maquinariaIds: number[],
     fechaInicio: Date,
     fechaFin: Date,
+    excludeCodEntrega?: number,
   ) {
     return await this.prisma.uso_maquinaria.findMany({
       where: {
@@ -50,6 +51,9 @@ export class MaquinariaRepository {
           { fecha_hora_ini_uso: { lt: fechaFin } },
           { fecha_hora_fin_est: { gt: fechaInicio } },
           { entrega: { estado: { not: 'CANCELADO' } } },
+          ...(excludeCodEntrega
+            ? [{ cod_entrega: { not: excludeCodEntrega } }]
+            : []),
         ],
       },
       include: {
