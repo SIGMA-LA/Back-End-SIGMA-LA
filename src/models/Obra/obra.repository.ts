@@ -197,13 +197,12 @@ export class ObraRepository {
       const fechaIniFilter: Prisma.DateTimeFilter = {}
 
       if (filters.fechaDesde) {
-        const fechaDesde = new Date(filters.fechaDesde)
+        const fechaDesde = new Date(`${filters.fechaDesde}T00:00:00`)
         fechaIniFilter.gte = fechaDesde
       }
 
       if (filters.fechaHasta) {
-        const fechaHasta = new Date(filters.fechaHasta)
-        fechaHasta.setHours(23, 59, 59, 999)
+        const fechaHasta = new Date(`${filters.fechaHasta}T23:59:59.999`)
         fechaIniFilter.lte = fechaHasta
       }
 

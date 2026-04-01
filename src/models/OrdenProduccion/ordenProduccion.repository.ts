@@ -33,12 +33,12 @@ export class OrdenProduccionRepository {
       const fechaConfeccionFilter: Prisma.DateTimeFilter = {}
 
       if (filters.fechaDesde) {
-        fechaConfeccionFilter.gte = new Date(filters.fechaDesde)
+        const fechaDesde = new Date(`${filters.fechaDesde}T00:00:00`)
+        fechaConfeccionFilter.gte = fechaDesde
       }
 
       if (filters.fechaHasta) {
-        const fechaHasta = new Date(filters.fechaHasta)
-        fechaHasta.setHours(23, 59, 59, 999)
+        const fechaHasta = new Date(`${filters.fechaHasta}T23:59:59.999`)
         fechaConfeccionFilter.lte = fechaHasta
       }
 
