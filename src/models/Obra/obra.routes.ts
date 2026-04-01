@@ -36,47 +36,9 @@ obraRouter.get('/para-pedido-stock', (req, res) => {
   obraController.getObrasParaPedidoStock(req, res)
 })
 
-// Solicitar stock para una obra
-obraRouter.patch('/:id/solicitar-stock', (req, res) => {
-  obraController.solicitarStock(req, res)
-})
-
-// Confirmar recepción de stock
-obraRouter.patch('/:id/recibir-stock', (req, res) => {
-  obraController.recibirStock(req, res)
-})
-
-// ----------- NOTA DE FÁBRICA -----------
-
-// Subir nota de fábrica a una obra
-obraRouter.post('/:id/nota-fabrica', (req, res) => {
-  upload.single('file')(req, res, err => {
-    if (err) {
-      return res
-        .status(400)
-        .json({ message: 'Error al subir el archivo', error: err })
-    }
-    obraController.subirNotaFabrica(req, res)
-  })
-})
-
-// Eliminar nota de fábrica de una obra
-obraRouter.delete('/:id/nota-fabrica', (req, res) => {
-  validate({ params: idParamsSchema })(req, res, async () => {
-    try {
-      const id = parseInt(req.params.id, 10)
-      const obra = await obraController.getOneById(id)
-      if (!obra) {
-        return res.status(404).json({ message: 'Obra no encontrada' })
-      }
-      await deleteUploadedFile(obra.nota_fabrica_pid?.toString() || '')
-      obraController.deleteNotaFabrica(req, res)
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido'
-      res.status(500).json({ error: message })
-    }
-  })
+// Obtener obras para Notas de Fábrica con filtros
+obraRouter.get('/notas-fabrica', (req, res) => {
+  obraController.getNotasFabrica(req, res)
 })
 
 // Obtener obras con nota de fábrica sin orden aprobada
@@ -92,6 +54,54 @@ obraRouter.get('/notas-con-orden-proceso', (req, res) => {
 // Obtener obras con presupuesto aceptado
 obraRouter.get('/con-presupuesto-aceptado', (req, res) => {
   obraController.getObrasConPresupuestoAceptado(req, res)
+})
+
+// Solicitar stock para una obra
+obraRouter.patch('/:id/solicitar-stock', (req, res) => {
+  obraController.solicitarStock(req, res)
+})
+
+// Confirmar recepción de stock
+obraRouter.patch('/:id/recibir-stock', (req, res) => {
+  obraController.recibirStock(req, res)
+})
+
+// ----------- NOTA DE FÁBRICA -----------
+
+// Subir nota de fábrica a una obra
+obraRouter.post('/:cod_obra/nota-fabrica', (req, res) => {
+  upload.single('file')(req, res, err => {
+    if (err) {
+      return res
+        .status(400)
+        .json({ message: 'Error al subir el archivo' })
+    }
+    obraController.subirNotaFabrica(req, res)
+  })
+})
+
+// Eliminar nota de fábrica de una obra
+obraRouter.delete('/:cod_obra/nota-fabrica', async (req, res) => {
+  try {
+    const codObra = Number.parseInt(req.params.cod_obra, 10)
+    if (Number.isNaN(codObra)) {
+      return res.status(400).json({ message: 'Código de obra inválido' })
+    }
+
+    const obra = await obraController.getOneById(codObra)
+    if (!obra) {
+      return res.status(404).json({ message: 'Obra no encontrada' })
+    }
+
+    if (obra.nota_fabrica_pid) {
+      await deleteUploadedFile(obra.nota_fabrica_pid.toString())
+    }
+
+    obraController.deleteNotaFabrica(req, res)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error desconocido'
+    res.status(500).json({ message })
+  }
 })
 
 // ----------- CRUD DE OBRAS -----------

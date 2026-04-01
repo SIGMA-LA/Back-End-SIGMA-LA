@@ -1,6 +1,12 @@
 import { PrismaClient, orden_de_produccion, Prisma } from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
 
+export interface OrdenProduccionFilters {
+  estado?: string
+  fechaDesde?: string
+  fechaHasta?: string
+}
+
 export class OrdenProduccionRepository {
   private prisma: PrismaClient
 
@@ -16,8 +22,31 @@ export class OrdenProduccionRepository {
     })
   }
 
-  async findAll(): Promise<orden_de_produccion[]> {
+  async findAll(filters?: OrdenProduccionFilters): Promise<orden_de_produccion[]> {
+    const andConditions: Prisma.orden_de_produccionWhereInput[] = []
+
+    if (filters?.estado) {
+      andConditions.push({ estado: filters.estado })
+    }
+
+    if (filters?.fechaDesde || filters?.fechaHasta) {
+      const fechaConfeccionFilter: Prisma.DateTimeFilter = {}
+
+      if (filters.fechaDesde) {
+        fechaConfeccionFilter.gte = new Date(filters.fechaDesde)
+      }
+
+      if (filters.fechaHasta) {
+        const fechaHasta = new Date(filters.fechaHasta)
+        fechaHasta.setHours(23, 59, 59, 999)
+        fechaConfeccionFilter.lte = fechaHasta
+      }
+
+      andConditions.push({ fecha_confeccion: fechaConfeccionFilter })
+    }
+
     return await this.prisma.orden_de_produccion.findMany({
+      where: andConditions.length ? { AND: andConditions } : undefined,
       orderBy: { fecha_confeccion: 'desc' },
       include: {
         obra: {

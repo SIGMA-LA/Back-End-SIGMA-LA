@@ -2,6 +2,7 @@ import { OrdenProduccionService } from './ordenProduccion.service.js'
 import { Request, Response } from 'express'
 
 const ordenService = new OrdenProduccionService()
+const ORDEN_ESTADOS = ['PENDIENTE', 'APROBADA', 'EN PRODUCCION', 'FINALIZADA']
 
 export class OrdenProduccionController {
   async create(req: Request, res: Response) {
@@ -33,7 +34,58 @@ export class OrdenProduccionController {
 
   async getAll(req: Request, res: Response) {
     try {
-      const ordenes = await ordenService.findAll()
+      const { estado, fechaDesde, fechaHasta } = req.query as {
+        estado?: string
+        fechaDesde?: string
+        fechaHasta?: string
+      }
+
+      const allowedQueryParams = new Set(['estado', 'fechaDesde', 'fechaHasta'])
+      const invalidQueryParams = Object.keys(req.query).filter(
+        key => !allowedQueryParams.has(key),
+      )
+
+      if (invalidQueryParams.length > 0) {
+        return res.status(400).json({
+          message:
+            'Parámetros no permitidos. Solo se aceptan estado, fechaDesde y fechaHasta',
+        })
+      }
+
+      if (estado && !ORDEN_ESTADOS.includes(estado)) {
+        return res.status(400).json({
+          message:
+            'El estado debe ser PENDIENTE, APROBADA, EN PRODUCCION o FINALIZADA',
+        })
+      }
+
+      const fechaDesdeDate = fechaDesde ? new Date(fechaDesde) : null
+      const fechaHastaDate = fechaHasta ? new Date(fechaHasta) : null
+
+      if (fechaDesde && Number.isNaN(fechaDesdeDate?.getTime())) {
+        return res.status(400).json({ message: 'fechaDesde inválida' })
+      }
+
+      if (fechaHasta && Number.isNaN(fechaHastaDate?.getTime())) {
+        return res.status(400).json({ message: 'fechaHasta inválida' })
+      }
+
+      if (
+        fechaDesdeDate &&
+        fechaHastaDate &&
+        fechaDesdeDate.getTime() > fechaHastaDate.getTime()
+      ) {
+        return res.status(400).json({
+          message: 'fechaDesde no puede ser mayor a fechaHasta',
+        })
+      }
+
+      const ordenes = await ordenService.findAll({
+        estado,
+        fechaDesde,
+        fechaHasta,
+      })
+
       res.status(200).json(ordenes)
     } catch (error) {
       console.error('Error al obtener órdenes:', error)
@@ -48,17 +100,15 @@ export class OrdenProduccionController {
 
   async getOne(req: Request, res: Response) {
     try {
-      const cod_orden = parseInt(req.params.cod_orden, 10)
+      const cod_op = parseInt(req.params.cod_op, 10)
 
-      if (isNaN(cod_orden)) {
+      if (isNaN(cod_op)) {
         return res.status(400).json({ message: 'Código de orden inválido' })
       }
 
-      const orden = await ordenService.findById(cod_orden)
+      const orden = await ordenService.findById(cod_op)
       if (!orden) {
-        return res
-          .status(404)
-          .json({ message: 'Orden de producción no encontrada' })
+        return res.status(404).json({ message: 'Not found' })
       }
       res.status(200).json(orden)
     } catch (error) {
@@ -74,21 +124,30 @@ export class OrdenProduccionController {
 
   async update(req: Request, res: Response) {
     try {
-      const cod_orden = parseInt(req.params.cod_orden, 10)
+      const cod_op = parseInt(req.params.cod_op, 10)
 
-      if (isNaN(cod_orden)) {
+      if (isNaN(cod_op)) {
         return res.status(400).json({ message: 'Código de orden inválido' })
       }
 
       // Verificar que la orden existe
-      const ordenExistente = await ordenService.findById(cod_orden)
+      const ordenExistente = await ordenService.findById(cod_op)
       if (!ordenExistente) {
         return res
           .status(404)
           .json({ message: 'Orden de producción no encontrada' })
       }
 
-      const orden = await ordenService.update(cod_orden, req.body)
+      const body = { ...req.body }
+      if (typeof body.fecha_validacion === 'string') {
+        const parsedDate = new Date(body.fecha_validacion)
+        if (Number.isNaN(parsedDate.getTime())) {
+          return res.status(400).json({ message: 'fecha_validacion inválida' })
+        }
+        body.fecha_validacion = parsedDate
+      }
+
+      const orden = await ordenService.update(cod_op, body)
       res.status(200).json(orden)
     } catch (error) {
       console.error('Error al actualizar orden:', error)
@@ -103,13 +162,13 @@ export class OrdenProduccionController {
 
   async remove(req: Request, res: Response) {
     try {
-      const cod_orden = parseInt(req.params.cod_orden, 10)
+      const cod_op = parseInt(req.params.cod_op, 10)
 
-      if (isNaN(cod_orden)) {
+      if (isNaN(cod_op)) {
         return res.status(400).json({ message: 'Código de orden inválido' })
       }
 
-      const orden = await ordenService.remove(cod_orden)
+      const orden = await ordenService.remove(cod_op)
       res.status(200).json(orden)
     } catch (error) {
       console.error('Error al eliminar orden:', error)
@@ -200,6 +259,12 @@ export class OrdenProduccionController {
       }
 
       await ordenService.finalizarProduccion(cod_op)
+
+      const { ObraService } = await import('../Obra/obra.service.js')
+      const obraService = new ObraService()
+      await obraService.update(orden.cod_obra, {
+        estado: 'PRODUCCION FINALIZADA',
+      })
 
       res.json({ message: 'Producción finalizada correctamente' })
     } catch (error) {
