@@ -1,7 +1,7 @@
-import { env } from '../../../config/env';
-import { IEmailStrategy } from './IEmailStrategy';
-import { NodemailerStrategy } from './NodemailerStrategy';
-import { ExternalEmailStrategy } from './ExternalEmailStrategy';
+import { env } from '../../../config/env.js';
+import { IEmailStrategy } from './IEmailStrategy.js';
+import { NodemailerStrategy } from './NodemailerStrategy.js';
+import { ExternalEmailStrategy } from './ExternalEmailStrategy.js';
 
 export class EmailFactory {
   static createStrategy(): IEmailStrategy {

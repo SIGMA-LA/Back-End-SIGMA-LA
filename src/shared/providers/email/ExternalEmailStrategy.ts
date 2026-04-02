@@ -1,5 +1,5 @@
-import { env } from '../../../config/env';
-import { IEmailStrategy, SendEmailOptions } from './IEmailStrategy';
+import { env } from '../../../config/env.js';
+import { IEmailStrategy, SendEmailOptions } from './IEmailStrategy.js';
 
 export class ExternalEmailStrategy implements IEmailStrategy {
   constructor() {

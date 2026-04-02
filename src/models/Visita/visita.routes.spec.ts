@@ -66,6 +66,13 @@ describe('Integration Tests - Visita Routes', () => {
         cod_visita: 5,
         motivo_visita: 'Presupuesto',
         estado: 'PROGRAMADA',
+        obra: {
+          cliente: {
+            nombre: 'Juan Mock',
+            mail: 'test@ejemplo.com' // Esto disparará la lógica de email en el test si EmailService no está mockeado
+          },
+          direccion: 'Calle Falsa 123'
+        }
       } as any)
 
       const response = await request(app)

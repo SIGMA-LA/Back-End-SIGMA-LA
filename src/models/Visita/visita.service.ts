@@ -3,6 +3,7 @@ import { visita, Prisma } from '@prisma/client'
 import { EmpleadoService } from '../Empleado/empleado.service.js'
 import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { emailService } from '../../shared/providers/email/index.js'
 
 /**
  * Servicio para manejar la lógica de negocio de visitas.
@@ -42,15 +43,15 @@ export class VisitaService {
     const fechaFinEstimada = data.fechaHasta
       ? new Date(data.fechaHasta)
       : new Date(
-          fechaParaPrisma.getTime() +
-            (data.dias_viatico && data.dias_viatico > 0
-              ? data.dias_viatico
-              : 1) *
-              24 *
-              60 *
-              60 *
-              1000,
-        )
+        fechaParaPrisma.getTime() +
+        (data.dias_viatico && data.dias_viatico > 0
+          ? data.dias_viatico
+          : 1) *
+        24 *
+        60 *
+        60 *
+        1000,
+      )
 
     const visitaData: Prisma.visitaCreateInput = {
       fecha_hora_visita: fechaParaPrisma,
@@ -117,7 +118,39 @@ export class VisitaService {
       )
     }
 
-    return await this.visitaRepository.create(visitaData)
+    const visita = await this.visitaRepository.create(visitaData)
+
+    // Notificación por email: Intenta encontrar el destinatario (Obra -> Cliente -> Email o Fallback en campos de texto)
+    let emailDestino: string | null = null;
+
+    // 1. Intentar obtener el email directamente de la relación Obra -> Cliente si existe
+    if (visita.obra?.cliente?.mail) {
+      emailDestino = visita.obra.cliente.mail;
+    }
+
+    // 2. Si no hay email en el cliente o no hay obra vinculada, buscamos un email literal en observaciones o dirección
+    if (!emailDestino) {
+      const textToSearch = `${data.observaciones || ''} ${data.direccion_visita || ''}`;
+      const emailMatch = textToSearch.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+      emailDestino = emailMatch ? emailMatch[0] : null;
+    }
+
+    if (emailDestino) {
+      const nombreDestino = data.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
+      const motivo = data.motivo_visita || 'Visita Técnica';
+
+      await emailService.sendNotification(
+        emailDestino,
+        `Confirmación de Visita Técnica - SIGMA-LA - ${motivo}`,
+        `Hola ${nombreDestino},<br><br>` + //
+        `Le informamos que se ha programado una visita técnica para el día <b>${fechaParaPrisma.toLocaleString()}</b>.<br>` +
+        `Motivo: <b>${motivo}</b><br>` +
+        `Dirección: ${data.direccion_visita || visita.obra?.direccion || 'A coordinar'}<br><br>` +
+        `Saludos,<br>Equipo de SIGMA-LA`
+      ).catch(err => console.error('Error enviando mail automático de visita:', err));
+    }
+
+    return visita
   }
 
   // Obtener todas las visitas
@@ -191,7 +224,7 @@ export class VisitaService {
     const newFechaSalida = fechaSalida ? new Date(fechaSalida) : curFechaSalida
     const newFechaRetorno = fechaHasta ? new Date(fechaHasta) : curFechaRetorno
 
-    const hasDatesChanged = 
+    const hasDatesChanged =
       newFechaInicio.getTime() !== new Date(existingVisita.fecha_hora_visita).getTime() ||
       newFechaSalida.getTime() !== curFechaSalida.getTime() ||
       newFechaRetorno.getTime() !== curFechaRetorno.getTime()
