@@ -4,6 +4,7 @@ import { EmpleadoService } from '../Empleado/empleado.service.js'
 import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { emailService } from '../../shared/providers/email/index.js'
+import { notificationConfigRepository } from '../../shared/providers/email/NotificationConfigRepository.js'
 
 /**
  * Servicio para manejar la lógica de negocio de visitas.
@@ -359,7 +360,35 @@ export class VisitaService {
       ...(observaciones && { observaciones })
     }
 
-    return await this.visitaRepository.update(cod_visita, updateData)
+    const visitaCompletada = await this.visitaRepository.update(cod_visita, updateData)
+
+    // Notificar a COORDINACION según sus preferencias
+    this.notificarFinalizacionACoordinacion(visitaCompletada)
+      .catch(err => console.error('Error enviando notificaciones a coordinacion:', err));
+
+    return visitaCompletada
+  }
+
+  private async notificarFinalizacionACoordinacion(visita: VisitaWithRelations) {
+    // 1. Obtener emails de coordinadores con la opción visita_completada activada (Vía Repositorio Centralizado)
+    const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'visita_completada')
+    
+    if (emails.length === 0) return;
+
+    const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
+    
+    // 2. Enviar mail a todos los interesados
+    await emailService.sendNotification(
+      emails,
+      `Visita Técnica Finalizada - ${visita.motivo_visita}`,
+      `Se ha marcado como FINALIZADA una visita técnica en el sistema.<br><br>` +
+      `<b>Detalles:</b><br>` +
+      `- Cliente: ${clienteNombre}<br>` +
+      `- Motivo: ${visita.motivo_visita}<br>` +
+      `- Fecha: ${visita.fecha_hora_visita.toLocaleString()}<br>` +
+      `- Observaciones finales: ${visita.observaciones || 'Sin observaciones'}<br><br>` +
+      `<i>Este es un aviso automático para el rol de Coordinación.</i>`
+    );
   }
 
   async cancelar(cod_visita: number, motivo?: string): Promise<VisitaWithRelations> {

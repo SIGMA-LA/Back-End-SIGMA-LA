@@ -21,16 +21,18 @@ model cliente {
 }
 
 model empleado {
-  cuil             String             @id
-  nombre           String             @db.VarChar(50)
-  apellido         String             @db.VarChar(50)
-  rol_actual       String             @db.VarChar(50)
-  area_trabajo     String             @db.VarChar(50)
-  contrasenia      String?            @db.VarChar(255)
-  refreshTokenHash String?            @db.VarChar(255)
-  activo           Boolean            @default(true)
-  empleado_visita  empleado_visita[]
-  entrega_empleado entrega_empleado[]
+  cuil                String               @id
+  nombre              String               @db.VarChar(50)
+  apellido            String               @db.VarChar(50)
+  rol_actual          String               @db.VarChar(50)
+  area_trabajo        String               @db.VarChar(50)
+  contrasenia         String?              @db.VarChar(255)
+  refreshTokenHash    String?              @db.VarChar(255)
+  activo              Boolean              @default(true)
+  mail                String?              @db.VarChar(100)
+  config_coordinacion config_coordinacion?
+  empleado_visita     empleado_visita[]
+  entrega_empleado    entrega_empleado[]
 }
 
 model empleado_visita {
@@ -228,4 +230,11 @@ model visita {
   @@index([cod_obra])
   @@index([cod_localidad])
   @@index([fecha_hora_visita])
+}
+
+model config_coordinacion {
+  cuil                   String   @id
+  visita_completada      Boolean  @default(false)
+  nueva_orden_produccion Boolean  @default(false)
+  empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
 }
