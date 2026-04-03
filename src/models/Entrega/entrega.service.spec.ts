@@ -114,7 +114,7 @@ describe('EntregaService - Pruebas Unitarias', () => {
       // Nota: vi.mocked no funciona directo con el parametro del callback si no lo extraemos
       // pero el diseño del mock de vi.mocked arriba ya inyecta el comportamiento de resolucion.
       
-      const res = await entregaService.finalizar(100, 'Entregado OK')
+      const _res = await entregaService.finalizar(100, 'Entregado OK')
       
       expect(prisma.entrega.findUnique).toHaveBeenCalledWith({
         where: { cod_entrega: 100 },

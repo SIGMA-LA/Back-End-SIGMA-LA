@@ -19,7 +19,7 @@ router.get('/health', (req, res) => {
  * @route GET /api/ready
  * @desc Readiness check to see if the server and its dependencies (DB) are ready
  */
-router.get('/ready', async (req, res) => {
+router.get('/ready', async (_req, res) => {
   try {
     // Check database connection
     await prisma.$queryRaw`SELECT 1`
@@ -29,7 +29,7 @@ router.get('/ready', async (req, res) => {
       database: 'connected',
       timestamp: new Date().toISOString(),
     })
-  } catch (error) {
+  } catch (_error) {
     res.status(503).json({
       status: 'error',
       database: 'disconnected',
@@ -43,7 +43,7 @@ router.get('/ready', async (req, res) => {
  * @route GET /api/debug-sentry
  * @desc Temporary route to test Sentry error capturing
  */
-router.get('/debug-sentry', (req, res) => {
+router.get('/debug-sentry', (_req, _res) => {
   throw new Error('Sentry Debug Error - SIGMA-LA Backend')
 })
 

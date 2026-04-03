@@ -3,7 +3,6 @@ import { AuthService } from './auth.service'
 import { EmpleadoRepository } from '../Empleado/empleado.repository'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { env } from '../../config/env'
 
 vi.mock('../Empleado/empleado.repository')
 vi.mock('bcryptjs', () => ({

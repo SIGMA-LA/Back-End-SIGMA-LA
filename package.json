@@ -11,6 +11,7 @@
     "start:dev": "cross-env NODE_ENV=development tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node --import ./dist/instrument.js ./dist/app.js\"",
     "start:prod": "cross-env NODE_ENV=production node --import ./dist/instrument.js ./dist/app.js",
     "build": "tsc -p ./tsconfig.json",
+    "type-check": "tsc --noEmit",
     "lint": "eslint . --ext .ts",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",

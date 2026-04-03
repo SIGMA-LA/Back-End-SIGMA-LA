@@ -23,10 +23,8 @@ function makeTestToken(rol = 'ADMIN') {
   )
 }
 
-// CUIL válido de 11 dígitos
 // CUIL válido de 11 dígitos que cumpla con el formato (ej. de seeder)
 const CUIL_VALIDO = '20999999995'
-const CUIL_ADMIN = '20999999991'
 
 describe('Integration Tests - Empleado Routes', () => {
   let adminToken: string
