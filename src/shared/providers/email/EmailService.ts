@@ -1,5 +1,5 @@
-import { EmailFactory } from './EmailFactory';
-import { IEmailStrategy, SendEmailOptions } from './IEmailStrategy';
+import { EmailFactory } from './EmailFactory.js';
+import { IEmailStrategy, SendEmailOptions } from './IEmailStrategy.js';
 
 export class EmailService {
   private strategy: IEmailStrategy;

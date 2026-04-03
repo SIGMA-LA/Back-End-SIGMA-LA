@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
-import { env } from '../../../config/env';
-import { IEmailStrategy, SendEmailOptions } from './IEmailStrategy';
+import { env } from '../../../config/env.js';
+import { IEmailStrategy, SendEmailOptions } from './IEmailStrategy.js';
 
 export class NodemailerStrategy implements IEmailStrategy {
   private transporter: nodemailer.Transporter;
