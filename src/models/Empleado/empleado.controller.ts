@@ -56,15 +56,9 @@ export class EmpleadoController {
       }
 
       // 3. Devolver los datos al Frontend
-      // OJO: tu frontend espera recibir un objeto directo { nombre, apellido, cuil } por el fetchWithErrorHandling,
-      // te lo dejo como { success, data } por ahora como en tu boilerplate original, pero te recomendaría ajustarlo si falla.
       res.json({
         success: true,
-        data: {
-          nombre: configuraciones.nombre,
-          apellido: configuraciones.apellido,
-          cuil: configuraciones.cuil,
-        },
+        data: configuraciones,
       })
     } catch (error) {
       next(error)
@@ -117,34 +111,44 @@ export class EmpleadoController {
   }
 
   /**
-   * Actualizar el perfil del empleado autenticado
+   * Actualizar el perfil del empleado autenticado y sus notificaciones opcionalmente
    */
   async updatePerfil(req: Request, res: Response, next: NextFunction) {
     try {
       const user = req.user
-      if (!user || !user.cuil) {
+      if (!user || !user.cuil || !user.rol_actual) {
         return res.status(401).json({
           success: false,
-          message: 'Usuario no autenticado',
+          message: 'Usuario no autenticado o faltan permisos de rol',
         })
       }
 
-      // El cuil NO se puede cambiar porque es el PK, entonces omitimos el cuil del body
-      const { nombre, apellido } = req.body
+      // Extraer campos del perfil y las notificaciones
+      const { nombre, apellido, mail, notificaciones } = req.body
 
-      const updatedEmpleado = await empleadoService.update(user.cuil, {
+      // 1. Actualizar datos básicos (nombre, apellido, mail)
+      await empleadoService.update(user.cuil, {
         nombre,
         apellido,
+        mail,
       })
 
-      // Tu Front-end action va a esperar esto como resultado de data
+      // 2. Actualizar notificaciones si están presentes
+      if (notificaciones) {
+        await empleadoService.updateNotifications(
+          user.cuil,
+          user.rol_actual,
+          notificaciones,
+        )
+      }
+
+      // 3. Obtener el perfil completamente actualizado con todos sus metadatos
+      const configuraciones = await empleadoService.getPerfil(user.cuil)
+
+      // Tu Front-end action va a esperar que esto devuelva el mismo esquema que el GET
       res.json({
         success: true,
-        data: {
-          nombre: updatedEmpleado.nombre,
-          apellido: updatedEmpleado.apellido,
-          cuil: updatedEmpleado.cuil,
-        },
+        data: configuraciones,
       })
     } catch (error) {
       next(error)
@@ -236,6 +240,8 @@ export class EmpleadoController {
       next(error)
     }
   }
+
+
 
   /**
    * Obtener empleados disponibles para entrega (VISITADOR o PLANTA)

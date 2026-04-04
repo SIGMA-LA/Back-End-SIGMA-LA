@@ -1,6 +1,7 @@
 import { EmpleadoRepository } from './empleado.repository.js'
 import bcrypt from 'bcryptjs'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { type empleado, Prisma } from '@prisma/client'
 
 /**
  * Servicio para manejar la lógica de negocio de empleados.
@@ -22,6 +23,15 @@ export interface EmpleadoPayload {
   rol_actual: string
   area_trabajo: string
   activo: boolean
+  mail?: string | null
+  notificacion_email?: boolean
+  notificacion_whatsapp?: boolean
+  config_coordinacion?: ConfigCoordinacionUpdate | null
+}
+
+export interface ConfigCoordinacionUpdate {
+  visita_completada?: boolean
+  nueva_orden_produccion?: boolean
 }
 
 export class EmpleadoService {
@@ -81,9 +91,63 @@ export class EmpleadoService {
   async findAll(): Promise<EmpleadoPayload[]> {
     return await this.empleadoRepository.findAllPublic()
   }
+  // Este any le da dinamismo al objeto no tocar
+  async getPerfil(cuil: string): Promise<(EmpleadoPayload & { notificaciones: any }) | null> {
+    const empleado = await this.empleadoRepository.findPerfil(cuil)
+    if (!empleado) return null
 
-  async getPerfil(cuil: string): Promise<EmpleadoPayload | null> {
-    return await this.empleadoRepository.findPerfil(cuil)
+    // Generar metadata dinámicamente según el rol
+    const notificacionesMetadata = this.getNotificationMetadata(
+      empleado.rol_actual,
+      empleado as unknown as EmpleadoPayload,
+      empleado.config_coordinacion
+    )
+
+    // Ocultar los campos de la DB que ya están mapeados en 'notificaciones' para evitar redundancia
+    const {
+      config_coordinacion,
+      notificacion_email,
+      notificacion_whatsapp,
+      ...frontendData
+    } = empleado as any
+
+    return {
+      ...frontendData,
+      notificaciones: notificacionesMetadata
+    }
+  }
+
+  private getNotificationMetadata(rol: string, empleado: EmpleadoPayload, values?: ConfigCoordinacionUpdate | null) {
+    // Configuración base por defecto
+    const metadata = {
+      configuracion: {
+        canales: [] as { id: string; label: string }[],
+        eventos: [] as { id: string; label: string }[]
+      },
+      valores: {} as Record<string, boolean>
+    }
+
+    if (rol === 'COORDINACION') {
+      metadata.configuracion.eventos = [
+        { id: 'visita_completada', label: 'Visita Técnica Completada' },
+        { id: 'nueva_orden_produccion', label: 'Nueva Orden de Producción' }
+      ]
+
+      metadata.configuracion.canales = [
+        { id: 'email', label: 'Recibir por Email' },
+        { id: 'whatsapp', label: 'Recibir por WhatsApp' }
+      ]
+
+      // Valores actuales de la DB
+      metadata.valores = {
+        visita_completada: values?.visita_completada || false,
+        nueva_orden_produccion: values?.nueva_orden_produccion || false,
+        email: empleado.notificacion_email || false,
+        whatsapp: empleado.notificacion_whatsapp || false
+      }
+    }
+
+    return metadata
   }
 
   // Obtener empleado por CUIL
@@ -192,6 +256,7 @@ export class EmpleadoService {
       apellido: string
       rol_actual: string
       area_trabajo: string
+      mail?: string | null
       contrasenia?: string
     }>,
   ): Promise<EmpleadoPayload> {
@@ -268,5 +333,35 @@ export class EmpleadoService {
   // Contar total de empleados activos
   async count(): Promise<number> {
     return await this.empleadoRepository.count()
+  }
+
+  async updateNotifications(
+    cuil: string,
+    rol: string,
+    notifications: Record<string, boolean>,
+  ): Promise<empleado> {
+    const empleado = await this.empleadoRepository.findByCuil(cuil)
+    if (!empleado || !empleado.activo) {
+      throw new Error('Empleado no encontrado')
+    }
+
+    const { email, whatsapp, ...eventos } = notifications;
+    const data: Prisma.empleadoUpdateInput = {}
+
+    // Actualizamos campos globales del empleado si se envían
+    if (email !== undefined) data.notificacion_email = email;
+    if (whatsapp !== undefined) data.notificacion_whatsapp = whatsapp;
+
+    // Lógica por rol para decidir qué tabla de configuración actualizar
+    if (rol === 'COORDINACION') {
+      data.config_coordinacion = {
+        upsert: {
+          create: eventos as Prisma.config_coordinacionCreateWithoutEmpleadoInput,
+          update: eventos as Prisma.config_coordinacionUpdateWithoutEmpleadoInput,
+        },
+      }
+    }
+
+    return await this.empleadoRepository.update(cuil, data)
   }
 }
