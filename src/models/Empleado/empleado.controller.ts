@@ -111,34 +111,43 @@ export class EmpleadoController {
   }
 
   /**
-   * Actualizar el perfil del empleado autenticado
+   * Actualizar el perfil del empleado autenticado y sus notificaciones opcionalmente
    */
   async updatePerfil(req: Request, res: Response, next: NextFunction) {
     try {
       const user = req.user
-      if (!user || !user.cuil) {
+      if (!user || !user.cuil || !user.rol_actual) {
         return res.status(401).json({
           success: false,
-          message: 'Usuario no autenticado',
+          message: 'Usuario no autenticado o faltan permisos de rol',
         })
       }
 
       // El cuil NO se puede cambiar porque es el PK, entonces omitimos el cuil del body
-      const { nombre, apellido } = req.body
+      const { nombre, apellido, notificaciones } = req.body
 
-      const updatedEmpleado = await empleadoService.update(user.cuil, {
+      // 1. Actualizar datos básicos (nombre, apellido)
+      await empleadoService.update(user.cuil, {
         nombre,
         apellido,
       })
 
-      // Tu Front-end action va a esperar esto como resultado de data
+      // 2. Actualizar notificaciones si están presentes
+      if (notificaciones) {
+        await empleadoService.updateNotifications(
+          user.cuil,
+          user.rol_actual,
+          notificaciones,
+        )
+      }
+
+      // 3. Obtener el perfil completamente actualizado con todos sus metadatos
+      const configuraciones = await empleadoService.getPerfil(user.cuil)
+
+      // Tu Front-end action va a esperar que esto devuelva el mismo esquema que el GET
       res.json({
         success: true,
-        data: {
-          nombre: updatedEmpleado.nombre,
-          apellido: updatedEmpleado.apellido,
-          cuil: updatedEmpleado.cuil,
-        },
+        data: configuraciones,
       })
     } catch (error) {
       next(error)
@@ -232,39 +241,6 @@ export class EmpleadoController {
   }
 
 
-  async updateNotificaciones(req: Request, res: Response, next: NextFunction) {
-    try {
-      const user = req.user
-      if (!user || !user.cuil || !user.rol_actual) {
-        return res.status(401).json({
-          success: false,
-          message: 'Usuario no autenticado o faltan permisos de rol',
-        })
-      }
-
-      const { notificaciones } = req.body
-      if (notificaciones === undefined) {
-        return res.status(400).json({
-          success: false,
-          message: 'Faltan parámetros para actualizar las notificaciones',
-        })
-      }
-
-      // El service decidirá qué tabla actualizar basándose en el rol del usuario
-      const updatedData = await empleadoService.updateNotifications(
-        user.cuil,
-        user.rol_actual,
-        notificaciones,
-      )
-
-      res.json({
-        success: true,
-        data: updatedData,
-      })
-    } catch (error) {
-      next(error)
-    }
-  }
 
   /**
    * Obtener empleados disponibles para entrega (VISITADOR o PLANTA)

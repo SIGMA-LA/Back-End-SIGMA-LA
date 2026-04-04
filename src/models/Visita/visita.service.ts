@@ -377,17 +377,18 @@ export class VisitaService {
 
     const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
     
-    // 2. Enviar mail a todos los interesados
+    // 2. Enviar mail a todos los interesados (Empleados con el Rol)
     await emailService.sendNotification(
       emails,
-      `Visita Técnica Finalizada - ${visita.motivo_visita}`,
-      `Se ha marcado como FINALIZADA una visita técnica en el sistema.<br><br>` +
-      `<b>Detalles:</b><br>` +
-      `- Cliente: ${clienteNombre}<br>` +
-      `- Motivo: ${visita.motivo_visita}<br>` +
-      `- Fecha: ${visita.fecha_hora_visita.toLocaleString()}<br>` +
-      `- Observaciones finales: ${visita.observaciones || 'Sin observaciones'}<br><br>` +
-      `<i>Este es un aviso automático para el rol de Coordinación.</i>`
+      `Aviso Interno: Visita Técnica Finalizada - ${visita.motivo_visita}`,
+      `Hola equipo de Coordinación,<br><br>` +
+      `Les informamos que se ha marcado como FINALIZADA una visita técnica en el sistema.<br><br>` +
+      `<b>Detalles de la operación:</b><br>` +
+      `- <b>Cliente:</b> ${clienteNombre}<br>` +
+      `- <b>Motivo:</b> ${visita.motivo_visita}<br>` +
+      `- <b>Fecha:</b> ${visita.fecha_hora_visita.toLocaleString()}<br>` +
+      `- <b>Observaciones finales:</b> ${visita.observaciones || 'Sin observaciones'}<br><br>` +
+      `<i>Este es un aviso automático generado por el sistema SIGMA-LA para el personal de Coordinación. Por favor no responder a este correo.</i>`
     );
   }
 
