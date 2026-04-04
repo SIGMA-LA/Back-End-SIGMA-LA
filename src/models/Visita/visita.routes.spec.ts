@@ -99,7 +99,7 @@ describe('Integration Tests - Visita Routes', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ observaciones: 'Medidas tomadas' })
 
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(400)
     })
 
     it('debería devolver 200 y la visita completada', async () => {

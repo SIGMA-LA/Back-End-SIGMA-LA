@@ -1,4 +1,5 @@
 import { CloudinaryUploader } from './commonUpload/cloudynary.strategy.js'
+import { LocalUploader } from './commonUpload/local.strategy.js'
 import { IUploadStrategy } from './commonUpload/iuploadStrategy.js'
 import { env } from '../../config/env.js'
 
@@ -7,6 +8,10 @@ let uploadStrategy: IUploadStrategy
 switch (env.STORAGE_PROVIDER.toLowerCase()) {
   case 'cloudinary':
     uploadStrategy = new CloudinaryUploader()
+    break
+
+  case 'local':
+    uploadStrategy = new LocalUploader()
     break
 
   default:

@@ -40,8 +40,7 @@ export function authenticateJWT(
  */
 export function authorizeRoles(roles: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
-    // @ts-expect-error: req.user no está tipado en Express por defecto
-    if (!req.user || !roles.includes(req.user.rol_actual)) {
+    if (!req.user || !roles.includes(req.user.rol_actual ?? '')) {
       return res.status(403).json({ error: 'No autorizado' })
     }
     next()

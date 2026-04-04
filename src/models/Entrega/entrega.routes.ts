@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { EntregaController } from './entrega.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
-import { updateEntregaSchema, idParamsSchema } from 'sigma-la-schemas'
+import { idParamsSchema } from 'sigma-la-schemas'
 const entregaController = new EntregaController()
 const entregaRouter = Router()
 
@@ -20,26 +20,6 @@ entregaRouter.post('/', (req, res) => {
 entregaRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
   entregaController.getOne(req, res)
 })
-
-import * as v from 'valibot'
-const localUpdateEntregaSchema = v.pipe(
-  v.object({
-    fecha_hora_entrega: v.optional(v.pipe(v.string(), v.isoDateTime())),
-    detalle: v.optional(v.pipe(v.string(), v.maxLength(50))),
-    observaciones: v.optional(v.pipe(v.string(), v.maxLength(500))),
-    dias_viaticos: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0))),
-    estado: v.optional(v.picklist(["PENDIENTE", "EN CURSO", "ENTREGADO", "CANCELADO"])),
-    vehiculos: v.optional(v.array(v.string())),
-    maquinarias: v.optional(v.array(v.number())),
-    empleados: v.optional(v.array(v.object({
-      cuil: v.string(),
-      rol_entrega: v.picklist(["ENCARGADO", "ACOMPANANTE"])
-    }))),
-    fecha_salida_estimada: v.optional(v.pipe(v.string(), v.isoDateTime())),
-    fecha_regreso_estimado: v.optional(v.pipe(v.string(), v.isoDateTime())),
-  }),
-  v.check((input) => Object.keys(input).length > 0, "Debe enviar al menos un campo para actualizar")
-)
 
 /**
  * [PARCHE TEMPORAL]
