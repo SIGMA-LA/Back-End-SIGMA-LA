@@ -56,15 +56,9 @@ export class EmpleadoController {
       }
 
       // 3. Devolver los datos al Frontend
-      // OJO: tu frontend espera recibir un objeto directo { nombre, apellido, cuil } por el fetchWithErrorHandling,
-      // te lo dejo como { success, data } por ahora como en tu boilerplate original, pero te recomendaría ajustarlo si falla.
       res.json({
         success: true,
-        data: {
-          nombre: configuraciones.nombre,
-          apellido: configuraciones.apellido,
-          cuil: configuraciones.cuil,
-        },
+        data: configuraciones,
       })
     } catch (error) {
       next(error)
@@ -231,6 +225,41 @@ export class EmpleadoController {
       res.json({
         success: true,
         data: empleado,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+
+  async updateNotificaciones(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user
+      if (!user || !user.cuil || !user.rol_actual) {
+        return res.status(401).json({
+          success: false,
+          message: 'Usuario no autenticado o faltan permisos de rol',
+        })
+      }
+
+      const { notificaciones } = req.body
+      if (notificaciones === undefined) {
+        return res.status(400).json({
+          success: false,
+          message: 'Faltan parámetros para actualizar las notificaciones',
+        })
+      }
+
+      // El service decidirá qué tabla actualizar basándose en el rol del usuario
+      const updatedData = await empleadoService.updateNotifications(
+        user.cuil,
+        user.rol_actual,
+        notificaciones,
+      )
+
+      res.json({
+        success: true,
+        data: updatedData,
       })
     } catch (error) {
       next(error)

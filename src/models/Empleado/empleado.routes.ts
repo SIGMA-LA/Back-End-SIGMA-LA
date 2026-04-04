@@ -48,6 +48,15 @@ empleadoRouter.put('/configuraciones/perfil', (req, res, next) => {
 })
 
 /**
+ * @route   PUT /api/empleados/configuraciones/notificaciones
+ * @desc    Actualizar las notificaciones del empleado
+ * @access  Privado (requiere autenticación)
+ */
+empleadoRouter.put('/configuraciones/notificaciones', (req, res, next) => {
+  empleadoController.updateNotificaciones(req, res, next)
+})
+
+/**
  * @route   GET /api/empleados/visitadores
  * @desc    Obtener todos los visitadores activos
  * @access  Privado (requiere autenticación)

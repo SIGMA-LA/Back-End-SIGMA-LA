@@ -30,6 +30,8 @@ model empleado {
   refreshTokenHash    String?              @db.VarChar(255)
   activo              Boolean              @default(true)
   mail                String?              @db.VarChar(100)
+  notificacion_email  Boolean              @default(false)
+  notificacion_whatsapp Boolean            @default(false)
   config_coordinacion config_coordinacion?
   empleado_visita     empleado_visita[]
   entrega_empleado    entrega_empleado[]

@@ -87,6 +87,15 @@ export class EmpleadoRepository {
         rol_actual: true,
         area_trabajo: true,
         activo: true,
+        mail: true,
+        notificacion_email: true,
+        notificacion_whatsapp: true,
+        config_coordinacion: {
+          select: {
+            visita_completada: true,
+            nueva_orden_produccion: true,
+          },
+        },
       },
     })
   }
@@ -106,6 +115,9 @@ export class EmpleadoRepository {
     return await this.prisma.empleado.update({
       where: { cuil: cuil },
       data,
+      include: {
+        config_coordinacion: true,
+      },
     })
   }
 

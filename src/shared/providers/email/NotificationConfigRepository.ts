@@ -27,7 +27,8 @@ export class NotificationConfigRepository {
     const baseWhere = {
       rol_actual: rol,
       activo: true,
-      mail: { not: null }
+      mail: { not: null },
+      notificacion_email: true
     };
 
     let configs: any[] = [];
