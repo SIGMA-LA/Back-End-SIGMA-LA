@@ -31,17 +31,18 @@ export class NotificationConfigRepository {
       notificacion_email: true
     };
 
-    let configs: any[] = [];
-
+    let emails: string[] = [];
+    
     // Lógica específica por rol (expandible)
     if (rol === 'COORDINACION') {
-      configs = await this.prisma.config_coordinacion.findMany({
+      const configs = await this.prisma.config_coordinacion.findMany({
         where: {
           [field as string]: true,
           empleado: baseWhere
         },
         select: { empleado: { select: { mail: true } } }
       });
+      emails = configs.map(c => c.empleado.mail).filter((m): m is string => !!m);
     }
 
     /* 
@@ -51,9 +52,7 @@ export class NotificationConfigRepository {
     }
     */
 
-    return configs
-      .map(c => c.empleado?.mail)
-      .filter((mail): mail is string => !!mail);
+    return emails;
   }
 }
 

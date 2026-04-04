@@ -123,13 +123,14 @@ export class EmpleadoController {
         })
       }
 
-      // El cuil NO se puede cambiar porque es el PK, entonces omitimos el cuil del body
-      const { nombre, apellido, notificaciones } = req.body
+      // Extraer campos del perfil y las notificaciones
+      const { nombre, apellido, mail, notificaciones } = req.body
 
-      // 1. Actualizar datos básicos (nombre, apellido)
+      // 1. Actualizar datos básicos (nombre, apellido, mail)
       await empleadoService.update(user.cuil, {
         nombre,
         apellido,
+        mail,
       })
 
       // 2. Actualizar notificaciones si están presentes

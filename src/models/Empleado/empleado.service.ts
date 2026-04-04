@@ -91,25 +91,25 @@ export class EmpleadoService {
   async findAll(): Promise<EmpleadoPayload[]> {
     return await this.empleadoRepository.findAllPublic()
   }
-
-  async getPerfil(cuil: string): Promise<any | null> {
+  // Este any le da dinamismo al objeto no tocar
+  async getPerfil(cuil: string): Promise<(EmpleadoPayload & { notificaciones: any }) | null> {
     const empleado = await this.empleadoRepository.findPerfil(cuil)
     if (!empleado) return null
 
     // Generar metadata dinámicamente según el rol
     const notificacionesMetadata = this.getNotificationMetadata(
-      empleado.rol_actual, 
-      empleado as any, 
+      empleado.rol_actual,
+      empleado as unknown as EmpleadoPayload,
       empleado.config_coordinacion
     )
 
     // Ocultar los campos de la DB que ya están mapeados en 'notificaciones' para evitar redundancia
-    const { 
-      config_coordinacion, 
-      notificacion_email, 
-      notificacion_whatsapp, 
-      ...frontendData 
-    } = empleado
+    const {
+      config_coordinacion,
+      notificacion_email,
+      notificacion_whatsapp,
+      ...frontendData
+    } = empleado as any
 
     return {
       ...frontendData,
@@ -137,7 +137,7 @@ export class EmpleadoService {
         { id: 'email', label: 'Recibir por Email' },
         { id: 'whatsapp', label: 'Recibir por WhatsApp' }
       ]
-      
+
       // Valores actuales de la DB
       metadata.valores = {
         visita_completada: values?.visita_completada || false,
@@ -256,6 +256,7 @@ export class EmpleadoService {
       apellido: string
       rol_actual: string
       area_trabajo: string
+      mail?: string | null
       contrasenia?: string
     }>,
   ): Promise<EmpleadoPayload> {
@@ -337,7 +338,7 @@ export class EmpleadoService {
   async updateNotifications(
     cuil: string,
     rol: string,
-    notifications: any,
+    notifications: Record<string, boolean>,
   ): Promise<empleado> {
     const empleado = await this.empleadoRepository.findByCuil(cuil)
     if (!empleado || !empleado.activo) {
