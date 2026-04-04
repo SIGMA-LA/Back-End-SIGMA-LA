@@ -67,11 +67,12 @@ jobs:
     needs: lint
     env:
       NODE_ENV: test
-      JWT_SECRET: ci-secret
-      NODE_AUTH_REFRESH_TOKEN: ci-refresh-secret
+      JWT_SECRET: ci-secret-placeholder-32-characters-long
+      NODE_AUTH_REFRESH_TOKEN: ci-refresh-secret-string
       DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
       FRONTEND_URL: http://localhost:3000
       PORT: '3001'
+      STORAGE_PROVIDER: local
 
     steps:
       - uses: actions/checkout@v4
