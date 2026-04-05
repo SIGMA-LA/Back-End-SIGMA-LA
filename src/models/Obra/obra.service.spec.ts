@@ -22,7 +22,7 @@ describe('ObraService - Pruebas Unitarias', () => {
       vi.spyOn(ObraRepository.prototype, 'findById').mockResolvedValue({
         cod_obra: 1,
         estado: 'PENDIENTE',
-      } as any)
+      } as unknown as Awaited<ReturnType<ObraRepository['findById']>>)
       await expect(obraService.solicitarStock(1)).rejects.toThrow('Solo se puede solicitar stock para obras con pago parcial.')
     })
 
@@ -30,12 +30,12 @@ describe('ObraService - Pruebas Unitarias', () => {
       vi.spyOn(ObraRepository.prototype, 'findById').mockResolvedValue({
         cod_obra: 1,
         estado: 'PAGADA PARCIALMENTE',
-      } as any)
+      } as unknown as Awaited<ReturnType<ObraRepository['findById']>>)
 
       const updateMock = vi.spyOn(ObraRepository.prototype, 'update').mockResolvedValue({
         cod_obra: 1,
         estado: 'EN ESPERA DE STOCK',
-      } as any)
+      } as unknown as Awaited<ReturnType<ObraRepository['update']>>)
 
       await obraService.solicitarStock(1)
       expect(updateMock).toHaveBeenCalledWith(1, { estado: 'EN ESPERA DE STOCK' })
@@ -47,7 +47,7 @@ describe('ObraService - Pruebas Unitarias', () => {
       vi.spyOn(ObraRepository.prototype, 'findById').mockResolvedValue({
         cod_obra: 1,
         estado: 'PENDIENTE',
-      } as any)
+      } as unknown as Awaited<ReturnType<ObraRepository['findById']>>)
       await expect(obraService.recibirStock(1)).rejects.toThrow('Esta obra no está esperando stock.')
     })
 
@@ -55,12 +55,12 @@ describe('ObraService - Pruebas Unitarias', () => {
       vi.spyOn(ObraRepository.prototype, 'findById').mockResolvedValue({
         cod_obra: 2,
         estado: 'EN ESPERA DE STOCK',
-      } as any)
+      } as unknown as Awaited<ReturnType<ObraRepository['findById']>>)
 
       const updateMock = vi.spyOn(ObraRepository.prototype, 'update').mockResolvedValue({
         cod_obra: 2,
         estado: 'EN PRODUCCION',
-      } as any)
+      } as unknown as Awaited<ReturnType<ObraRepository['update']>>)
 
       await obraService.recibirStock(2)
       expect(updateMock).toHaveBeenCalledWith(2, { estado: 'EN PRODUCCION' })
@@ -69,7 +69,7 @@ describe('ObraService - Pruebas Unitarias', () => {
 
   describe('create() / update() validación de fechas', () => {
     it('debería transformar fecha de string ISO corto a Date al crear obra', async () => {
-      const createMock = vi.spyOn(ObraRepository.prototype, 'create').mockResolvedValue({} as any)
+      const createMock = vi.spyOn(ObraRepository.prototype, 'create').mockResolvedValue({} as unknown as Awaited<ReturnType<ObraRepository['create']>>)
 
       await obraService.create({
         direccion: 'Calle Falsa 123',

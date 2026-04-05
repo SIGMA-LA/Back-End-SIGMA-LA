@@ -1,6 +1,7 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest'
 import { AuthService } from './auth.service'
 import { EmpleadoRepository } from '../Empleado/empleado.repository'
+import { empleado } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
@@ -35,11 +36,11 @@ describe('AuthService - Pruebas Unitarias', () => {
 
   describe('register()', () => {
     it('debería hashear la contraseña y llamar al repositorio', async () => {
-      vi.mocked(bcrypt.hash).mockResolvedValue('hashed-pass' as any)
+      (bcrypt.hash as Mock).mockResolvedValue('hashed-pass')
       const createMock = vi.spyOn(EmpleadoRepository.prototype, 'create').mockResolvedValue({
         cuil: '1234',
         contrasenia: 'hashed-pass',
-      } as any)
+      } as unknown as empleado)
 
       await authService.register({
         cuil: '1234',
@@ -65,8 +66,8 @@ describe('AuthService - Pruebas Unitarias', () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
         cuil: '20111111112',
         contrasenia: 'hash',
-      } as any)
-      vi.mocked(bcrypt.compare).mockResolvedValue(false as any)
+      } as unknown as empleado)
+      ;(bcrypt.compare as Mock).mockResolvedValue(false)
       
       await expect(authService.login('20111111112', 'badpass')).rejects.toThrow('CUIL o contraseña incorrectos')
     })
@@ -75,12 +76,12 @@ describe('AuthService - Pruebas Unitarias', () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
         cuil: '20111111112',
         contrasenia: 'hash',
-      } as any)
-      vi.mocked(bcrypt.compare).mockResolvedValue(true as any)
-      vi.mocked(jwt.sign)
-        .mockReturnValueOnce('token-jwt' as any)
-        .mockReturnValueOnce('refresh-token-jwt' as any)
-      vi.mocked(bcrypt.hash).mockResolvedValue('hashed-refresh' as any)
+      } as unknown as empleado)
+      ;(bcrypt.compare as Mock).mockResolvedValue(true)
+      ;(jwt.sign as Mock)
+        .mockReturnValueOnce('token-jwt')
+        .mockReturnValueOnce('refresh-token-jwt')
+      ;(bcrypt.hash as Mock).mockResolvedValue('hashed-refresh')
 
       const updateMock = vi.spyOn(EmpleadoRepository.prototype, 'updateRefreshTokenHash').mockResolvedValue(undefined)
 
@@ -94,13 +95,13 @@ describe('AuthService - Pruebas Unitarias', () => {
 
   describe('refreshAccessToken()', () => {
     it('debería generar un nuevo token si el refreshToken es válido', async () => {
-      vi.mocked(jwt.verify).mockReturnValue({ cuil: '111' } as any)
+      ;(jwt.verify as Mock).mockReturnValue({ cuil: '111' })
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
         cuil: '111',
         refreshTokenHash: 'hash-rt',
-      } as any)
-      vi.mocked(bcrypt.compare).mockResolvedValue(true as any)
-      vi.mocked(jwt.sign).mockReturnValue('nuevo-token' as any)
+      } as unknown as empleado)
+      ;(bcrypt.compare as Mock).mockResolvedValue(true)
+      ;(jwt.sign as Mock).mockReturnValue('nuevo-token')
 
       const result = await authService.refreshAccessToken('rt-valido')
       
@@ -110,7 +111,7 @@ describe('AuthService - Pruebas Unitarias', () => {
     })
 
     it('debería arrojar error si la firma falla', async () => {
-      vi.mocked(jwt.verify).mockImplementation(() => { throw new Error('invalid') })
+      ;(jwt.verify as Mock).mockImplementation(() => { throw new Error('invalid') })
       await expect(authService.refreshAccessToken('rt-malo')).rejects.toThrow('Refresh token invalid or expired')
     })
   })

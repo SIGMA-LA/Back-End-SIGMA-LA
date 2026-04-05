@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import jwt from 'jsonwebtoken'
 import app from '../../app.js'
 import { EmpleadoRepository } from './empleado.repository.js'
+import { empleado } from '@prisma/client'
 
 /**
  * Tests de Integración - Empleado Routes
@@ -45,7 +46,7 @@ describe('Integration Tests - Empleado Routes', () => {
 
     it('debería devolver 200 y la lista de empleados activos', async () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findAllPublic').mockResolvedValue([
-        { cuil: CUIL_VALIDO, nombre: 'Juan', apellido: 'Pérez', activo: true } as any,
+        { cuil: CUIL_VALIDO, nombre: 'Juan', apellido: 'Pérez', activo: true } as unknown as empleado,
       ])
 
       const response = await request(app)
@@ -86,8 +87,8 @@ describe('Integration Tests - Empleado Routes', () => {
         activo: true,
         contrasenia: null,
         refreshTokenHash: null,
-        fecha_ingreso: new Date() as any,
-      } as any)
+        fecha_ingreso: new Date(),
+      } as unknown as empleado)
 
       const response = await request(app)
         .post('/api/empleados')
@@ -108,7 +109,7 @@ describe('Integration Tests - Empleado Routes', () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
         cuil: CUIL_VALIDO,
         activo: true,
-      } as any)
+      } as unknown as empleado)
 
       const response = await request(app)
         .post('/api/empleados')
@@ -154,7 +155,7 @@ describe('Integration Tests - Empleado Routes', () => {
         apellido: 'García',
         rol_actual: 'VISITADOR',
         area_trabajo: 'Campo',
-      } as any)
+      } as unknown as empleado)
       vi.spyOn(EmpleadoRepository.prototype, 'update').mockResolvedValue({
         cuil: CUIL_VALIDO,
         nombre: 'Ana',
@@ -162,7 +163,7 @@ describe('Integration Tests - Empleado Routes', () => {
         rol_actual: 'VISITADOR',
         area_trabajo: 'Campo',
         activo: false,
-      } as any)
+      } as unknown as empleado)
 
       const response = await request(app)
         .delete(`/api/empleados/${CUIL_VALIDO}`)

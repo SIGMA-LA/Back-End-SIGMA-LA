@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import jwt from 'jsonwebtoken'
 import app from '../../app.js'
 import { ClienteRepository } from './cliente.repository.js'
+import { cliente } from '@prisma/client'
 
 /**
  * Tests de Integración - Cliente Routes
@@ -38,8 +39,8 @@ describe('Integration Tests - Cliente Routes', () => {
 
     it('debería devolver 200 y lista de clientes con token válido', async () => {
       vi.spyOn(ClienteRepository.prototype, 'findAll').mockResolvedValue([
-        { cuil: '20111111112', razon_social: 'Empresa A' } as any,
-        { cuil: '20222222223', razon_social: 'Empresa B' } as any,
+        { cuil: '20111111112', razon_social: 'Empresa A' } as unknown as cliente,
+        { cuil: '20222222223', razon_social: 'Empresa B' } as unknown as cliente,
       ])
 
       const response = await request(app)
@@ -58,7 +59,7 @@ describe('Integration Tests - Cliente Routes', () => {
       vi.spyOn(ClienteRepository.prototype, 'create').mockResolvedValue({
         cuil: '20111111112',
         razon_social: 'Empresa Test',
-      } as any)
+      } as unknown as cliente)
 
       const response = await request(app)
         .post('/api/clientes')
@@ -93,7 +94,7 @@ describe('Integration Tests - Cliente Routes', () => {
     it('debería devolver 409 si el cliente tiene dependencias activas', async () => {
       vi.spyOn(ClienteRepository.prototype, 'findById').mockResolvedValue({
         cuil: '20111111112',
-      } as any)
+      } as unknown as cliente)
       vi.spyOn(ClienteRepository.prototype, 'countDeleteDependencies').mockResolvedValue({
         obras: 2,
         visitasConObra: 0,
@@ -110,7 +111,7 @@ describe('Integration Tests - Cliente Routes', () => {
     it('debería devolver 204 al eliminar un cliente sin dependencias', async () => {
       vi.spyOn(ClienteRepository.prototype, 'findById').mockResolvedValue({
         cuil: '20111111112',
-      } as any)
+      } as unknown as cliente)
       vi.spyOn(ClienteRepository.prototype, 'countDeleteDependencies').mockResolvedValue({
         obras: 0,
         visitasConObra: 0,
@@ -118,7 +119,7 @@ describe('Integration Tests - Cliente Routes', () => {
       })
       vi.spyOn(ClienteRepository.prototype, 'delete').mockResolvedValue({
         cuil: '20111111112',
-      } as any)
+      } as unknown as cliente)
 
       const response = await request(app)
         .delete('/api/clientes/20111111112')

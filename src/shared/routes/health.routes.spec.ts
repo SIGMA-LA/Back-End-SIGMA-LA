@@ -31,7 +31,7 @@ describe('Integration Tests - Health Routes', () => {
   describe('GET /api/ready', () => {
     it('debería responder con 200 ready si base de datos está conectada', async () => {
       // Simulamos que la BD responde ok
-      vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([1] as any)
+      vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([1])
 
       const response = await request(app).get('/api/ready')
 

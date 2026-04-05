@@ -1,6 +1,7 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest'
 import { EmpleadoService } from './empleado.service'
 import { EmpleadoRepository } from './empleado.repository'
+import { empleado } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 // 1. Mockeamos el repositorio y dependencias externas como bcrypt
@@ -26,7 +27,7 @@ describe('EmpleadoService - Pruebas Unitarias', () => {
       // Simula que findByCuil encuentra un registro
       const findMock = vi
         .spyOn(EmpleadoRepository.prototype, 'findByCuil')
-        .mockResolvedValue({ cuil: '20123456781' } as any)
+        .mockResolvedValue({ cuil: '20123456781' } as unknown as empleado)
 
       await expect(
         empleadoService.create({
@@ -52,10 +53,10 @@ describe('EmpleadoService - Pruebas Unitarias', () => {
         area_trabajo: 'Campo',
         contrasenia: 'hashed_pass_mock',
         activo: true,
-      } as any)
-
+      } as unknown as empleado)
+      
       // Configuramos el mock de bcrypt para devolver un string simulado
-      vi.mocked(bcrypt.hash).mockResolvedValue('hashed_pass_mock' as any)
+      ;(bcrypt.hash as Mock).mockResolvedValue('hashed_pass_mock')
 
       const result = await empleadoService.create({
         cuil: '20123456781',
@@ -87,7 +88,7 @@ describe('EmpleadoService - Pruebas Unitarias', () => {
       const findMock = vi.spyOn(EmpleadoRepository.prototype, 'findByCuilPublic').mockResolvedValue({
         cuil: '111',
         activo: false,
-      } as any)
+      } as unknown as empleado)
 
       await expect(empleadoService.findByCuil('111')).rejects.toThrow('Empleado no encontrado o inactivo')
       expect(findMock).toHaveBeenCalledWith('111')
@@ -100,10 +101,10 @@ describe('EmpleadoService - Pruebas Unitarias', () => {
         cuil: '123',
         activo: true,
         contrasenia: 'old_hash',
-      } as any)
-
+      } as unknown as empleado)
+      
       // Simular bcrypt.compare retornando "false"
-      vi.mocked(bcrypt.compare).mockResolvedValue(false as any)
+      ;(bcrypt.compare as Mock).mockResolvedValue(false)
 
       await expect(
         empleadoService.updatePassword('123', 'wrong_pass', 'new_pass')
@@ -117,12 +118,12 @@ describe('EmpleadoService - Pruebas Unitarias', () => {
         cuil: '123',
         activo: true,
         contrasenia: 'old_hash',
-      } as any)
-
-      vi.mocked(bcrypt.compare).mockResolvedValue(true as any)
-      vi.mocked(bcrypt.hash).mockResolvedValue('new_hash_mock' as any)
+      } as unknown as empleado)
       
-      const updateMock = vi.spyOn(EmpleadoRepository.prototype, 'update').mockResolvedValue({} as any)
+      ;(bcrypt.compare as Mock).mockResolvedValue(true)
+      ;(bcrypt.hash as Mock).mockResolvedValue('new_hash_mock')
+      
+      const updateMock = vi.spyOn(EmpleadoRepository.prototype, 'update').mockResolvedValue({} as unknown as empleado)
 
       await empleadoService.updatePassword('123', 'correct_pass', 'new_pass')
 
@@ -136,12 +137,12 @@ describe('EmpleadoService - Pruebas Unitarias', () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuilPublic').mockResolvedValue({
         cuil: '999',
         activo: true,
-      } as any)
+      } as unknown as empleado)
 
       const updateMock = vi.spyOn(EmpleadoRepository.prototype, 'update').mockResolvedValue({
         cuil: '999',
         activo: false, // se marca inactivo
-      } as any)
+      } as unknown as empleado)
 
       const result = await empleadoService.remove('999')
 

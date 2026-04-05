@@ -2,6 +2,7 @@ import request from 'supertest'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import app from '../../app.js'
 import { AuthService } from './auth.service.js'
+import { empleado } from '@prisma/client'
 import { AppError } from '../../shared/errors/AppError.js'
 
 /**
@@ -51,7 +52,7 @@ describe('Integration Tests - Auth Routes', () => {
           apellido: 'Test',
           rol_actual: 'ADMIN',
           activo: true,
-        } as any,
+        } as unknown as empleado,
       })
 
       const response = await request(app)

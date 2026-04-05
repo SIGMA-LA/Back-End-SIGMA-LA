@@ -2,7 +2,8 @@ import request from 'supertest'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import jwt from 'jsonwebtoken'
 import app from '../../app.js'
-import { VisitaRepository } from './visita.repository.js'
+import { VisitaRepository, type VisitaWithRelations } from './visita.repository.js'
+// import type { visita } from '@prisma/client' // Removido para evitar error de lint no-unused-vars
 import { EmpleadoRepository } from '../Empleado/empleado.repository.js'
 import { VehiculoRepository } from '../Vehiculo/vehiculo.repository.js'
 
@@ -42,8 +43,8 @@ describe('Integration Tests - Visita Routes', () => {
 
     it('debería devolver 200 y la lista de visitas', async () => {
       vi.spyOn(VisitaRepository.prototype, 'findAll').mockResolvedValue([
-        { cod_visita: 1, motivo_visita: 'Presupuesto', estado: 'PROGRAMADA' } as any,
-        { cod_visita: 2, motivo_visita: 'Medición', estado: 'COMPLETADA' } as any,
+        { cod_visita: 1, motivo_visita: 'Presupuesto', estado: 'PROGRAMADA' } as unknown as VisitaWithRelations,
+        { cod_visita: 2, motivo_visita: 'Medición', estado: 'COMPLETADA' } as unknown as VisitaWithRelations,
       ])
 
       const response = await request(app)
@@ -73,7 +74,7 @@ describe('Integration Tests - Visita Routes', () => {
           },
           direccion: 'Calle Falsa 123'
         }
-      } as any)
+      } as unknown as VisitaWithRelations)
 
       const response = await request(app)
         .post('/api/visitas')
@@ -106,12 +107,12 @@ describe('Integration Tests - Visita Routes', () => {
       vi.spyOn(VisitaRepository.prototype, 'findById').mockResolvedValue({
         cod_visita: 1,
         estado: 'PROGRAMADA',
-      } as any)
+      } as unknown as VisitaWithRelations)
       vi.spyOn(VisitaRepository.prototype, 'update').mockResolvedValue({
         cod_visita: 1,
         estado: 'COMPLETADA',
         observaciones: 'Medidas tomadas',
-      } as any)
+      } as unknown as VisitaWithRelations)
 
       const response = await request(app)
         .patch('/api/visitas/1/finalizar')
@@ -129,12 +130,12 @@ describe('Integration Tests - Visita Routes', () => {
       vi.spyOn(VisitaRepository.prototype, 'findById').mockResolvedValue({
         cod_visita: 2,
         estado: 'PROGRAMADA',
-      } as any)
+      } as unknown as VisitaWithRelations)
       vi.spyOn(VisitaRepository.prototype, 'update').mockResolvedValue({
         cod_visita: 2,
         estado: 'CANCELADA',
         observaciones: 'Visita cancelada: Cliente ausente',
-      } as any)
+      } as unknown as VisitaWithRelations)
 
       const response = await request(app)
         .patch('/api/visitas/2/cancelar')

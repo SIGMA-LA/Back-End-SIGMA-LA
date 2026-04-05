@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { VisitaService } from './visita.service'
-import { VisitaRepository } from './visita.repository'
+import { VisitaRepository, type VisitaWithRelations } from './visita.repository'
 import { EmpleadoService } from '../Empleado/empleado.service'
 import { VehiculoService } from '../Vehiculo/vehiculo.service'
 
@@ -47,7 +47,7 @@ describe('VisitaService - Pruebas Unitarias', () => {
       const createMock = vi.spyOn(VisitaRepository.prototype, 'create').mockResolvedValue({
         cod_visita: 10,
         motivo_visita: 'Medición',
-      } as any)
+      } as unknown as VisitaWithRelations)
 
       const result = await visitaService.create({
         empleados_visita: ['20111111112'],
@@ -66,13 +66,13 @@ describe('VisitaService - Pruebas Unitarias', () => {
       vi.spyOn(VisitaRepository.prototype, 'findById').mockResolvedValue({
         cod_visita: 5,
         estado: 'PROGRAMADA'
-      } as any)
+      } as unknown as VisitaWithRelations)
 
       const updateMock = vi.spyOn(VisitaRepository.prototype, 'update').mockResolvedValue({
         cod_visita: 5,
         estado: 'COMPLETADA',
         observaciones: 'Todo correcto'
-      } as any)
+      } as unknown as VisitaWithRelations)
 
       const result = await visitaService.finalizar(5, 'Todo correcto')
 
@@ -88,12 +88,12 @@ describe('VisitaService - Pruebas Unitarias', () => {
     it('debería cancelar actualizando el estado a CANCELADA y grabar motivo', async () => {
       vi.spyOn(VisitaRepository.prototype, 'findById').mockResolvedValue({
         cod_visita: 8,
-      } as any)
+      } as unknown as VisitaWithRelations)
 
       const updateMock = vi.spyOn(VisitaRepository.prototype, 'update').mockResolvedValue({
         cod_visita: 8,
         estado: 'CANCELADA',
-      } as any)
+      } as unknown as VisitaWithRelations)
 
       await visitaService.cancelar(8, 'Cliente no estaba')
 

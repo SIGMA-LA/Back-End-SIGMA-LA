@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { ClienteService } from './cliente.service'
 import { ClienteRepository } from './cliente.repository'
+import { cliente, Prisma } from '@prisma/client'
 
 // 1. Mockeamos el módulo completo del repositorio
 vi.mock('./cliente.repository')
@@ -21,11 +22,11 @@ describe('ClienteService - Pruebas Unitarias', () => {
       // spyOn al prototipo permite interceptar la llamada del mock dentro del servicio
       const findByIdMock = vi
         .spyOn(ClienteRepository.prototype, 'findById')
-        .mockResolvedValue({ cuil: '20123456789', razon_social: 'Empresa Test' } as any)
+        .mockResolvedValue({ cuil: '20123456789', razon_social: 'Empresa Test' } as unknown as cliente)
 
       // Verificamos que al crear arroje el mensaje de error esperado
       await expect(
-        clienteService.create({ cuil: '20123456789', razon_social: 'Empresa Test' } as any)
+        clienteService.create({ cuil: '20123456789', razon_social: 'Empresa Test' } as Prisma.clienteCreateInput)
       ).rejects.toThrow('Ya existe un cliente con el mismo CUIL.')
 
       // Verificamos que se haya llamado a findById
@@ -38,12 +39,12 @@ describe('ClienteService - Pruebas Unitarias', () => {
       
       const createMock = vi
         .spyOn(ClienteRepository.prototype, 'create')
-        .mockResolvedValue({ cuil: '20123456789', razon_social: 'Empresa Test' } as any)
+        .mockResolvedValue({ cuil: '20123456789', razon_social: 'Empresa Test' } as unknown as cliente)
 
       const nuevoCliente = await clienteService.create({
         cuil: '20123456789',
         razon_social: 'Empresa Test'
-      } as any)
+      } as Prisma.clienteCreateInput)
 
       // Verificamos el resultado del llamado
       expect(nuevoCliente.cuil).toBe('20123456789')
@@ -63,7 +64,7 @@ describe('ClienteService - Pruebas Unitarias', () => {
 
     it('debería arrojar AppError si el cliente tiene registros asociados', async () => {
       // Simulamos que el cliente sí existe
-      vi.spyOn(ClienteRepository.prototype, 'findById').mockResolvedValue({ cuil: '111' } as any)
+      vi.spyOn(ClienteRepository.prototype, 'findById').mockResolvedValue({ cuil: '111' } as unknown as cliente)
       
       // Simulamos que al contar relaciones, arroja un número mayor a cero en `obras`
       vi.spyOn(ClienteRepository.prototype, 'countDeleteDependencies').mockResolvedValue({
@@ -76,7 +77,7 @@ describe('ClienteService - Pruebas Unitarias', () => {
     })
 
     it('debería eliminar el cliente cuando no hay dependencias', async () => {
-      vi.spyOn(ClienteRepository.prototype, 'findById').mockResolvedValue({ cuil: '111', razon_social: 'Borrar' } as any)
+      vi.spyOn(ClienteRepository.prototype, 'findById').mockResolvedValue({ cuil: '111', razon_social: 'Borrar' } as unknown as cliente)
       // Sin dependencias
       vi.spyOn(ClienteRepository.prototype, 'countDeleteDependencies').mockResolvedValue({
         obras: 0,
@@ -87,7 +88,7 @@ describe('ClienteService - Pruebas Unitarias', () => {
       const deleteMock = vi.spyOn(ClienteRepository.prototype, 'delete').mockResolvedValue({
         cuil: '111',
         razon_social: 'Borrar'
-      } as any)
+      } as unknown as cliente)
 
       await clienteService.remove('111')
 

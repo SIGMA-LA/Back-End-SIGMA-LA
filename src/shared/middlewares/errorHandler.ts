@@ -17,7 +17,6 @@ export const errorHandler = (
 
   // Consistent error object structure
   let statusCode = 500
-  let status = 'error'
   let errorCode = 'INTERNAL_SERVER_ERROR'
   let message = 'Algo salió mal'
   let details: unknown = undefined
@@ -25,7 +24,6 @@ export const errorHandler = (
 
   if (err instanceof AppError) {
     statusCode = err.statusCode
-    status = err.status
     errorCode = err.errorCode
     message = err.message
     details = err.details
