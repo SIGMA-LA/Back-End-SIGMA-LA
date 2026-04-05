@@ -36,7 +36,7 @@ export class OrdenProduccionController {
   getOne = catchAsync(async (req: Request, res: Response) => {
     const { cod_op } = req.params
     const codOpNum = Number(cod_op)
-    if (isNaN(codOpNum)) throw new AppError('Invalid order code', 400, 'INVALID_ID')
+    if (isNaN(codOpNum)) throw new AppError('Código de orden inválido', 400, 'INVALID_ID')
 
     const orden = await ordenProduccionService.findById(codOpNum)
     return sendSuccess(res, orden)
@@ -64,7 +64,7 @@ export class OrdenProduccionController {
   update = catchAsync(async (req: Request, res: Response) => {
     const { cod_op } = req.params
     const codOpNum = Number(cod_op)
-    if (isNaN(codOpNum)) throw new AppError('Invalid order code', 400, 'INVALID_ID')
+    if (isNaN(codOpNum)) throw new AppError('Código de orden inválido', 400, 'INVALID_ID')
 
     const orden = await ordenProduccionService.update(codOpNum, req.body)
     return sendSuccess(res, orden, 'Production order updated successfully')
@@ -76,7 +76,7 @@ export class OrdenProduccionController {
   remove = catchAsync(async (req: Request, res: Response) => {
     const { cod_op } = req.params
     const codOpNum = Number(cod_op)
-    if (isNaN(codOpNum)) throw new AppError('Invalid order code', 400, 'INVALID_ID')
+    if (isNaN(codOpNum)) throw new AppError('Código de orden inválido', 400, 'INVALID_ID')
 
     await ordenProduccionService.remove(codOpNum)
     return res.status(204).send()
@@ -88,7 +88,7 @@ export class OrdenProduccionController {
   getByObra = catchAsync(async (req: Request, res: Response) => {
     const { cod_obra } = req.params
     const codObraNum = Number(cod_obra)
-    if (isNaN(codObraNum)) throw new AppError('Invalid obra code', 400, 'INVALID_ID')
+    if (isNaN(codObraNum)) throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
 
     const ordenes = await ordenProduccionService.findByObra(codObraNum)
     return sendSuccess(res, ordenes)
@@ -100,7 +100,7 @@ export class OrdenProduccionController {
   getByObraAndFinalizada = catchAsync(async (req: Request, res: Response) => {
     const { cod_obra } = req.params
     const codObraNum = Number(cod_obra)
-    if (isNaN(codObraNum)) throw new AppError('Invalid obra code', 400, 'INVALID_ID')
+    if (isNaN(codObraNum)) throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
 
     const ordenes = await ordenProduccionService.findByObraAndFinalizada(codObraNum)
     return sendSuccess(res, ordenes)
@@ -112,7 +112,7 @@ export class OrdenProduccionController {
   iniciarProduccion = catchAsync(async (req: Request, res: Response) => {
     const { cod_op } = req.params
     const codOpNum = Number(cod_op)
-    if (isNaN(codOpNum)) throw new AppError('Invalid order code', 400, 'INVALID_ID')
+    if (isNaN(codOpNum)) throw new AppError('Código de orden inválido', 400, 'INVALID_ID')
 
     const orden = await ordenProduccionService.iniciarProduccion(codOpNum)
     return sendSuccess(res, orden, 'Production started for this order')
@@ -124,7 +124,7 @@ export class OrdenProduccionController {
   finalizarProduccion = catchAsync(async (req: Request, res: Response) => {
     const { cod_op } = req.params
     const codOpNum = Number(cod_op)
-    if (isNaN(codOpNum)) throw new AppError('Invalid order code', 400, 'INVALID_ID')
+    if (isNaN(codOpNum)) throw new AppError('Código de orden inválido', 400, 'INVALID_ID')
 
     const orden = await ordenProduccionService.finalizarProduccion(codOpNum)
     return sendSuccess(res, orden, 'Production order finalized successfully')

@@ -72,7 +72,7 @@ describe('ClienteService - Pruebas Unitarias', () => {
         visitasInicialesSinObra: 0
       })
 
-      await expect(clienteService.remove('111')).rejects.toThrow('No se puede eliminar el cliente porque tiene obras o visitas asociadas')
+      await expect(clienteService.remove('111')).rejects.toThrow('No se puede eliminar el cliente porque tiene obras o visitas asociadas. Debe desvincularlas antes.')
     })
 
     it('debería eliminar el cliente cuando no hay dependencias', async () => {

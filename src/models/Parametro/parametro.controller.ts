@@ -32,7 +32,7 @@ export class ParametroController {
   getOne = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params
     const idNum = Number(id)
-    if (isNaN(idNum)) throw new AppError('Invalid parameter ID', 400, 'INVALID_ID')
+    if (isNaN(idNum)) throw new AppError('ID de parámetro inválido', 400, 'INVALID_ID')
 
     const parameter = await parametroService.findById(idNum)
     return sendSuccess(res, parameter)
@@ -52,7 +52,7 @@ export class ParametroController {
   update = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params
     const idNum = Number(id)
-    if (isNaN(idNum)) throw new AppError('Invalid parameter ID', 400, 'INVALID_ID')
+    if (isNaN(idNum)) throw new AppError('ID de parámetro inválido', 400, 'INVALID_ID')
 
     const parameter = await parametroService.update(idNum, req.body)
     return sendSuccess(res, parameter, 'Parameter updated successfully')
@@ -64,7 +64,7 @@ export class ParametroController {
   remove = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params
     const idNum = Number(id)
-    if (isNaN(idNum)) throw new AppError('Invalid parameter ID', 400, 'INVALID_ID')
+    if (isNaN(idNum)) throw new AppError('ID de parámetro inválido', 400, 'INVALID_ID')
 
     await parametroService.remove(idNum)
     return res.status(204).send()

@@ -54,7 +54,7 @@ export class OrdenProduccionService {
   async findById(cod_op: number): Promise<orden_de_produccion> {
     const entry = await this.repository.findById(cod_op)
     if (!entry) {
-      throw new AppError('Production order not found', 404, 'ORDEN_NOT_FOUND')
+      throw new AppError('Orden de producción no encontrada', 404, 'ORDEN_NOT_FOUND')
     }
     return entry
   }
@@ -114,7 +114,7 @@ export class OrdenProduccionService {
 
     if (orden.estado !== 'EN PRODUCCION') {
       throw new ValidationError(
-        'Only orders that are "In Production" can be finalized.',
+        'Solo las órdenes que están "En Producción" pueden ser finalizadas.',
         'INVALID_STATE'
       )
     }
@@ -141,7 +141,7 @@ export class OrdenProduccionService {
 
     if (orden.estado !== 'VALIDADA') {
       throw new ValidationError(
-        'Only "Validated" orders can start production.',
+        'Solo las órdenes "Validadas" pueden iniciar producción.',
         'INVALID_STATE'
       )
     }

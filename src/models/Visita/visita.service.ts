@@ -123,7 +123,7 @@ export class VisitaService {
     )
     if (errMessages.length > 0) {
       throw new ValidationError(
-        `Agenda overlaps detected:\n${errMessages.join('\n')}`,
+        `Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`,
         'CONFLICTO_AGENDA',
       )
     }
@@ -176,7 +176,7 @@ export class VisitaService {
   async findById(cod_visita: number): Promise<VisitaWithRelations> {
     const visita = await this.visitaRepository.findById(cod_visita)
     if (!visita) {
-      throw new AppError('Visit not found', 404, 'VISITA_NOT_FOUND')
+      throw new AppError('Visita no encontrada', 404, 'VISITA_NOT_FOUND')
     }
     return visita
   }
@@ -285,7 +285,7 @@ export class VisitaService {
       const errMessages = results.filter((msg): msg is string => typeof msg === 'string')
       if (errMessages.length > 0) {
         throw new ValidationError(
-          `Agenda overlaps detected:\n${errMessages.join('\n')}`,
+          `Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`,
           'CONFLICTO_AGENDA'
         )
       }

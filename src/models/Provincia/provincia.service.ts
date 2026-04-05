@@ -18,7 +18,7 @@ export class ProvinciaService {
   async findById(cod_provincia: number): Promise<provincia> {
     const entry = await this.repository.findById(cod_provincia)
     if (!entry) {
-      throw new AppError('Province not found', 404, 'PROVINCIA_NOT_FOUND')
+      throw new AppError('Provincia no encontrada', 404, 'PROVINCIA_NOT_FOUND')
     }
     return entry
   }

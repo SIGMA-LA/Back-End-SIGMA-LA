@@ -50,12 +50,12 @@ export class AuthService {
   ): Promise<{ token: string; empleado: empleado; refreshToken: string }> {
     const empleado = await this.empleadoRepository.findByCuil(cuil)
     if (!empleado || !empleado.contrasenia) {
-      throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS')
+      throw new AppError('CUIL o contraseña incorrectos', 401, 'INVALID_CREDENTIALS')
     }
 
     const isValid = await this.verifyPassword(contrasenia, empleado.contrasenia)
     if (!isValid) {
-      throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS')
+      throw new AppError('CUIL o contraseña incorrectos', 401, 'INVALID_CREDENTIALS')
     }
 
     const token = this.generateToken(empleado)
@@ -118,7 +118,7 @@ export class AuthService {
   async getProfile(cuil: string): Promise<Omit<empleado, 'contrasenia' | 'refreshTokenHash'>> {
     const empleado = await this.empleadoRepository.findByCuil(cuil)
     if (!empleado) {
-      throw new AppError('User not found', 404, 'USER_NOT_FOUND')
+      throw new AppError('Usuario no encontrado', 404, 'USER_NOT_FOUND')
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -138,7 +138,7 @@ export class AuthService {
         env.NODE_AUTH_REFRESH_TOKEN,
       ) as jwt.JwtPayload
       if (!payload.cuil) {
-        throw new AppError('Invalid refresh token payload', 401, 'INVALID_REFRESH_TOKEN')
+        throw new AppError('Sesión expirada o inválida, por favor inicie sesión nuevamente', 401, 'INVALID_REFRESH_TOKEN')
       }
 
       const empleado = await this.empleadoRepository.findByCuil(payload.cuil)

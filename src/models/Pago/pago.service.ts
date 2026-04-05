@@ -29,7 +29,7 @@ export class PagoService {
 
     if (isNaN(nuevoMonto) || nuevoMonto <= 0) {
       throw new ValidationError(
-        'Payment amount must be a valid number greater than zero.',
+        'El monto del pago debe ser un número válido mayor a cero.',
         'INVALID_PAYMENT_AMOUNT'
       )
     }
@@ -41,7 +41,7 @@ export class PagoService {
       })
 
       if (!obra) {
-        throw new AppError('The obra does not exist.', 404, 'OBRA_NOT_FOUND')
+        throw new AppError('La obra no existe.', 404, 'OBRA_NOT_FOUND')
       }
 
       const presupuestoAceptado = obra.presupuesto.find(
@@ -50,7 +50,7 @@ export class PagoService {
 
       if (!presupuestoAceptado) {
         throw new ValidationError(
-          'Cannot register payment. The obra does not have an accepted budget.',
+          'No se puede registrar el pago. La obra no tiene un presupuesto aceptado.',
           'MISSING_ACCEPTED_BUDGET'
         )
       }
@@ -68,7 +68,7 @@ export class PagoService {
         // Check equivalence with 0.01 tolerance due to float precision
         if (Math.abs(nuevoMonto - montoRequerido) > 0.01) {
           throw new ValidationError(
-            `The first payment must be exactly 70% of the budget (${montoRequerido.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}).`,
+            `El primer pago debe ser exactamente el 70% del presupuesto (${montoRequerido.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}).`,
             'INVALID_FIRST_PAYMENT'
           )
         }
@@ -76,7 +76,7 @@ export class PagoService {
 
       if (nuevoMonto > montoRestante + 0.01) {
         throw new ValidationError(
-          `Payment amount (${nuevoMonto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}) exceeds the remaining balance (${montoRestante.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}).`,
+          `El monto del pago (${nuevoMonto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}) excede el saldo restante (${montoRestante.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}).`,
           'PAYMENT_EXCEEDS_BALANCE'
         )
       }
@@ -85,7 +85,7 @@ export class PagoService {
 
       if (esPagoFinal && obra.estado !== 'PRODUCCION FINALIZADA') {
         throw new ValidationError(
-          'Total payment can only be registered if the project status is "PRODUCCION FINALIZADA".',
+          'El pago total solo puede registrarse si el estado del proyecto es "PRODUCCION FINALIZADA".',
           'INVALID_STATE_FOR_FINAL_PAYMENT'
         )
       }
@@ -181,7 +181,7 @@ export class PagoService {
   async findById(id: number): Promise<pago> {
     const entry = await this.repository.findById(id)
     if (!entry) {
-      throw new AppError('Payment not found', 404, 'PAGO_NOT_FOUND')
+      throw new AppError('Pago no encontrado', 404, 'PAGO_NOT_FOUND')
     }
     return entry
   }

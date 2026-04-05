@@ -50,7 +50,7 @@ export class PresupuestoService {
   async findById(nro_presupuesto: number): Promise<presupuesto> {
     const entry = await this.repository.findById(nro_presupuesto)
     if (!entry) {
-      throw new AppError('Budget not found', 404, 'PRESUPUESTO_NOT_FOUND')
+      throw new AppError('Presupuesto no encontrado', 404, 'PRESUPUESTO_NOT_FOUND')
     }
     return entry
   }

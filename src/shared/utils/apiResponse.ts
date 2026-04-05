@@ -6,9 +6,16 @@ import { Response } from 'express'
  */
 
 export interface ApiResponse<T = unknown> {
-  status: 'success' | 'error'
+  status: 'success'
   message?: string
   data?: T
+}
+
+export interface ApiErrorResponse {
+  status: 'fail' | 'error'
+  message: string
+  errorCode: string
+  details?: unknown
 }
 
 /**
@@ -24,5 +31,24 @@ export const sendSuccess = <T>(
     status: 'success',
     message,
     data,
+  })
+}
+
+/**
+ * Standardized error sender.
+ */
+export const sendError = (
+  res: Response,
+  message: string,
+  errorCode: string = 'INTERNAL_SERVER_ERROR',
+  statusCode: number = 500,
+  details?: unknown,
+): Response<ApiErrorResponse> => {
+  const status = `${statusCode}`.startsWith('4') ? 'fail' : 'error'
+  return res.status(statusCode).json({
+    status,
+    message,
+    errorCode,
+    details,
   })
 }

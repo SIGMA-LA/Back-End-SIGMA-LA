@@ -72,7 +72,7 @@ export class ObraService {
   async findById(id: number): Promise<obra> {
     const entry = await this.repository.findById(id)
     if (!entry) {
-      throw new AppError('Obra not found', 404, 'OBRA_NOT_FOUND')
+      throw new AppError(`Obra no encontrada (ID: ${id})`, 404, 'OBRA_NOT_FOUND')
     }
     return entry
   }
@@ -315,7 +315,7 @@ export class ObraService {
     const obra = await this.findById(id)
     if (obra.estado !== 'PAGADA PARCIALMENTE') {
       throw new ValidationError(
-        'Stock can only be requested for projects with partial payment.',
+        'Solo se puede solicitar stock para obras con pago parcial.',
         'INVALID_STATE'
       )
     }
@@ -328,7 +328,7 @@ export class ObraService {
   async recibirStock(id: number): Promise<obra> {
     const obra = await this.findById(id)
     if (obra.estado !== 'EN ESPERA DE STOCK') {
-      throw new ValidationError('This project is not waiting for stock.', 'INVALID_STATE')
+      throw new ValidationError('Esta obra no está esperando stock.', 'INVALID_STATE')
     }
     return await this.repository.update(id, { estado: 'EN PRODUCCION' })
   }

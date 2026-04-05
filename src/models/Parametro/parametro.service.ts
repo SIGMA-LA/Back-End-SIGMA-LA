@@ -52,7 +52,7 @@ export class ParametroService {
   async findById(id: number): Promise<parametro> {
     const entry = await this.repository.findOne(id)
     if (!entry) {
-      throw new AppError('Parameter not found', 404, 'PARAMETRO_NOT_FOUND')
+      throw new AppError('Parámetro no encontrado', 404, 'PARAMETRO_NOT_FOUND')
     }
     return entry
   }

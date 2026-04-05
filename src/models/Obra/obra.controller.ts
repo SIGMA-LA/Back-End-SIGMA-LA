@@ -74,7 +74,7 @@ export class ObraController {
    */
   getOne = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
-    if (isNaN(id)) throw new AppError('Invalid obra ID', 400, 'INVALID_ID')
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
     
     const obra = await obraService.findById(id)
     return sendSuccess(res, obra)
@@ -99,7 +99,7 @@ export class ObraController {
 
     if (invalidQueryParams.length > 0) {
       throw new AppError(
-        'Invalid query parameters. Only estado, fechaDesde and fechaHasta are allowed.',
+        'Parámetros de consulta no válidos. Solo se permiten estado, fechaDesde y fechaHasta.',
         400,
         'INVALID_QUERY_PARAMS'
       )
@@ -118,24 +118,24 @@ export class ObraController {
     const normalizedFechaHasta = normalizeQueryValue(fechaHasta)
 
     if (!normalizedEstado) {
-      throw new AppError('The "estado" query parameter is required', 400, 'QUERY_PARAM_REQUIRED')
+      throw new AppError('El parámetro "estado" es requerido en la consulta', 400, 'QUERY_PARAM_REQUIRED')
     }
 
     if (
       !NOTAS_FABRICA_ESTADOS.includes(normalizedEstado as NotasFabricaEstado)
     ) {
-      throw new AppError('The state must be SIN_ORDEN, EN_PRODUCCION or FINALIZADA', 400, 'INVALID_STATE')
+      throw new AppError('El estado debe ser SIN_ORDEN, EN_PRODUCCION o FINALIZADA', 400, 'INVALID_STATE')
     }
 
     const fechaDesdeDate = normalizedFechaDesde ? new Date(normalizedFechaDesde) : null
     const fechaHastaDate = normalizedFechaHasta ? new Date(normalizedFechaHasta) : null
 
     if (normalizedFechaDesde && Number.isNaN(fechaDesdeDate?.getTime())) {
-      throw new AppError('Invalid fechaDesde', 400, 'INVALID_DATE')
+      throw new AppError('fechaDesde inválida', 400, 'INVALID_DATE')
     }
 
     if (normalizedFechaHasta && Number.isNaN(fechaHastaDate?.getTime())) {
-      throw new AppError('Invalid fechaHasta', 400, 'INVALID_DATE')
+      throw new AppError('fechaHasta inválida', 400, 'INVALID_DATE')
     }
 
     if (
@@ -143,7 +143,7 @@ export class ObraController {
       fechaHastaDate &&
       fechaDesdeDate.getTime() > fechaHastaDate.getTime()
     ) {
-      throw new AppError('fechaDesde cannot be later than fechaHasta', 400, 'INVALID_DATE_RANGE')
+      throw new AppError('fechaDesde no puede ser posterior a fechaHasta', 400, 'INVALID_DATE_RANGE')
     }
 
     const obras = await obraService.findNotasFabrica({
@@ -162,11 +162,11 @@ export class ObraController {
     const codObra = Number.parseInt(req.params.cod_obra, 10)
 
     if (Number.isNaN(codObra)) {
-      throw new AppError('Invalid obra code', 400, 'INVALID_ID')
+      throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
     }
 
     if (!req.file) {
-      throw new AppError('No file has been uploaded', 400, 'FILE_REQUIRED')
+      throw new AppError('No se ha subido ningún archivo', 400, 'FILE_REQUIRED')
     }
 
     const obra = await obraService.subirNotaFabrica(codObra, req.file)
@@ -180,7 +180,7 @@ export class ObraController {
     const codObra = Number.parseInt(req.params.cod_obra, 10)
 
     if (Number.isNaN(codObra)) {
-      throw new AppError('Invalid obra code', 400, 'INVALID_ID')
+      throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
     }
 
     const obra = await obraService.deleteNotaFabrica(codObra)
@@ -210,7 +210,7 @@ export class ObraController {
    */
   update = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
-    if (isNaN(id)) throw new AppError('Invalid obra ID', 400, 'INVALID_ID')
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
     
     const obra = await obraService.update(id, req.body)
     return sendSuccess(res, obra, 'Obra updated successfully')
@@ -221,7 +221,7 @@ export class ObraController {
    */
   bajaLogica = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
-    if (isNaN(id)) throw new AppError('Invalid obra ID', 400, 'INVALID_ID')
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
     
     const obra = await obraService.bajaLogica(id)
     return sendSuccess(res, obra, 'Obra cancelled successfully')
@@ -232,7 +232,7 @@ export class ObraController {
    */
   remove = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
-    if (isNaN(id)) throw new AppError('Invalid obra ID', 400, 'INVALID_ID')
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
     
     await obraService.remove(id)
     return res.status(204).send()
@@ -255,7 +255,7 @@ export class ObraController {
     if (search) {
       search = search.trim().replace(/[<>{}]/g, '')
       if (search.length > 100) {
-        throw new AppError('Search term is too long', 400, 'SEARCH_TOO_LONG')
+        throw new AppError('El término de búsqueda es demasiado largo', 400, 'SEARCH_TOO_LONG')
       }
     }
 
@@ -276,7 +276,7 @@ export class ObraController {
    */
   solicitarStock = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
-    if (isNaN(id)) throw new AppError('Invalid obra ID', 400, 'INVALID_ID')
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
     
     const obra = await obraService.solicitarStock(id)
     return sendSuccess(res, obra, 'Stock requested successfully')
@@ -287,7 +287,7 @@ export class ObraController {
    */
   recibirStock = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
-    if (isNaN(id)) throw new AppError('Invalid obra ID', 400, 'INVALID_ID')
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
     
     const obra = await obraService.recibirStock(id)
     return sendSuccess(res, obra, 'Stock received and obra now in production')

@@ -46,7 +46,7 @@ export class VisitaController {
     )
 
     if (!q) {
-      throw new AppError('Search parameter "q" is required', 400, 'MISSING_PARAMS')
+      throw new AppError('El parámetro de búsqueda "q" es requerido', 400, 'MISSING_PARAMS')
     }
 
     const estado = req.query.estado as string | undefined
@@ -114,7 +114,7 @@ export class VisitaController {
    */
   getVisitasByObra = catchAsync(async (req: Request, res: Response) => {
     const cod_obra = Number(req.params.cod_obra)
-    if (isNaN(cod_obra)) throw new AppError('Invalid obra code', 400, 'INVALID_ID')
+    if (isNaN(cod_obra)) throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
     
     const visitas = await visitaService.findByObra(cod_obra)
     return sendSuccess(res, visitas)

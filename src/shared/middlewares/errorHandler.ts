@@ -2,6 +2,8 @@ import express from 'express'
 import { Prisma } from '@prisma/client'
 import { env } from '../../config/env.js'
 import { AppError } from '../errors/AppError.js'
+import { sendError } from '../utils/apiResponse.js'
+import { ERROR_MAP } from '../utils/ERROR_MAP.js'
 
 export const errorHandler = (
   err: unknown,
@@ -36,19 +38,19 @@ export const errorHandler = (
       case 'P2002': // Unique constraint failed
         statusCode = 409
         errorCode = 'DUPLICATE_ENTRY'
-        message = 'Ya existe un registro con estos datos'
+        message = ERROR_MAP['DUPLICATE_ENTRY']
         details = err.meta
         break
       case 'P2003': // Foreign key constraint failed
         statusCode = 409
         errorCode = 'FOREIGN_KEY_CONSTRAINT'
-        message = 'No se puede realizar la operación debido a dependencias con otros registros'
+        message = ERROR_MAP['FOREIGN_KEY_CONSTRAINT']
         details = err.meta
         break
       case 'P2025': // Record not found
         statusCode = 404
         errorCode = 'RECORD_NOT_FOUND'
-        message = 'El registro solicitado no existe'
+        message = ERROR_MAP['RECORD_NOT_FOUND'] || 'El registro solicitado no existe'
         break
       default:
         errorCode = `PRISMA_${err.code}`
@@ -58,7 +60,6 @@ export const errorHandler = (
     message = err.message
     if (err.name === 'ValidationError' || err.name === 'ValiError') {
       statusCode = 400
-      status = 'fail'
       errorCode = (err as { code?: string }).code ?? 'VALIDATION_ERROR'
       isOperational = true
       
@@ -69,16 +70,17 @@ export const errorHandler = (
     }
   }
 
-  // Log error (in production maybe use a more sophisticated logger)
+  // Log error (with technical/English message)
   if (!isOperational || env.NODE_ENV === 'development') {
-    console.error(`[ERROR][${errorCode}]`, err)
+    console.error(`[ERROR_HANDLER][${errorCode}]`, err)
   }
 
-  res.status(statusCode).json({
-    status,
-    message: statusCode === 500 && env.NODE_ENV === 'production' ? 'Error interno del servidor' : message,
-    errorCode,
-    details: details ?? undefined,
-  })
+  // Final check against ERROR_MAP to ensure Spanish messaging in the response
+  const finalMessage = ERROR_MAP[errorCode] || 
+    (statusCode === 500 && env.NODE_ENV === 'production' 
+      ? ERROR_MAP['INTERNAL_SERVER_ERROR'] 
+      : message)
+
+  return sendError(res, finalMessage, errorCode, statusCode, details)
 }
 

@@ -23,7 +23,7 @@ export class ProvinciaController {
    */
   getOne = catchAsync(async (req: Request, res: Response) => {
     const codProvincia = parseInt(req.params.id, 10)
-    if (isNaN(codProvincia)) throw new AppError('Invalid province ID', 400, 'INVALID_ID')
+    if (isNaN(codProvincia)) throw new AppError('ID de provincia inválido', 400, 'INVALID_ID')
 
     const provincia = await provinciaService.findById(codProvincia)
     return sendSuccess(res, provincia)

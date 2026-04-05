@@ -15,7 +15,7 @@ describe('ObraService - Pruebas Unitarias', () => {
   describe('solicitarStock()', () => {
     it('debería fallar si la obra no existe', async () => {
       vi.spyOn(ObraRepository.prototype, 'findById').mockResolvedValue(null)
-      await expect(obraService.solicitarStock(99)).rejects.toThrow('Obra not found')
+      await expect(obraService.solicitarStock(99)).rejects.toThrow('Obra no encontrada (ID: 99)')
     })
 
     it('debería fallar si el estado no es PAGADA PARCIALMENTE', async () => {
@@ -23,7 +23,7 @@ describe('ObraService - Pruebas Unitarias', () => {
         cod_obra: 1,
         estado: 'PENDIENTE',
       } as any)
-      await expect(obraService.solicitarStock(1)).rejects.toThrow('Stock can only be requested for projects with partial payment.')
+      await expect(obraService.solicitarStock(1)).rejects.toThrow('Solo se puede solicitar stock para obras con pago parcial.')
     })
 
     it('debería cambiar a EN ESPERA DE STOCK exitosamente', async () => {
@@ -48,7 +48,7 @@ describe('ObraService - Pruebas Unitarias', () => {
         cod_obra: 1,
         estado: 'PENDIENTE',
       } as any)
-      await expect(obraService.recibirStock(1)).rejects.toThrow('This project is not waiting for stock.')
+      await expect(obraService.recibirStock(1)).rejects.toThrow('Esta obra no está esperando stock.')
     })
 
     it('debería cambiar a EN PRODUCCION exitosamente', async () => {

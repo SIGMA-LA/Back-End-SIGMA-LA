@@ -30,13 +30,13 @@ describe('Integration Tests - Auth Routes', () => {
 
       expect(response.status).toBe(401)
       expect(response.body.status).toBe('fail')
-      expect(response.body).toHaveProperty('message', 'Invalid credentials')
+      expect(response.body).toHaveProperty('message', 'CUIL o contraseña incorrectos')
     })
 
     it('debería devolver 400 si el body no pasa la validación del schema', async () => {
       const response = await request(app)
         .post('/api/auth/login')
-        .send({ cuil: '123', contrasenia: '' })
+        .send({ cuil: '20111111112', contrasenia: '' })
 
       expect(response.status).toBe(400)
     })

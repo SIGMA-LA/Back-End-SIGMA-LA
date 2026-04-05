@@ -60,20 +60,20 @@ describe('AuthService - Pruebas Unitarias', () => {
   describe('login()', () => {
     it('debería rechazar si el usuario o la contraseña no existen o son inválidos', async () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue(null)
-      await expect(authService.login('111', 'pass')).rejects.toThrow('Invalid credentials')
+      await expect(authService.login('20111111112', 'pass')).rejects.toThrow('CUIL o contraseña incorrectos')
 
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
-        cuil: '111',
+        cuil: '20111111112',
         contrasenia: 'hash',
       } as any)
       vi.mocked(bcrypt.compare).mockResolvedValue(false as any)
       
-      await expect(authService.login('111', 'badpass')).rejects.toThrow('Invalid credentials')
+      await expect(authService.login('20111111112', 'badpass')).rejects.toThrow('CUIL o contraseña incorrectos')
     })
 
     it('debería generar token y refreshToken si las credenciales son válidas', async () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
-        cuil: '111',
+        cuil: '20111111112',
         contrasenia: 'hash',
       } as any)
       vi.mocked(bcrypt.compare).mockResolvedValue(true as any)
@@ -84,11 +84,11 @@ describe('AuthService - Pruebas Unitarias', () => {
 
       const updateMock = vi.spyOn(EmpleadoRepository.prototype, 'updateRefreshTokenHash').mockResolvedValue(undefined)
 
-      const result = await authService.login('111', 'pass')
+      const result = await authService.login('20111111112', 'pass')
 
       expect(result.token).toBe('token-jwt')
       expect(result.refreshToken).toBe('refresh-token-jwt')
-      expect(updateMock).toHaveBeenCalledWith('111', 'hashed-refresh')
+      expect(updateMock).toHaveBeenCalledWith('20111111112', 'hashed-refresh')
     })
   })
 

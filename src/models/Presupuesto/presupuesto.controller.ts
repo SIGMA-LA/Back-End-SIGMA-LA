@@ -32,7 +32,7 @@ export class PresupuestoController {
   getOne = catchAsync(async (req: Request, res: Response) => {
     const { nro_presupuesto } = req.params
     const nroPrespuestoNum = Number(nro_presupuesto)
-    if (isNaN(nroPrespuestoNum)) throw new AppError('Invalid budget number', 400, 'INVALID_ID')
+    if (isNaN(nroPrespuestoNum)) throw new AppError('Número de presupuesto inválido', 400, 'INVALID_ID')
 
     const presupuesto = await presupuestoService.findById(nroPrespuestoNum)
     return sendSuccess(res, presupuesto)
@@ -44,7 +44,7 @@ export class PresupuestoController {
   update = catchAsync(async (req: Request, res: Response) => {
     const { nro_presupuesto } = req.params
     const nroPrespuestoNum = Number(nro_presupuesto)
-    if (isNaN(nroPrespuestoNum)) throw new AppError('Invalid budget number', 400, 'INVALID_ID')
+    if (isNaN(nroPrespuestoNum)) throw new AppError('Número de presupuesto inválido', 400, 'INVALID_ID')
 
     const presupuesto = await presupuestoService.update(nroPrespuestoNum, req.body)
     return sendSuccess(res, presupuesto, 'Budget updated successfully')
@@ -56,7 +56,7 @@ export class PresupuestoController {
   remove = catchAsync(async (req: Request, res: Response) => {
     const { nro_presupuesto } = req.params
     const nroPrespuestoNum = Number(nro_presupuesto)
-    if (isNaN(nroPrespuestoNum)) throw new AppError('Invalid budget number', 400, 'INVALID_ID')
+    if (isNaN(nroPrespuestoNum)) throw new AppError('Número de presupuesto inválido', 400, 'INVALID_ID')
 
     await presupuestoService.remove(nroPrespuestoNum)
     return res.status(204).send()

@@ -16,7 +16,7 @@ export class PagoController {
    */
   createForObra = catchAsync(async (req: Request, res: Response) => {
     const codObra = parseInt(req.params.cod_obra, 10)
-    if (isNaN(codObra)) throw new AppError('Invalid obra code', 400, 'INVALID_ID')
+    if (isNaN(codObra)) throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
 
     const nuevoPago = await pagoService.createForObra(codObra, req.body)
     return sendSuccess(res, nuevoPago, 'Payment registered successfully', 201)
@@ -77,7 +77,7 @@ export class PagoController {
    */
   getOne = catchAsync(async (req: Request, res: Response) => {
     const codPago = parseInt(req.params.id, 10)
-    if (isNaN(codPago)) throw new AppError('Invalid payment code', 400, 'INVALID_ID')
+    if (isNaN(codPago)) throw new AppError('Código de pago inválido', 400, 'INVALID_ID')
 
     const pago = await pagoService.findById(codPago)
     return sendSuccess(res, pago)
@@ -88,7 +88,7 @@ export class PagoController {
    */
   update = catchAsync(async (req: Request, res: Response) => {
     const codPago = parseInt(req.params.id, 10)
-    if (isNaN(codPago)) throw new AppError('Invalid payment code', 400, 'INVALID_ID')
+    if (isNaN(codPago)) throw new AppError('Código de pago inválido', 400, 'INVALID_ID')
 
     const pago = await pagoService.update(codPago, req.body)
     return sendSuccess(res, pago, 'Payment updated successfully')
@@ -99,7 +99,7 @@ export class PagoController {
    */
   remove = catchAsync(async (req: Request, res: Response) => {
     const codPago = parseInt(req.params.id, 10)
-    if (isNaN(codPago)) throw new AppError('Invalid payment code', 400, 'INVALID_ID')
+    if (isNaN(codPago)) throw new AppError('Código de pago inválido', 400, 'INVALID_ID')
 
     await pagoService.remove(codPago)
     return res.status(204).send()
@@ -110,7 +110,7 @@ export class PagoController {
    */
   getByObra = catchAsync(async (req: Request, res: Response) => {
     const codObra = parseInt(req.params.cod_obra, 10)
-    if (isNaN(codObra)) throw new AppError('Invalid obra code', 400, 'INVALID_ID')
+    if (isNaN(codObra)) throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
 
     const pagos = await pagoService.findByObra(codObra)
     return sendSuccess(res, pagos)
