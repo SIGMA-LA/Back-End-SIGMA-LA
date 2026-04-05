@@ -5,6 +5,7 @@ export interface OrdenProduccionFilters {
   estado?: string
   fechaDesde?: string
   fechaHasta?: string
+  cod_obra?: number
 }
 
 export class OrdenProduccionRepository {
@@ -27,6 +28,10 @@ export class OrdenProduccionRepository {
 
     if (filters?.estado) {
       andConditions.push({ estado: filters.estado })
+    }
+
+    if (filters?.cod_obra) {
+      andConditions.push({ cod_obra: filters.cod_obra })
     }
 
     if (filters?.fechaDesde || filters?.fechaHasta) {

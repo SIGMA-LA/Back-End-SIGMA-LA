@@ -6,36 +6,25 @@ import { createParametroSchema, updateParametroSchema } from 'sigma-la-schemas'
 const parametroController = new ParametroController()
 const parametroRouter = Router()
 
-parametroRouter.get('/', (req, res) => {
-  parametroController.getAll(req, res)
-})
+parametroRouter.get('/', parametroController.getAll)
 
 parametroRouter.post(
   '/',
   validate({ body: createParametroSchema }),
-  (req, res) => {
-    parametroController.create(req, res)
-  },
+  parametroController.create,
 )
 
-parametroRouter.get('/actual/viatico', (req, res) => {
-  parametroController.getActualViatico(req, res);
-})
+parametroRouter.get('/actual/viatico', parametroController.getActualViatico)
 
-parametroRouter.get('/:id', (req, res) => {
-  parametroController.getOne(req, res)
-})
+parametroRouter.get('/:id', parametroController.getOne)
 
 parametroRouter.put(
   '/:id',
   validate({ body: updateParametroSchema }),
-  (req, res) => {
-    parametroController.update(req, res)
-  },
+  parametroController.update,
 )
 
-parametroRouter.delete('/:id', (req, res) => {
-  parametroController.remove(req, res)
-})
+parametroRouter.delete('/:id', parametroController.remove)
+
 
 export default parametroRouter

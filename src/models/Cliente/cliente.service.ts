@@ -1,5 +1,6 @@
 import { Prisma, cliente } from '@prisma/client'
 import { ClienteRepository } from './cliente.repository.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 export interface ClienteDependencyDetails {
   obras: number
@@ -7,21 +8,8 @@ export interface ClienteDependencyDetails {
   visitasInicialesSinObra: number
 }
 
-export type ClienteRemoveResult =
-  | { status: 'deleted'; cliente: cliente }
-  | { status: 'not_found' }
-  | { status: 'has_dependencies'; details: ClienteDependencyDetails }
-
 /**
  * Servicio para manejar operaciones CRUD de clientes.
- * @class ClienteService
- * @method create - Crea un nuevo cliente.
- * @method findAll - Obtiene todos los clientes.
- * @method findById - Obtiene un cliente por su CUIL.
- * @method update - Actualiza un cliente existente.
- * @method remove - Elimina un cliente por su CUIL.
- * @returns {Promise<cliente | cliente[] | null>} - Resultado de la operación.
- * @throws {Error} - Si ocurre un error durante la operación.
  */
 export class ClienteService {
   private repository: ClienteRepository
@@ -31,10 +19,9 @@ export class ClienteService {
   }
 
   async create(data: Prisma.clienteCreateInput): Promise<cliente> {
-    // Asegurarse de que data.cuil es string
     const existingCliente = await this.repository.findById(data.cuil)
     if (existingCliente) {
-      throw new Error('Ya existe un cliente con el mismo CUIL.')
+      throw new AppError('Ya existe un cliente con el mismo CUIL.', 409, 'DUPLICATE_CLIENTE')
     }
     return await this.repository.create(data)
   }
@@ -43,8 +30,12 @@ export class ClienteService {
     return await this.repository.findAll()
   }
 
-  async findById(cuil: string): Promise<cliente | null> {
-    return await this.repository.findById(cuil)
+  async findById(cuil: string): Promise<cliente> {
+    const cliente = await this.repository.findById(cuil)
+    if (!cliente) {
+      throw new AppError('Cliente no encontrado', 404, 'CLIENTE_NOT_FOUND')
+    }
+    return cliente
   }
 
   async buscar(q: string, page = 1, pageSize = 25): Promise<cliente[]> {
@@ -57,18 +48,12 @@ export class ClienteService {
     cuil: string,
     data: Prisma.clienteUpdateInput,
   ): Promise<cliente> {
-    const existingCliente = await this.repository.findById(cuil)
-    if (!existingCliente) {
-      throw new Error('No existe un cliente con el CUIL proporcionado.')
-    }
+    await this.findById(cuil) // Throws if not found
     return await this.repository.update(cuil, data)
   }
 
-  async remove(cuil: string): Promise<ClienteRemoveResult> {
-    const existingCliente = await this.repository.findById(cuil)
-    if (!existingCliente) {
-      return { status: 'not_found' }
-    }
+  async remove(cuil: string): Promise<void> {
+    await this.findById(cuil) // Throws if not found
 
     const dependencyCounts = await this.repository.countDeleteDependencies(cuil)
 
@@ -77,30 +62,35 @@ export class ClienteService {
       dependencyCounts.visitasConObra > 0 ||
       dependencyCounts.visitasInicialesSinObra > 0
     ) {
-      return {
-        status: 'has_dependencies',
-        details: dependencyCounts,
-      }
+      throw new AppError(
+        'No se puede eliminar el cliente porque tiene obras o visitas asociadas. Debe desvincularlas antes.',
+        409,
+        'CLIENTE_HAS_DEPENDENCIES',
+        true,
+        dependencyCounts
+      )
     }
 
     try {
-      const deletedCliente = await this.repository.delete(cuil)
-      return { status: 'deleted', cliente: deletedCliente }
+      await this.repository.delete(cuil)
     } catch (error: unknown) {
-      // Safety net for concurrent writes between dependency check and delete.
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2003'
       ) {
         const refreshedDependencyCounts =
           await this.repository.countDeleteDependencies(cuil)
-        return {
-          status: 'has_dependencies',
-          details: refreshedDependencyCounts,
-        }
+        throw new AppError(
+          'No se puede eliminar el cliente debido a dependencias detectadas.',
+          409,
+          'CLIENTE_HAS_DEPENDENCIES',
+          true,
+          refreshedDependencyCounts
+        )
       }
 
       throw error
     }
   }
 }
+

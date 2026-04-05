@@ -4,24 +4,15 @@ import { EntregaEmpleadoController } from './entregaEmpleado.controller.js'
 const entregaEmpleadoController = new EntregaEmpleadoController()
 const entregaEmpleadoRouter = Router()
 
-entregaEmpleadoRouter.get('/', (req, res) => {
-  entregaEmpleadoController.getAll(req, res)
-})
+entregaEmpleadoRouter.get('/', entregaEmpleadoController.getAll)
 
-entregaEmpleadoRouter.post('/', (req, res) => {
-  entregaEmpleadoController.create(req, res)
-})
+entregaEmpleadoRouter.post('/', entregaEmpleadoController.create)
 
-entregaEmpleadoRouter.get('/:id/:cuil', (req, res) => {
-  entregaEmpleadoController.getOne(req, res)
-})
+entregaEmpleadoRouter.get('/:id/:cuil', entregaEmpleadoController.getOne)
 
-entregaEmpleadoRouter.put('/:id/:cuil', (req, res) => {
-  entregaEmpleadoController.update(req, res)
-})
+entregaEmpleadoRouter.put('/:id/:cuil', entregaEmpleadoController.update)
 
-entregaEmpleadoRouter.delete('/:id/:cuil', (req, res) => {
-  entregaEmpleadoController.remove(req, res)
-})
+entregaEmpleadoRouter.delete('/:id/:cuil', entregaEmpleadoController.remove)
+
 
 export default entregaEmpleadoRouter

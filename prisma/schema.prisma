@@ -21,20 +21,20 @@ model cliente {
 }
 
 model empleado {
-  cuil                String               @id
-  nombre              String               @db.VarChar(50)
-  apellido            String               @db.VarChar(50)
-  rol_actual          String               @db.VarChar(50)
-  area_trabajo        String               @db.VarChar(50)
-  contrasenia         String?              @db.VarChar(255)
-  refreshTokenHash    String?              @db.VarChar(255)
-  activo              Boolean              @default(true)
-  mail                String?              @db.VarChar(100)
-  notificacion_email  Boolean              @default(false)
-  notificacion_whatsapp Boolean            @default(false)
-  config_coordinacion config_coordinacion?
-  empleado_visita     empleado_visita[]
-  entrega_empleado    entrega_empleado[]
+  cuil                  String               @id
+  nombre                String               @db.VarChar(50)
+  apellido              String               @db.VarChar(50)
+  rol_actual            String               @db.VarChar(50)
+  area_trabajo          String               @db.VarChar(50)
+  contrasenia           String?              @db.VarChar(255)
+  refreshTokenHash      String?              @db.VarChar(255)
+  activo                Boolean              @default(true)
+  mail                  String?              @db.VarChar(100)
+  notificacion_email    Boolean              @default(false)
+  notificacion_whatsapp Boolean              @default(false)
+  config_coordinacion   config_coordinacion?
+  empleado_visita       empleado_visita[]
+  entrega_empleado      entrega_empleado[]
 }
 
 model empleado_visita {

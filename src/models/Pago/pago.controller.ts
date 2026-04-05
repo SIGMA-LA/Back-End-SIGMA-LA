@@ -1,125 +1,121 @@
 import { PagoService } from './pago.service.js'
 import { Request, Response } from 'express'
+import { catchAsync } from '../../shared/utils/catchAsync.js'
+import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { AppError } from '../../shared/errors/AppError.js'
+import { ValidationError } from '../../shared/errors/validationError.js'
 
 const pagoService = new PagoService()
 
 /**
- * Controlador para manejar las rutas de los pagos.
- * @class PagoController
- * @method create - Maneja la creación de un nuevo pago.
- * @method getAll - Maneja la obtención de todos los pagos.
- * @method getOne - Maneja la obtención de un pago por su código.
- * @method update - Maneja la actualización de un pago existente.
- * @method remove - Maneja la eliminación de un pago por su código.
- * @returns {Promise<void>} - Respuesta HTTP.
- * @throws {Error} - Si ocurre un error durante la operación.
+ * Controller to handle payment (pago) routes.
  */
 export class PagoController {
-  async createForObra(req: Request, res: Response) {
-    const nuevoPago = await pagoService.createForObra(
-      parseInt(req.params.cod_obra, 10),
-      req.body,
-    )
-    res.status(201).json(nuevoPago)
-  }
+  /**
+   * Creates a new payment for a specific construction project (obra).
+   */
+  createForObra = catchAsync(async (req: Request, res: Response) => {
+    const codObra = parseInt(req.params.cod_obra, 10)
+    if (isNaN(codObra)) throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
 
-  async getAll(req: Request, res: Response) {
-    try {
-      const filters = {
-        search: req.query.search as string,
-        cliente: req.query.cliente as string,
-        fechaDesde: req.query.fechaDesde as string,
-        fechaHasta: req.query.fechaHasta as string,
-        obra: req.query.obra as string,
-        montoMin: req.query.montoMin
-          ? parseFloat(req.query.montoMin as string)
-          : undefined,
-        montoMax: req.query.montoMax
-          ? parseFloat(req.query.montoMax as string)
-          : undefined,
-      }
+    const nuevoPago = await pagoService.createForObra(codObra, req.body)
+    return sendSuccess(res, nuevoPago, 'Payment registered successfully', 201)
+  })
 
-      if (filters.fechaDesde && filters.fechaHasta) {
-        const fechaDesde = new Date(filters.fechaDesde)
-        const fechaHasta = new Date(filters.fechaHasta)
-        if (fechaDesde > fechaHasta) {
-          return res.status(400).json({
-            message: 'La fecha desde no puede ser mayor que la fecha hasta',
-          })
-        }
-      }
-
-      if (filters.montoMin !== undefined && filters.montoMax !== undefined) {
-        if (filters.montoMin > filters.montoMax) {
-          return res.status(400).json({
-            message: 'El monto mínimo no puede ser mayor que el monto máximo',
-          })
-        }
-      }
-
-      if (filters.cliente) {
-        filters.cliente = filters.cliente.replace(/[<>{}]/g, '')
-      }
-      if (filters.obra) {
-        filters.obra = filters.obra.replace(/[<>{}]/g, '')
-      }
-      if (filters.search) {
-        filters.search = filters.search.replace(/[<>{}]/g, '')
-      }
-
-      Object.keys(filters).forEach(key => {
-        const value = filters[key as keyof typeof filters]
-        if (
-          value === undefined ||
-          value === '' ||
-          (typeof value === 'number' && isNaN(value))
-        ) {
-          delete filters[key as keyof typeof filters]
-        }
-      })
-
-      const pagos = await pagoService.findAll(
-        Object.keys(filters).length > 0 ? filters : undefined,
-      )
-      res.status(200).json(pagos)
-    } catch (error) {
-      console.error('Error al obtener pagos:', error)
-      res.status(500).json({
-        message: 'Error interno del servidor al obtener pagos',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
+  /**
+   * Gets all payments with optional filtering.
+   */
+  getAll = catchAsync(async (req: Request, res: Response) => {
+    const filters = {
+      search: req.query.search as string,
+      cliente: req.query.cliente as string,
+      fechaDesde: req.query.fechaDesde as string,
+      fechaHasta: req.query.fechaHasta as string,
+      obra: req.query.obra as string,
+      montoMin: req.query.montoMin ? parseFloat(req.query.montoMin as string) : undefined,
+      montoMax: req.query.montoMax ? parseFloat(req.query.montoMax as string) : undefined,
     }
-  }
 
-  async create(req: Request, res: Response) {
+    // Validation: Date range
+    if (filters.fechaDesde && filters.fechaHasta) {
+      const fechaDesde = new Date(filters.fechaDesde)
+      const fechaHasta = new Date(filters.fechaHasta)
+      if (fechaDesde > fechaHasta) {
+        throw new ValidationError('Start date cannot be greater than end date', 'INVALID_DATE_RANGE')
+      }
+    }
+
+    // Validation: Amount range
+    if (filters.montoMin !== undefined && filters.montoMax !== undefined) {
+      if (filters.montoMin > filters.montoMax) {
+        throw new ValidationError('Minimum amount cannot be greater than maximum amount', 'INVALID_AMOUNT_RANGE')
+      }
+    }
+
+    // Sanitization and cleanup
+    const cleanFilters: Record<string, string | number | boolean> = {}
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== '' && !(typeof value === 'number' && isNaN(value))) {
+        cleanFilters[key] = typeof value === 'string' ? value.replace(/[<>{}]/g, '') : value
+      }
+    })
+
+    const pagos = await pagoService.findAll(Object.keys(cleanFilters).length > 0 ? cleanFilters : undefined)
+    return sendSuccess(res, pagos)
+  })
+
+  /**
+   * Creates a basic payment entry.
+   */
+  create = catchAsync(async (req: Request, res: Response) => {
     const nuevo = await pagoService.createOne(req.body)
-    res.status(201).json(nuevo)
-  }
+    return sendSuccess(res, nuevo, 'Payment created successfully', 201)
+  })
 
-  async getOne(req: Request, res: Response) {
-    const cod_pago = parseInt(req.params.id, 10)
-    const pago = await pagoService.findById(cod_pago)
-    if (!pago) {
-      return res.status(404).json({ message: 'Pago no encontrado' })
-    }
-    res.json(pago)
-  }
+  /**
+   * Gets a specific payment by ID.
+   */
+  getOne = catchAsync(async (req: Request, res: Response) => {
+    const codPago = parseInt(req.params.id, 10)
+    if (isNaN(codPago)) throw new AppError('Código de pago inválido', 400, 'INVALID_ID')
 
-  async update(req: Request, res: Response) {
-    const cod_pago = parseInt(req.params.id, 10)
-    const pago = await pagoService.update(cod_pago, req.body)
-    res.json(pago)
-  }
+    const pago = await pagoService.findById(codPago)
+    return sendSuccess(res, pago)
+  })
 
-  async remove(req: Request, res: Response) {
-    const cod_pago = parseInt(req.params.id, 10)
-    const pago = await pagoService.remove(cod_pago)
-    res.json(pago)
-  }
+  /**
+   * Updates an existing payment.
+   */
+  update = catchAsync(async (req: Request, res: Response) => {
+    const codPago = parseInt(req.params.id, 10)
+    if (isNaN(codPago)) throw new AppError('Código de pago inválido', 400, 'INVALID_ID')
 
-  async getByObra(req: Request, res: Response) {
-    const cod_obra = parseInt(req.params.cod_obra, 10)
-    const pagos = await pagoService.findByObra(cod_obra)
-    res.status(200).json(pagos)
-  }
+    const pago = await pagoService.update(codPago, req.body)
+    return sendSuccess(res, pago, 'Payment updated successfully')
+  })
+
+  /**
+   * Removes a payment by its ID.
+   */
+  remove = catchAsync(async (req: Request, res: Response) => {
+    const codPago = parseInt(req.params.id, 10)
+    if (isNaN(codPago)) throw new AppError('Código de pago inválido', 400, 'INVALID_ID')
+
+    await pagoService.remove(codPago)
+    return res.status(204).send()
+  })
+
+  /**
+   * Gets all payments associated with a specific construction project.
+   */
+  getByObra = catchAsync(async (req: Request, res: Response) => {
+    const codObra = parseInt(req.params.cod_obra, 10)
+    if (isNaN(codObra)) throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
+
+    const pagos = await pagoService.findByObra(codObra)
+    return sendSuccess(res, pagos)
+  })
 }
+
+export const pagoController = new PagoController()
+

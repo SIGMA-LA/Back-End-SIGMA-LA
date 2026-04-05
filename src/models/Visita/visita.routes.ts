@@ -6,21 +6,13 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 const visitaController = new VisitaController()
 const visitaRouter = Router()
 
-visitaRouter.get('/', (req, res) => {
-  visitaController.getAll(req, res)
-})
+visitaRouter.get('/', visitaController.getAll)
 
-visitaRouter.post('/', (req, res) => {
-  visitaController.create(req, res)
-})
+visitaRouter.post('/', visitaController.create)
 
-visitaRouter.get('/buscar', (req, res) => {
-  visitaController.buscar(req, res)
-})
+visitaRouter.get('/buscar', visitaController.buscar)
 
-visitaRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
-  visitaController.getOne(req, res)
-})
+visitaRouter.get('/:id', validate({ params: idParamsSchema }), visitaController.getOne)
 
 /**
  * [PARCHE TEMPORAL]
@@ -35,38 +27,25 @@ visitaRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
  * TODO: Corregir los esquemas en 'sigma-la-schemas' para usar un formato de fecha
  * más flexible o una expresión regular antes de reactivar este middleware.
  */
-visitaRouter.put('/:id', (req, res) => {
-  visitaController.update(req, res)
-})
+visitaRouter.put('/:id', visitaController.update)
 
 visitaRouter.delete(
   '/:id',
   validate({ params: idParamsSchema }),
-  (req, res) => {
-    visitaController.remove(req, res)
-  },
+  visitaController.remove,
 )
 
-visitaRouter.get('/empleado/:cuil/:estado', (req, res) => {
-  visitaController.getVisitasByEmpleadoAndEstado(req, res)
-})
+visitaRouter.get('/empleado/:cuil/:estado', visitaController.getVisitasByEmpleadoAndEstado)
 
 // GET /api/visitas/empleado/:cuil - Todas las visitas de un empleado
-visitaRouter.get('/empleado/:cuil', (req, res) => {
-  visitaController.getVisitasByEmpleado(req, res)
-})
+visitaRouter.get('/empleado/:cuil', visitaController.getVisitasByEmpleado)
 
 // GET /api/visitas/obra/:cod_obra - Visitas asociadas a una obra
-visitaRouter.get('/obra/:cod_obra', (req, res) => {
-  visitaController.getVisitasByObra(req, res)
-})
+visitaRouter.get('/obra/:cod_obra', visitaController.getVisitasByObra)
 
-visitaRouter.patch('/:id/finalizar', (req, res) => {
-  visitaController.finalizarVisita(req, res)
-})
+visitaRouter.patch('/:id/finalizar', visitaController.finalizarVisita)
 
-visitaRouter.patch('/:id/cancelar', (req, res) => {
-  visitaController.cancelarVisita(req, res)
-})
+visitaRouter.patch('/:id/cancelar', visitaController.cancelarVisita)
+
 
 export default visitaRouter

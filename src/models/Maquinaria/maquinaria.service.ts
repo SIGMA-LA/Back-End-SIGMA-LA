@@ -1,6 +1,7 @@
 import { Prisma, maquinaria } from '@prisma/client'
 import { MaquinariaRepository } from './maquinaria.repository.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 export type AvailabilityStatus = 'DISPONIBLE' | 'ADVERTENCIA' | 'NO_DISPONIBLE'
 
@@ -11,14 +12,6 @@ export type MaquinariaConDisponibilidad = maquinaria & {
 
 /**
  * Servicio para manejar operaciones CRUD de maquinaria.
- * @class MaquinariaService
- * @method create - Crea una nueva maquinaria.
- * @method findAll - Obtiene todas las maquinarias.
- * @method findById - Obtiene una maquinaria por su código.
- * @method update - Actualiza una maquinaria existente.
- * @method remove - Elimina una maquinaria por su código.
- * @returns {Promise<maquinaria | maquinaria[] | null>} - Resultado de la operación.
- * @throws {Error} - Si ocurre un error durante la operación.
  */
 export class MaquinariaService {
   private repository: MaquinariaRepository
@@ -98,7 +91,6 @@ export class MaquinariaService {
   }
 
   async create(data: Prisma.maquinariaCreateInput): Promise<maquinaria> {
-    // Establecer estado por defecto si no se proporciona
     const maquinariaData = {
       ...data,
       estado: data.estado || 'DISPONIBLE',
@@ -113,8 +105,12 @@ export class MaquinariaService {
     return await this.repository.findAll(filters)
   }
 
-  async findById(cod_maquina: number): Promise<maquinaria | null> {
-    return await this.repository.findById(cod_maquina)
+  async findById(cod_maquina: number): Promise<maquinaria> {
+    const maquina = await this.repository.findById(cod_maquina)
+    if (!maquina) {
+      throw new AppError('No existe una maquinaria con el código proporcionado.', 404, 'MAQUINARIA_NOT_FOUND')
+    }
+    return maquina
   }
 
   async findDisponibles(): Promise<maquinaria[]> {
@@ -125,24 +121,19 @@ export class MaquinariaService {
     cod_maquina: number,
     data: Prisma.maquinariaUpdateInput,
   ): Promise<maquinaria> {
-    const existingMaquinaria = await this.repository.findById(cod_maquina)
-    if (!existingMaquinaria) {
-      throw new Error('No existe una maquinaria con el código proporcionado.')
-    }
+    await this.findById(cod_maquina) // Throws if not found
     return await this.repository.update(cod_maquina, data)
   }
 
   async updateEstado(cod_maquina: number, estado: string): Promise<maquinaria> {
-    const existingMaquinaria = await this.repository.findById(cod_maquina)
-    if (!existingMaquinaria) {
-      throw new Error('No existe una maquinaria con el código proporcionado.')
-    }
+    await this.findById(cod_maquina) // Throws if not found
 
-    // Validar estados permitidos
     const estadosValidos = ['DISPONIBLE', 'NO DISPONIBLE']
     if (!estadosValidos.includes(estado)) {
-      throw new Error(
+      throw new AppError(
         'Estado no válido. Estados permitidos: ' + estadosValidos.join(', '),
+        400,
+        'INVALID_STATUS'
       )
     }
 
@@ -150,10 +141,8 @@ export class MaquinariaService {
   }
 
   async remove(cod_maquina: number): Promise<maquinaria> {
-    const existingMaquinaria = await this.repository.findById(cod_maquina)
-    if (!existingMaquinaria) {
-      throw new Error('No existe una maquinaria con el código proporcionado.')
-    }
+    await this.findById(cod_maquina) // Throws if not found
     return await this.repository.delete(cod_maquina)
   }
 }
+

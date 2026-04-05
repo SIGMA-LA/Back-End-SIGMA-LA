@@ -3,6 +3,9 @@ import { registerSchema, loginSchema } from './auth.schemas.js'
 import { parse } from 'valibot'
 import { Request, Response } from 'express'
 import { env } from '../../config/env.js'
+import { catchAsync } from '../../shared/utils/catchAsync.js'
+import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 const baseCookieOptions = {
   httpOnly: true,
@@ -12,10 +15,7 @@ const baseCookieOptions = {
 }
 
 /**
- * Controlador para manejar los endpoints de autenticación.
- * @class AuthController
- * @method register - POST /api/auth/register
- * @method login - POST /api/auth/login
+ * Controller to handle authentication endpoints.
  */
 export class AuthController {
   private authService: AuthService
@@ -24,102 +24,97 @@ export class AuthController {
     this.authService = new AuthService()
   }
 
-  async register(req: Request, res: Response) {
-    try {
-      const data = parse(registerSchema, req.body)
-      const empleado = await this.authService.register(data)
-      res.status(201).json({ empleado })
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido'
-      res.status(400).json({ error: message })
+  /**
+   * Registers a new employee.
+   */
+  register = catchAsync(async (req: Request, res: Response) => {
+    const data = parse(registerSchema, req.body)
+    const empleado = await this.authService.register(data)
+    return sendSuccess(res, { empleado }, 'User registered successfully', 201)
+  })
+
+  /**
+   * Logs in an employee and sets authentication cookies.
+   */
+  login = catchAsync(async (req: Request, res: Response) => {
+    const { cuil, contrasenia } = parse(loginSchema, req.body)
+    const { token, refreshToken, empleado } = await this.authService.login(
+      cuil,
+      contrasenia,
+    )
+
+    res.cookie('accessToken', token, {
+      ...baseCookieOptions,
+      maxAge: 8 * 60 * 60 * 1000,
+    })
+    res.cookie('refreshToken', refreshToken, {
+      ...baseCookieOptions,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    })
+
+    const usuarioSeguro = {
+      cuil: empleado.cuil,
+      nombre: empleado.nombre,
+      apellido: empleado.apellido,
+      rol_actual: empleado.rol_actual,
     }
-  }
 
-  async login(req: Request, res: Response) {
-    try {
-      const { cuil, contrasenia } = parse(loginSchema, req.body)
-      const { token, refreshToken, empleado } = await this.authService.login(
-        cuil,
-        contrasenia,
-      )
+    res.cookie('usuario', JSON.stringify(usuarioSeguro), {
+      ...baseCookieOptions,
+      maxAge: 8 * 60 * 60 * 1000,
+    })
 
-      res.cookie('accessToken', token, {
-        ...baseCookieOptions,
-        maxAge: 8 * 60 * 60 * 1000,
-      })
-      res.cookie('refreshToken', refreshToken, {
-        ...baseCookieOptions,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-      })
+    return sendSuccess(res, {
+      usuario: usuarioSeguro,
+      accessToken: token,
+      refreshToken,
+    }, 'Login successful')
+  })
 
-      const usuarioSeguro = {
-        cuil: empleado.cuil,
-        nombre: empleado.nombre,
-        apellido: empleado.apellido,
-        rol_actual: empleado.rol_actual,
-      }
+  /**
+   * Logs out an employee and clears authentication cookies.
+   */
+  logout = catchAsync(async (req: Request, res: Response) => {
+    res.clearCookie('accessToken', baseCookieOptions)
+    res.clearCookie('refreshToken', baseCookieOptions)
+    res.clearCookie('usuario', baseCookieOptions)
 
-      res.cookie('usuario', JSON.stringify(usuarioSeguro), {
-        ...baseCookieOptions,
-        maxAge: 8 * 60 * 60 * 1000,
-      })
+    const refreshToken = req.cookies?.refreshToken || req.body.refreshToken
+    await this.authService.logout(refreshToken)
 
-      res.status(200).json({
-        usuario: usuarioSeguro,
-        accessToken: token,
-        refreshToken,
-      })
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido'
-      res.status(401).json({ error: message })
+    return res.status(204).send()
+  })
+
+  /**
+   * Gets the profile of the currently logged-in employee.
+   */
+  getProfile = catchAsync(async (req: Request, res: Response) => {
+    const cuil = req.user?.cuil
+    if (!cuil) throw new AppError('Authentication required', 401, 'UNAUTHORIZED')
+
+    const empleado = await this.authService.getProfile(cuil)
+    return sendSuccess(res, empleado)
+  })
+
+  /**
+   * Refreshes the access token using the refresh token cookie.
+   */
+  refresh = catchAsync(async (req: Request, res: Response) => {
+    const refreshToken = req.cookies?.refreshToken
+    if (!refreshToken) {
+      throw new AppError('No refresh token provided', 401, 'MISSING_REFRESH_TOKEN')
     }
-  }
 
-  async logout(req: Request, res: Response) {
-    try {
-      res.clearCookie('accessToken', baseCookieOptions)
-      res.clearCookie('refreshToken', baseCookieOptions)
-      res.clearCookie('usuario', baseCookieOptions)
-      const refreshToken = req.cookies?.refreshToken || req.body.refreshToken
-      await this.authService.logout(refreshToken)
-      res.status(204).send()
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido'
-      res.status(400).json({ error: message })
-    }
-  }
+    const { token } = await this.authService.refreshAccessToken(refreshToken)
 
-  async getProfile(req: Request, res: Response) {
-    try {
-      const cuil = req.user?.cuil
-      const empleado = await this.authService.getProfile(cuil ? cuil : '')
-      res.status(200).json(empleado)
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido'
-      res.status(404).json({ error: message })
-    }
-  }
+    res.cookie('accessToken', token, {
+      ...baseCookieOptions,
+      maxAge: 8 * 60 * 60 * 1000,
+    })
 
-  async refresh(req: Request, res: Response) {
-    try {
-      const refreshToken = req.cookies.refreshToken
-      if (!refreshToken) {
-        return res.status(401).json({ error: 'No hay refresh token' })
-      }
-      const { token } = await this.authService.refreshAccessToken(refreshToken)
-      res.cookie('accessToken', token, {
-        ...baseCookieOptions,
-        maxAge: 8 * 60 * 60 * 1000,
-      })
-      res.status(200).json({ message: 'Token refrescado' })
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido'
-      res.status(401).json({ error: message })
-    }
-  }
+    return sendSuccess(res, { message: 'Token refreshed' })
+  })
 }
+
+export const authController = new AuthController()
+

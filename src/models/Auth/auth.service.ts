@@ -4,16 +4,12 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 import { env } from '../../config/env.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 const JWT_EXPIRES_IN = '8h'
 
 /**
- * Servicio para manejar la autenticación de empleados.
- * @class AuthService
- * @method register - Registra un nuevo empleado (visitador) con contraseña encriptada.
- * @method login - Valida credenciales y genera JWT.
- * @method verifyPassword - Compara contraseñas.
- * @method generateToken - Genera un JWT con id y rol.
+ * Service to manage authentication (auth) operations for employees.
  */
 export class AuthService {
   private empleadoRepository: EmpleadoRepository
@@ -23,9 +19,9 @@ export class AuthService {
   }
 
   /**
-   * Registra un nuevo empleado (visitador) con contraseña encriptada.
-   * @param {object} data - Datos del empleado (cuil, nombre, apellido, rol_actual, area_trabajo, contrasenia)
-   * @returns {Promise<empleado>} - Empleado creado
+   * Registers a new employee (visitador) with an encrypted password.
+   * @param data Employee data (cuil, nombre, apellido, rol_actual, area_trabajo, contrasenia).
+   * @returns The created employee.
    */
   async register(data: {
     cuil: string
@@ -43,10 +39,10 @@ export class AuthService {
   }
 
   /**
-   * Inicia sesión validando credenciales y genera JWT.
-   * @param {bigint} cuil - CUIL del empleado
-   * @param {string} contrasenia - Contraseña en texto plano
-   * @returns {Promise<{ token: string, empleado: empleado, refreshToken: string }>} - JWT y datos del empleado
+   * Logs in an employee by validating credentials and generating a JWT.
+   * @param cuil Employee CUIL.
+   * @param contrasenia Plain text password.
+   * @returns An object containing the JWT, employee data, and refresh token.
    */
   async login(
     cuil: string,
@@ -54,12 +50,14 @@ export class AuthService {
   ): Promise<{ token: string; empleado: empleado; refreshToken: string }> {
     const empleado = await this.empleadoRepository.findByCuil(cuil)
     if (!empleado || !empleado.contrasenia) {
-      throw new Error('Credenciales inválidas')
+      throw new AppError('CUIL o contraseña incorrectos', 401, 'INVALID_CREDENTIALS')
     }
+
     const isValid = await this.verifyPassword(contrasenia, empleado.contrasenia)
     if (!isValid) {
-      throw new Error('Credenciales inválidas')
+      throw new AppError('CUIL o contraseña incorrectos', 401, 'INVALID_CREDENTIALS')
     }
+
     const token = this.generateToken(empleado)
 
     const refreshToken = jwt.sign(
@@ -67,11 +65,17 @@ export class AuthService {
       env.NODE_AUTH_REFRESH_TOKEN,
       { expiresIn: '30d' },
     )
+
     const hash = await bcrypt.hash(refreshToken, 10)
     await this.empleadoRepository.updateRefreshTokenHash(empleado.cuil, hash)
+
     return { token, refreshToken, empleado }
   }
 
+  /**
+   * Logs out an employee by clearing their refresh token hash.
+   * @param refreshToken The refresh token to invalidate.
+   */
   async logout(refreshToken: string): Promise<void> {
     if (!refreshToken) return
     const payload = jwt.decode(refreshToken) as { cuil?: string }
@@ -81,19 +85,19 @@ export class AuthService {
   }
 
   /**
-   * Compara la contraseña ingresada con la almacenada.
-   * @param {string} plain - Contraseña en texto plano
-   * @param {string} hash - Contraseña encriptada
-   * @returns {Promise<boolean>} - true si coinciden
+   * Compares the input password with the stored hash.
+   * @param plain Plain text password.
+   * @param hash Encrypted password.
+   * @returns True if they match.
    */
   async verifyPassword(plain: string, hash: string): Promise<boolean> {
     return await bcrypt.compare(plain, hash)
   }
 
   /**
-   * Genera un JWT con el id y rol del empleado.
-   * @param {empleado} empleado - Datos del empleado
-   * @returns {string} - JWT
+   * Genera a JWT with the employee ID and role.
+   * @param empleado Employee data.
+   * @returns The generated JWT.
    */
   generateToken(empleado: empleado): string {
     return jwt.sign(
@@ -107,41 +111,55 @@ export class AuthService {
   }
 
   /**
-   * Obtiene los datos de un empleado por su CUIL (sin la contraseña).
-   * @param {string} cuil - CUIL del empleado a buscar.
-   * @returns {Promise<Omit<empleado, 'contrasenia'>>} - Datos del empleado.
+   * Gets employee data by CUIL (without sensitive fields).
+   * @param cuil Employee CUIL.
+   * @returns Employee data.
    */
-  async getProfile(cuil: string): Promise<Omit<empleado, 'contrasenia'>> {
+  async getProfile(cuil: string): Promise<Omit<empleado, 'contrasenia' | 'refreshTokenHash'>> {
     const empleado = await this.empleadoRepository.findByCuil(cuil)
     if (!empleado) {
-      throw new Error('Usuario no encontrado')
+      throw new AppError('Usuario no encontrado', 404, 'USER_NOT_FOUND')
     }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { contrasenia, ...empleadoSinContrasenia } = empleado
+    const { contrasenia, refreshTokenHash, ...empleadoSinContrasenia } = empleado
     return empleadoSinContrasenia
   }
 
+  /**
+   * Refreshes the access token using a valid refresh token.
+   * @param refreshToken The refresh token.
+   * @returns A new access token.
+   */
   async refreshAccessToken(refreshToken: string): Promise<{ token: string }> {
     try {
       const payload = jwt.verify(
         refreshToken,
         env.NODE_AUTH_REFRESH_TOKEN,
       ) as jwt.JwtPayload
+      if (!payload.cuil) {
+        throw new AppError('Sesión expirada o inválida, por favor inicie sesión nuevamente', 401, 'INVALID_REFRESH_TOKEN')
+      }
+
       const empleado = await this.empleadoRepository.findByCuil(payload.cuil)
       if (!empleado || !empleado.refreshTokenHash) {
-        throw new Error('Refresh token inválido')
+        throw new AppError('Refresh token invalid or expired', 401, 'INVALID_REFRESH_TOKEN')
       }
+
       const isValid = await bcrypt.compare(
         refreshToken,
         empleado.refreshTokenHash,
       )
       if (!isValid) {
-        throw new Error('Refresh token inválido')
+        throw new AppError('Refresh token invalid or expired', 401, 'INVALID_REFRESH_TOKEN')
       }
+
       const token = this.generateToken(empleado)
       return { token }
-    } catch {
-      throw new Error('Refresh token inválido')
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      throw new AppError('Refresh token invalid or expired', 401, 'INVALID_REFRESH_TOKEN')
     }
   }
 }
+

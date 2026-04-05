@@ -9,34 +9,25 @@ import {
 const usoVehiculoVisitaController = new UsoVehiculoVisitaController()
 const usoVehiculoVisitaRouter = Router()
 
-usoVehiculoVisitaRouter.get('/', (req, res) => {
-  usoVehiculoVisitaController.getAll(req, res)
-})
+usoVehiculoVisitaRouter.get('/', usoVehiculoVisitaController.getAll)
 
 usoVehiculoVisitaRouter.post(
   '/',
   validate({ body: createUsoVehiculoVisitaSchema }),
-  (req, res) => {
-    usoVehiculoVisitaController.create(req, res)
-  },
+  usoVehiculoVisitaController.create,
 )
 
-usoVehiculoVisitaRouter.get('/:cod_visita/:patente', (req, res) => {
-  usoVehiculoVisitaController.getOne(req, res)
-})
+usoVehiculoVisitaRouter.get('/:cod_visita/:patente', usoVehiculoVisitaController.getOne)
 
 usoVehiculoVisitaRouter.put(
   '/:cod_visita/:patente',
   validate({
     body: updateUsoVehiculoVisitaSchema,
   }),
-  (req, res) => {
-    usoVehiculoVisitaController.update(req, res)
-  },
+  usoVehiculoVisitaController.update,
 )
 
-usoVehiculoVisitaRouter.delete('/:cod_visita/:patente', (req, res) => {
-  usoVehiculoVisitaController.remove(req, res)
-})
+usoVehiculoVisitaRouter.delete('/:cod_visita/:patente', usoVehiculoVisitaController.remove)
+
 
 export default usoVehiculoVisitaRouter

@@ -11,27 +11,21 @@ const clienteRouter = Router()
  * @desc    Obtener todos los clientes
  * @access  Privado (requiere autenticación)
  */
-clienteRouter.get('/', (req, res) => {
-  clienteController.getAll(req, res)
-})
+clienteRouter.get('/', clienteController.getAll)
 
 /**
  * @route   GET /api/clientes/buscar
  * @desc    Buscar clientes con filtros
  * @access  Privado (requiere autenticación)
  */
-clienteRouter.get('/buscar', (req, res) => {
-  clienteController.buscar(req, res)
-})
+clienteRouter.get('/buscar', clienteController.buscar)
 
 /**
  * @route   POST /api/clientes
  * @desc    Crear nuevo cliente
  * @access  Privado (requiere autenticación)
  */
-clienteRouter.post('/', (req, res) => {
-  clienteController.create(req, res)
-})
+clienteRouter.post('/', clienteController.create)
 
 /**
  * @route   GET /api/clientes/:cuil
@@ -41,9 +35,7 @@ clienteRouter.post('/', (req, res) => {
 clienteRouter.get(
   '/:cuil',
   validate({ params: cuilParamsSchema }),
-  (req, res) => {
-    clienteController.getOne(req, res)
-  },
+  clienteController.getOne,
 )
 
 /**
@@ -57,9 +49,7 @@ clienteRouter.put(
     params: cuilParamsSchema,
     body: updateClienteSchema,
   }),
-  (req, res) => {
-    clienteController.update(req, res)
-  },
+  clienteController.update,
 )
 
 /**
@@ -70,9 +60,8 @@ clienteRouter.put(
 clienteRouter.delete(
   '/:cuil',
   validate({ params: cuilParamsSchema }),
-  (req, res, next) => {
-    clienteController.remove(req, res, next)
-  },
+  clienteController.remove,
 )
+
 
 export default clienteRouter

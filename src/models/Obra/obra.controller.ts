@@ -1,6 +1,9 @@
 import { ObraService } from './obra.service.js'
 import { Request, Response } from 'express'
 import type { NotasFabricaFilters } from './obra.repository.js'
+import { catchAsync } from '../../shared/utils/catchAsync.js'
+import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 const obraService = new ObraService()
 type NotasFabricaEstado = NotasFabricaFilters['estado']
@@ -11,327 +14,283 @@ const NOTAS_FABRICA_ESTADOS = [
 ] as const
 
 /**
- * Controlador para manejar las rutas de las obras.
- * @class EmpleadoController
- * @method create - Maneja la creación de nueva obra.
- * @method getAll - Maneja la obtención de todos las obras.
- * @method getOne - Maneja la obtención de una obra por su codigo de obra.
- * @method update - Maneja la actualización de un obra existente.
- * @method remove - Maneja la eliminación de una obra por su codigo de obra.
- * @returns {Promise<void>} - Respuesta HTTP.
- * @throws {Error} - Si ocurre un error durante la operación.
+ * Controller to handle obra (construction project) routes.
  */
 export class ObraController {
-  // ----------- FILTROS Y BÚSQUEDAS -----------
+  // ----------- FILTERS AND SEARCHES -----------
 
-  /** Filtra obras por estado, localidad o ambos */
-  async filtrar(req: Request, res: Response) {
-    try {
-      const { estado, localidad } = req.query
-      const obras = await obraService.filtrar({
-        estado: estado as string | undefined,
-        cod_localidad: localidad ? Number(localidad) : undefined,
-      })
-      res.json(obras)
-    } catch (error) {
-      res.status(500).json({ message: 'Error al filtrar obras', error })
-    }
-  }
+  /**
+   * Filters obras by status, location, or both.
+   */
+  filtrar = catchAsync(async (req: Request, res: Response) => {
+    const { estado, localidad } = req.query
+    const obras = await obraService.filtrar({
+      estado: estado as string | undefined,
+      cod_localidad: localidad ? Number(localidad) : undefined,
+    })
+    return sendSuccess(res, obras)
+  })
 
-  /** Busca obras por texto (dirección, cliente, etc.) */
-  async buscar(req: Request, res: Response) {
-    try {
-      const q = req.query.q as string
-      const obras = await obraService.buscar(q)
-      res.json(obras)
-    } catch (error) {
-      res.status(500).json({ message: 'Error al buscar obras', error })
-    }
-  }
+  /**
+   * Searches obras by text (address, client, etc.).
+   */
+  buscar = catchAsync(async (req: Request, res: Response) => {
+    const q = req.query.q as string
+    const obras = await obraService.buscar(q)
+    return sendSuccess(res, obras)
+  })
 
-  /** Obtiene obras para creación de entregas según si es parcial o final */
-  async getObrasParaEntrega(req: Request, res: Response) {
-    try {
-      const q = req.query.q as string | undefined
-      const esFinalStr = req.query.esFinal as string
-      
-      const esFinal = esFinalStr === 'true'
+  /**
+   * Gets obras eligible for delivery creation based on whether it is partial or final.
+   */
+  getObrasParaEntrega = catchAsync(async (req: Request, res: Response) => {
+    const q = req.query.q as string | undefined
+    const esFinalStr = req.query.esFinal as string
+    const esFinal = esFinalStr === 'true'
 
-      const obras = await obraService.findObrasParaEntrega(q, esFinal)
-      res.json(obras)
-    } catch (error) {
-      res.status(500).json({ message: 'Error al buscar obras para entrega', error })
-    }
-  }
+    const obras = await obraService.findObrasParaEntrega(q, esFinal)
+    return sendSuccess(res, obras)
+  })
 
-  /** Obtiene obras de un cliente específico */
-  async getByCliente(req: Request, res: Response) {
-    try {
-      const cuil = req.params.cuil
-      const obras = await obraService.findByCliente(cuil)
-      res.json(obras)
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: 'Error al obtener obras por cliente', error })
-    }
-  }
+  /**
+   * Gets obras for a specific client.
+   */
+  getByCliente = catchAsync(async (req: Request, res: Response) => {
+    const cuil = req.params.cuil
+    const obras = await obraService.findByCliente(cuil)
+    return sendSuccess(res, obras)
+  })
 
-  /** Obtiene todas las obras */
-  async getAll(req: Request, res: Response) {
+  /**
+   * Gets all obras.
+   */
+  getAll = catchAsync(async (req: Request, res: Response) => {
     const obras = await obraService.findAll()
-    res.status(200).json(obras)
-  }
+    return sendSuccess(res, obras)
+  })
 
-  /** Obtiene una obra por ID (usado internamente) */
-  async getOneById(id: number) {
-    return await obraService.findById(id)
-  }
-
-  /** Obtiene una obra por ID (endpoint) */
-  async getOne(req: Request, res: Response) {
+  /**
+   * Gets an obra by ID.
+   */
+  getOne = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
+    
     const obra = await obraService.findById(id)
-    if (!obra) {
-      return res.status(404).json({ message: 'Obra no encontrada' })
+    return sendSuccess(res, obra)
+  })
+
+  // ----------- FACTORY NOTE (NOTAS DE FÁBRICA) -----------
+
+  /**
+   * Gets obras for factory notes based on frontend filters.
+   */
+  getNotasFabrica = catchAsync(async (req: Request, res: Response) => {
+    const { estado, fechaDesde, fechaHasta } = req.query as {
+      estado?: string
+      fechaDesde?: string
+      fechaHasta?: string
     }
-    res.json(obra)
-  }
 
-  // ----------- NOTA DE FÁBRICA -----------
+    const allowedQueryParams = new Set(['estado', 'fechaDesde', 'fechaHasta'])
+    const invalidQueryParams = Object.keys(req.query).filter(
+      key => !allowedQueryParams.has(key),
+    )
 
-  /** Obtiene obras para Notas de Fábrica según filtros de frontend */
-  async getNotasFabrica(req: Request, res: Response) {
-    try {
-      const { estado, fechaDesde, fechaHasta } = req.query as {
-        estado?: string
-        fechaDesde?: string
-        fechaHasta?: string
-      }
-
-      const allowedQueryParams = new Set(['estado', 'fechaDesde', 'fechaHasta'])
-      const invalidQueryParams = Object.keys(req.query).filter(
-        key => !allowedQueryParams.has(key),
+    if (invalidQueryParams.length > 0) {
+      throw new AppError(
+        'Parámetros de consulta no válidos. Solo se permiten estado, fechaDesde y fechaHasta.',
+        400,
+        'INVALID_QUERY_PARAMS'
       )
-
-      if (invalidQueryParams.length > 0) {
-        return res.status(400).json({
-          message:
-            'Parámetros no permitidos. Solo se aceptan estado, fechaDesde y fechaHasta',
-        })
-      }
-
-      const normalizeQueryValue = (value?: string) => {
-        if (!value) return undefined
-        const normalized = value.trim()
-        if (!normalized) return undefined
-        if (normalized === 'undefined' || normalized === 'null') return undefined
-        return normalized
-      }
-
-      const normalizedEstado = normalizeQueryValue(estado)
-      const normalizedFechaDesde = normalizeQueryValue(fechaDesde)
-      const normalizedFechaHasta = normalizeQueryValue(fechaHasta)
-
-      if (!normalizedEstado) {
-        return res.status(400).json({
-          message: 'El query param "estado" es obligatorio',
-        })
-      }
-
-      if (
-        !NOTAS_FABRICA_ESTADOS.includes(normalizedEstado as NotasFabricaEstado)
-      ) {
-        return res.status(400).json({
-          message:
-            'El estado debe ser SIN_ORDEN, EN_PRODUCCION o FINALIZADA',
-        })
-      }
-
-      const fechaDesdeDate = normalizedFechaDesde
-        ? new Date(normalizedFechaDesde)
-        : null
-      const fechaHastaDate = normalizedFechaHasta
-        ? new Date(normalizedFechaHasta)
-        : null
-
-      if (normalizedFechaDesde && Number.isNaN(fechaDesdeDate?.getTime())) {
-        return res.status(400).json({ message: 'fechaDesde inválida' })
-      }
-
-      if (normalizedFechaHasta && Number.isNaN(fechaHastaDate?.getTime())) {
-        return res.status(400).json({ message: 'fechaHasta inválida' })
-      }
-
-      if (
-        fechaDesdeDate &&
-        fechaHastaDate &&
-        fechaDesdeDate.getTime() > fechaHastaDate.getTime()
-      ) {
-        return res.status(400).json({
-          message: 'fechaDesde no puede ser mayor a fechaHasta',
-        })
-      }
-
-      const obras = await obraService.findNotasFabrica({
-        estado: normalizedEstado as NotasFabricaEstado,
-        fechaDesde: normalizedFechaDesde,
-        fechaHasta: normalizedFechaHasta,
-      })
-
-      res.status(200).json(obras)
-    } catch (error) {
-      res.status(500).json({
-        message: 'Error al obtener notas de fábrica',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
     }
-  }
 
-  /** Sube nota de fábrica a una obra */
-  async subirNotaFabrica(req: Request, res: Response) {
+    const normalizeQueryValue = (value?: string) => {
+      if (!value) return undefined
+      const normalized = value.trim()
+      if (!normalized) return undefined
+      if (normalized === 'undefined' || normalized === 'null') return undefined
+      return normalized
+    }
+
+    const normalizedEstado = normalizeQueryValue(estado)
+    const normalizedFechaDesde = normalizeQueryValue(fechaDesde)
+    const normalizedFechaHasta = normalizeQueryValue(fechaHasta)
+
+    if (!normalizedEstado) {
+      throw new AppError('El parámetro "estado" es requerido en la consulta', 400, 'QUERY_PARAM_REQUIRED')
+    }
+
+    if (
+      !NOTAS_FABRICA_ESTADOS.includes(normalizedEstado as NotasFabricaEstado)
+    ) {
+      throw new AppError('El estado debe ser SIN_ORDEN, EN_PRODUCCION o FINALIZADA', 400, 'INVALID_STATE')
+    }
+
+    const fechaDesdeDate = normalizedFechaDesde ? new Date(normalizedFechaDesde) : null
+    const fechaHastaDate = normalizedFechaHasta ? new Date(normalizedFechaHasta) : null
+
+    if (normalizedFechaDesde && Number.isNaN(fechaDesdeDate?.getTime())) {
+      throw new AppError('fechaDesde inválida', 400, 'INVALID_DATE')
+    }
+
+    if (normalizedFechaHasta && Number.isNaN(fechaHastaDate?.getTime())) {
+      throw new AppError('fechaHasta inválida', 400, 'INVALID_DATE')
+    }
+
+    if (
+      fechaDesdeDate &&
+      fechaHastaDate &&
+      fechaDesdeDate.getTime() > fechaHastaDate.getTime()
+    ) {
+      throw new AppError('fechaDesde no puede ser posterior a fechaHasta', 400, 'INVALID_DATE_RANGE')
+    }
+
+    const obras = await obraService.findNotasFabrica({
+      estado: normalizedEstado as NotasFabricaEstado,
+      fechaDesde: normalizedFechaDesde,
+      fechaHasta: normalizedFechaHasta,
+    })
+
+    return sendSuccess(res, obras)
+  })
+
+  /**
+   * Uploads a factory note to an obra.
+   */
+  subirNotaFabrica = catchAsync(async (req: Request, res: Response) => {
     const codObra = Number.parseInt(req.params.cod_obra, 10)
 
     if (Number.isNaN(codObra)) {
-      return res.status(400).json({ message: 'Código de obra inválido' })
+      throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
     }
 
     if (!req.file) {
-      return res.status(400).json({ message: 'No se ha subido ningún archivo' })
-    }
-
-    const obraExistente = await obraService.findById(codObra)
-    if (!obraExistente) {
-      return res.status(404).json({ message: 'Obra no encontrada' })
+      throw new AppError('No se ha subido ningún archivo', 400, 'FILE_REQUIRED')
     }
 
     const obra = await obraService.subirNotaFabrica(codObra, req.file)
-    res.status(201).json(obra)
-  }
+    return sendSuccess(res, obra, 'Factory note uploaded successfully', 201)
+  })
 
-  /** Elimina la nota de fábrica de una obra */
-  async deleteNotaFabrica(req: Request, res: Response) {
+  /**
+   * Deletes the factory note of an obra.
+   */
+  deleteNotaFabrica = catchAsync(async (req: Request, res: Response) => {
     const codObra = Number.parseInt(req.params.cod_obra, 10)
 
     if (Number.isNaN(codObra)) {
-      return res.status(400).json({ message: 'Código de obra inválido' })
+      throw new AppError('Código de obra inválido', 400, 'INVALID_ID')
     }
 
     const obra = await obraService.deleteNotaFabrica(codObra)
-    res.status(200).json(obra)
-  }
+    return sendSuccess(res, obra, 'Factory note deleted successfully')
+  })
 
-  /** Obtiene obras con nota de fábrica y orden en proceso */
-  async getNotasConOrdenEnProceso(req: Request, res: Response) {
+  /**
+   * Gets obras with factory notes and orders in process.
+   */
+  getNotasConOrdenEnProceso = catchAsync(async (req: Request, res: Response) => {
     const obras = await obraService.findNotasConOrdenEnProceso()
-    res.json(obras)
-  }
+    return sendSuccess(res, obras)
+  })
 
-  // ----------- CRUD DE OBRAS -----------
+  // ----------- OBRA CRUD -----------
 
-  /** Crea una nueva obra */
-  async create(req: Request, res: Response) {
+  /**
+   * Creates a new construction project.
+   */
+  create = catchAsync(async (req: Request, res: Response) => {
     const nueva = await obraService.create(req.body)
-    res.status(201).json(nueva)
-  }
+    return sendSuccess(res, nueva, 'Obra created successfully', 201)
+  })
 
-  /** Actualiza una obra por ID */
-  async update(req: Request, res: Response) {
+  /**
+   * Updates an existing obra by ID.
+   */
+  update = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
+    
     const obra = await obraService.update(id, req.body)
-    res.json(obra)
-  }
+    return sendSuccess(res, obra, 'Obra updated successfully')
+  })
 
-  /** Baja lógica de una obra (cambia estado a CANCELADA) */
-  async bajaLogica(req: Request, res: Response) {
-    try {
-      const id = parseInt(req.params.id, 10)
-      const obra = await obraService.bajaLogica(id)
-      if (!obra) {
-        return res.status(404).json({ message: 'Obra no encontrada' })
-      }
-      res.json({ message: 'Baja lógica realizada con éxito', obra })
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: 'Error al realizar la baja lógica', error })
-    }
-  }
-
-  /** Elimina una obra por ID (baja física) */
-  async remove(req: Request, res: Response) {
+  /**
+   * Logical deletion of an obra (status changed to CANCELADA).
+   */
+  bajaLogica = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
-    const obra = await obraService.remove(id)
-    res.json(obra)
-  }
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
+    
+    const obra = await obraService.bajaLogica(id)
+    return sendSuccess(res, obra, 'Obra cancelled successfully')
+  })
 
-  async getNotasSinOrdenAprobada(req: Request, res: Response) {
+  /**
+   * Deletes an obra by ID (physical deletion).
+   */
+  remove = catchAsync(async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id, 10)
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
+    
+    await obraService.remove(id)
+    return res.status(204).send()
+  })
+
+  /**
+   * Gets obras with factory note but without approved order.
+   */
+  getNotasSinOrdenAprobada = catchAsync(async (req: Request, res: Response) => {
     const obras = await obraService.findNotasSinOrdenAprobada()
-    res.json(obras)
-  }
+    return sendSuccess(res, obras)
+  })
 
-  async getObrasConPresupuestoAceptado(req: Request, res: Response) {
-    try {
-      let search = req.query.search as string
+  /**
+   * Gets obras with accepted budgets.
+   */
+  getObrasConPresupuestoAceptado = catchAsync(async (req: Request, res: Response) => {
+    let search = req.query.search as string
 
-      // Sanitizar el input de búsqueda
-      if (search) {
-        search = search.trim().replace(/[<>{}]/g, '')
-        // Limitar longitud para evitar ataques
-        if (search.length > 100) {
-          return res.status(400).json({
-            message: 'El término de búsqueda es demasiado largo',
-          })
-        }
+    if (search) {
+      search = search.trim().replace(/[<>{}]/g, '')
+      if (search.length > 100) {
+        throw new AppError('El término de búsqueda es demasiado largo', 400, 'SEARCH_TOO_LONG')
       }
-
-      const obras = await obraService.findObrasConPresupuestoAceptado(search)
-      res.json(obras)
-    } catch (error) {
-      console.error('Error al obtener obras con presupuesto aceptado:', error)
-      res.status(500).json({
-        message:
-          'Error interno del servidor al obtener obras con presupuesto aceptado',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
     }
-  }
 
-  /** Obtiene obras para pedido de stock */
-  async getObrasParaPedidoStock(req: Request, res: Response) {
-    try {
-      const obras = await obraService.findObrasParaPedidoStock()
-      res.json(obras)
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: 'Error al obtener obras para pedido', error })
-    }
-  }
+    const obras = await obraService.findObrasConPresupuestoAceptado(search)
+    return sendSuccess(res, obras)
+  })
 
-  /** Cambia el estado de una obra a EN ESPERA DE STOCK */
-  async solicitarStock(req: Request, res: Response) {
-    try {
-      const id = parseInt(req.params.id, 10)
-      const obra = await obraService.solicitarStock(id)
-      res.json({ message: 'Pedido de stock solicitado con éxito', obra })
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido'
-      res.status(400).json({ message })
-    }
-  }
+  /**
+   * Gets obras for stock requesting.
+   */
+  getObrasParaPedidoStock = catchAsync(async (req: Request, res: Response) => {
+    const obras = await obraService.findObrasParaPedidoStock()
+    return sendSuccess(res, obras)
+  })
 
-  /** Cambia el estado de una obra a EN PRODUCCION */
-  async recibirStock(req: Request, res: Response) {
-    try {
-      const id = parseInt(req.params.id, 10)
-      const obra = await obraService.recibirStock(id)
-      res.json({ message: 'Stock recibido y obra en producción', obra })
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido'
-      res.status(400).json({ message })
-    }
-  }
+  /**
+   * Changes obra status to EN ESPERA DE STOCK.
+   */
+  solicitarStock = catchAsync(async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id, 10)
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
+    
+    const obra = await obraService.solicitarStock(id)
+    return sendSuccess(res, obra, 'Stock requested successfully')
+  })
+
+  /**
+   * Changes obra status to EN PRODUCCION.
+   */
+  recibirStock = catchAsync(async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id, 10)
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
+    
+    const obra = await obraService.recibirStock(id)
+    return sendSuccess(res, obra, 'Stock received and obra now in production')
+  })
 }
+

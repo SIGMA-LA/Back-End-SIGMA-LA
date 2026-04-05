@@ -3,12 +3,12 @@ import { visita, Prisma } from '@prisma/client'
 import { EmpleadoService } from '../Empleado/empleado.service.js'
 import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { AppError } from '../../shared/errors/AppError.js'
 import { emailService } from '../../shared/providers/email/index.js'
 import { notificationConfigRepository } from '../../shared/providers/email/NotificationConfigRepository.js'
 
 /**
- * Servicio para manejar la lógica de negocio de visitas.
- * @class VisitaService
+ * Interface for creating a new Visita.
  */
 interface CreateVisitaData {
   empleados_visita: string[]
@@ -27,6 +27,9 @@ interface CreateVisitaData {
   fechaHasta?: string
 }
 
+/**
+ * Service to manage technical visit (visita) operations.
+ */
 export class VisitaService {
   private visitaRepository: VisitaRepository
   private empleadoService: EmpleadoService
@@ -38,7 +41,11 @@ export class VisitaService {
     this.vehiculoService = new VehiculoService()
   }
 
-  // Crear nueva visita
+  /**
+   * Creates a new technical visit.
+   * @param data The visit data.
+   * @returns The created visit with relations.
+   */
   async create(data: CreateVisitaData): Promise<VisitaWithRelations> {
     const fechaParaPrisma = new Date(data.fecha_hora_visita)
     const fechaFinEstimada = data.fechaHasta
@@ -88,15 +95,16 @@ export class VisitaService {
       },
     }
 
-    // Validar disponibilidad antes de crear
+    // Availability validation before creation
     const fIni = new Date(data.fechaSalida || data.fecha_hora_visita)
     const fFin = fechaFinEstimada
 
-    const checks = []
+    const checks: Promise<string | null>[] = []
     if (data.empleados_visita.length > 0) {
       checks.push(
         this.empleadoService
           .verificarDisponibilidadEmpleados(data.empleados_visita, fIni, fFin)
+          .then(() => null)
           .catch((err: Error) => err.message),
       )
     }
@@ -104,6 +112,7 @@ export class VisitaService {
       checks.push(
         this.vehiculoService
           .verificarDisponibilidadVehiculos([data.vehiculo], fIni, fFin)
+          .then(() => null)
           .catch((err: Error) => err.message),
       )
     }
@@ -121,15 +130,15 @@ export class VisitaService {
 
     const visita = await this.visitaRepository.create(visitaData)
 
-    // Notificación por email: Intenta encontrar el destinatario (Obra -> Cliente -> Email o Fallback en campos de texto)
+    // Email notification: Try to find recipient (Obra -> Cliente -> Email or Fallback in text fields)
     let emailDestino: string | null = null;
 
-    // 1. Intentar obtener el email directamente de la relación Obra -> Cliente si existe
+    // 1. Try to get email directly from Obra -> Cliente relation
     if (visita.obra?.cliente?.mail) {
       emailDestino = visita.obra.cliente.mail;
     }
 
-    // 2. Si no hay email en el cliente o no hay obra vinculada, buscamos un email literal en observaciones o dirección
+    // 2. If no email in client or no obra linked, search for literal email in notes or address
     if (!emailDestino) {
       const textToSearch = `${data.observaciones || ''} ${data.direccion_visita || ''}`;
       const emailMatch = textToSearch.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
@@ -140,31 +149,41 @@ export class VisitaService {
       const nombreDestino = data.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
       const motivo = data.motivo_visita || 'Visita Técnica';
 
-      await emailService.sendNotification(
+      emailService.sendNotification(
         emailDestino,
         `Confirmación de Visita Técnica - SIGMA-LA - ${motivo}`,
-        `Hola ${nombreDestino},<br><br>` + //
+        `Hola ${nombreDestino},<br><br>` +
         `Le informamos que se ha programado una visita técnica para el día <b>${fechaParaPrisma.toLocaleString()}</b>.<br>` +
         `Motivo: <b>${motivo}</b><br>` +
         `Dirección: ${data.direccion_visita || visita.obra?.direccion || 'A coordinar'}<br><br>` +
         `Saludos,<br>Equipo de SIGMA-LA`
-      ).catch(err => console.error('Error enviando mail automático de visita:', err));
+      ).catch(err => console.error('Error sending automatic visit email:', err));
     }
 
     return visita
   }
 
-  // Obtener todas las visitas
+  /**
+   * Gets all visits, optionally filtered by status.
+   */
   async findAll(estado?: string): Promise<VisitaWithRelations[]> {
     return await this.visitaRepository.findAll(estado)
   }
 
-  // Obtener visita por cod_visita
-  async findById(cod_visita: number): Promise<VisitaWithRelations | null> {
-    return await this.visitaRepository.findById(cod_visita)
+  /**
+   * Gets a visit by its ID.
+   */
+  async findById(cod_visita: number): Promise<VisitaWithRelations> {
+    const visita = await this.visitaRepository.findById(cod_visita)
+    if (!visita) {
+      throw new AppError('Visita no encontrada', 404, 'VISITA_NOT_FOUND')
+    }
+    return visita
   }
 
-  // Obtener visitas paginadas con búsqueda
+  /**
+   * Searches for visits with pagination and status filter.
+   */
   async buscar(
     q: string,
     page = 1,
@@ -179,7 +198,9 @@ export class VisitaService {
     )
   }
 
-  // Actualizar visita
+  /**
+   * Updates an existing visit.
+   */
   async update(
     cod_visita: number,
     data: {
@@ -198,10 +219,7 @@ export class VisitaService {
       fechaSalida?: string
     },
   ): Promise<VisitaWithRelations> {
-    const existingVisita = await this.visitaRepository.findById(cod_visita)
-    if (!existingVisita) {
-      throw new ValidationError('Visita no encontrada')
-    }
+    const existingVisita = await this.findById(cod_visita)
 
     const {
       cod_obra,
@@ -216,7 +234,7 @@ export class VisitaService {
       ...simpleFields
     } = data
 
-    // 1. Detección de cambios en fechas
+    // 1. Date change detection
     const newFechaInicio = fecha_hora_visita ? new Date(fecha_hora_visita) : new Date(existingVisita.fecha_hora_visita)
     const vUsage = existingVisita.uso_vehiculo_visita?.[0]
     const curFechaSalida = vUsage ? new Date(vUsage.fecha_hora_ini_uso) : new Date(existingVisita.fecha_hora_visita)
@@ -230,7 +248,7 @@ export class VisitaService {
       newFechaSalida.getTime() !== curFechaSalida.getTime() ||
       newFechaRetorno.getTime() !== curFechaRetorno.getTime()
 
-    // 2. Detección de cambios en asignaciones
+    // 2. Assignment change detection
     const hasPersonnelChanged = !!empleados_visita && (
       empleados_visita.length !== existingVisita.empleado_visita.length ||
       empleados_visita.some(cuil => !existingVisita.empleado_visita.find((ev) => ev.cuil === cuil))
@@ -240,25 +258,40 @@ export class VisitaService {
       !vUsage || vehiculo !== vUsage.patente
     )
 
-    // 3. Validaciones de disponibilidad condicionales
+    // 3. Conditional availability validations
     if (hasDatesChanged || hasPersonnelChanged || hasVehicleChanged) {
       const cuilesToValidate = empleados_visita || existingVisita.empleado_visita.map((ev) => ev.cuil)
       const vehiculoToValidate = vehiculo || (vUsage ? vUsage.patente : undefined)
 
-      const checks = []
+      const checks: Promise<string | null>[] = []
       if (cuilesToValidate.length > 0) {
-        checks.push(this.empleadoService.verificarDisponibilidadEmpleados(cuilesToValidate, newFechaSalida, newFechaRetorno, cod_visita).catch((err: Error) => err.message))
+        checks.push(
+          this.empleadoService
+            .verificarDisponibilidadEmpleados(cuilesToValidate, newFechaSalida, newFechaRetorno, cod_visita)
+            .then(() => null)
+            .catch((err: Error) => err.message)
+        )
       }
       if (vehiculoToValidate) {
-        checks.push(this.vehiculoService.verificarDisponibilidadVehiculos([vehiculoToValidate], newFechaSalida, newFechaRetorno, cod_visita).catch((err: Error) => err.message))
+        checks.push(
+          this.vehiculoService
+            .verificarDisponibilidadVehiculos([vehiculoToValidate], newFechaSalida, newFechaRetorno, cod_visita)
+            .then(() => null)
+            .catch((err: Error) => err.message)
+        )
       }
 
       const results = await Promise.all(checks)
       const errMessages = results.filter((msg): msg is string => typeof msg === 'string')
-      if (errMessages.length > 0) throw new ValidationError(`Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`, 'CONFLICTO_AGENDA')
+      if (errMessages.length > 0) {
+        throw new ValidationError(
+          `Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`,
+          'CONFLICTO_AGENDA'
+        )
+      }
     }
 
-    // 4. Preparación de actualización
+    // 4. Update payload preparation
     const updateData: Prisma.visitaUpdateInput = {
       ...simpleFields,
       ...(fecha_hora_visita && { fecha_hora_visita: newFechaInicio }),
@@ -295,25 +328,31 @@ export class VisitaService {
     return await this.visitaRepository.update(cod_visita, updateData)
   }
 
-  // Eliminar visita
+  /**
+   * Deletes a visit by ID.
+   */
   async remove(cod_visita: number): Promise<visita> {
-    const existingVisita = await this.visitaRepository.findById(cod_visita)
-    if (!existingVisita) {
-      throw new ValidationError('Visita no encontrada')
-    }
+    await this.findById(cod_visita)
     return await this.visitaRepository.remove(cod_visita)
   }
 
-  // Obtener visitas por estado
+  /**
+   * Gets visits by status.
+   */
   async findByEstado(estado: string): Promise<VisitaWithRelations[]> {
     return await this.visitaRepository.findByEstado(estado)
   }
 
-  // Obtener visitas por obra
+  /**
+   * Gets visits associated with an obra.
+   */
   async findByObra(cod_obra: number): Promise<VisitaWithRelations[]> {
     return await this.visitaRepository.findByObra(cod_obra)
   }
 
+  /**
+   * Gets visits for a specific employee and set of statuses.
+   */
   async getVisitasByEmpleadoAndEstado(
     cuil: string,
     estado: string[] | string,
@@ -329,7 +368,9 @@ export class VisitaService {
     )
   }
 
-  // Obtener todas las visitas de un empleado
+  /**
+   * Gets all visits for a specific employee.
+   */
   async getVisitasByEmpleado(
     cuil: string,
     estados?: string[],
@@ -344,16 +385,11 @@ export class VisitaService {
     )
   }
 
-  // Obtener visitas asociadas a una obra
-  async getVisitasByObra(cod_obra: number): Promise<VisitaWithRelations[]> {
-    return await this.visitaRepository.findByObra(cod_obra)
-  }
-
+  /**
+   * Finalizes a visit by changing status to COMPLETADA.
+   */
   async finalizar(cod_visita: number, observaciones?: string): Promise<VisitaWithRelations> {
-    const existingVisita = await this.visitaRepository.findById(cod_visita)
-    if (!existingVisita) {
-      throw new ValidationError('Visita no encontrada')
-    }
+    await this.findById(cod_visita)
 
     const updateData: Prisma.visitaUpdateInput = {
       estado: 'COMPLETADA',
@@ -362,22 +398,25 @@ export class VisitaService {
 
     const visitaCompletada = await this.visitaRepository.update(cod_visita, updateData)
 
-    // Notificar a COORDINACION según sus preferencias
+    // Notify coordination according to their preferences
     this.notificarFinalizacionACoordinacion(visitaCompletada)
-      .catch(err => console.error('Error enviando notificaciones a coordinacion:', err));
+      .catch(err => console.error('Error sending coordination notifications:', err));
 
     return visitaCompletada
   }
 
+  /**
+   * Internal method to notify coordination about finished visits.
+   */
   private async notificarFinalizacionACoordinacion(visita: VisitaWithRelations) {
-    // 1. Obtener emails de coordinadores con la opción visita_completada activada (Vía Repositorio Centralizado)
+    // 1. Get emails of coordinators with 'visita_completada' option enabled
     const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'visita_completada')
     
     if (emails.length === 0) return;
 
     const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
     
-    // 2. Enviar mail a todos los interesados (Empleados con el Rol)
+    // 2. Send email to all interested parties
     await emailService.sendNotification(
       emails,
       `Aviso Interno: Visita Técnica Finalizada - ${visita.motivo_visita}`,
@@ -392,11 +431,11 @@ export class VisitaService {
     );
   }
 
+  /**
+   * Cancels a visit by changing status to CANCELADA.
+   */
   async cancelar(cod_visita: number, motivo?: string): Promise<VisitaWithRelations> {
-    const existingVisita = await this.visitaRepository.findById(cod_visita)
-    if (!existingVisita) {
-      throw new ValidationError('Visita no encontrada')
-    }
+    await this.findById(cod_visita)
 
     const updateData: Prisma.visitaUpdateInput = {
       estado: 'CANCELADA',
@@ -409,3 +448,4 @@ export class VisitaService {
 }
 
 export const visitaService = new VisitaService()
+

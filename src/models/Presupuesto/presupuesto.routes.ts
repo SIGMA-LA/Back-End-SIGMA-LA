@@ -9,24 +9,17 @@ import {
 const controller = new PresupuestoController()
 const router = Router()
 
-router.get('/', (req, res) => {
-  controller.getAll(req, res)
-})
+router.get('/', controller.getAll)
 
-router.post('/', validate({ body: createPresupuestoSchema }), (req, res) => {
-  controller.create(req, res)
-})
+router.post('/', validate({ body: createPresupuestoSchema }), controller.create)
 
 router.put(
   '/:nro_presupuesto',
   validate({ body: updatePresupuestoSchema }),
-  (req, res) => {
-    controller.update(req, res)
-  },
+  controller.update,
 )
 
-router.delete('/:nro_presupuesto', (req, res) => {
-  controller.remove(req, res)
-})
+router.delete('/:nro_presupuesto', controller.remove)
+
 
 export default router

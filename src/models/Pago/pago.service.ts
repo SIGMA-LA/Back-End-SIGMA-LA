@@ -1,29 +1,11 @@
 import { pago, Prisma } from '@prisma/client'
 import { PagoRepository } from './pago.repository.js'
 import { prisma } from '../../shared/db/prismaClient.js'
-
-/*
-type PagoConRelaciones = Prisma.pagoGetPayload<{
-  include: {
-    obra: {
-      include: {
-        cliente: true
-      }
-    }
-  }
-}>
-*/
+import { AppError } from '../../shared/errors/AppError.js'
+import { ValidationError } from '../../shared/errors/validationError.js'
 
 /**
- * Servicio para gestionar las operaciones relacionadas con los pagos.
- * @class PagoService
- * @method create - Crea un nuevo pago.
- * @method findAll - Obtiene todos los pagos.
- * @method findById - Obtiene un pago por su código.
- * @method update - Actualiza un pago existente.
- * @method remove - Elimina un pago por su código.
- * @returns {Promise<pago | pago[]>} - Resultado de la operación.
- * @throws {Error} - Si ocurre un error durante la operación.
+ * Service to manage payment (pago) operations.
  */
 export class PagoService {
   private repository: PagoRepository
@@ -32,6 +14,13 @@ export class PagoService {
     this.repository = new PagoRepository()
   }
 
+  /**
+   * Creates a new payment for a specific construction project (obra).
+   * Includes business logic for payment validation against budget.
+   * @param cod_obra The project code.
+   * @param data The payment data.
+   * @returns The created payment.
+   */
   async createForObra(
     cod_obra: number,
     data: Omit<Prisma.pagoUncheckedCreateInput, 'cod_obra'>,
@@ -39,8 +28,9 @@ export class PagoService {
     const nuevoMonto = Number(data.monto)
 
     if (isNaN(nuevoMonto) || nuevoMonto <= 0) {
-      throw new Error(
-        'El monto del pago debe ser un número válido y mayor a cero.',
+      throw new ValidationError(
+        'El monto del pago debe ser un número válido mayor a cero.',
+        'INVALID_PAYMENT_AMOUNT'
       )
     }
 
@@ -51,7 +41,7 @@ export class PagoService {
       })
 
       if (!obra) {
-        throw new Error('La obra no existe.')
+        throw new AppError('La obra no existe.', 404, 'OBRA_NOT_FOUND')
       }
 
       const presupuestoAceptado = obra.presupuesto.find(
@@ -59,8 +49,9 @@ export class PagoService {
       )
 
       if (!presupuestoAceptado) {
-        throw new Error(
-          'No se puede registrar un pago. La obra no tiene un presupuesto aceptado.',
+        throw new ValidationError(
+          'No se puede registrar el pago. La obra no tiene un presupuesto aceptado.',
+          'MISSING_ACCEPTED_BUDGET'
         )
       }
 
@@ -74,25 +65,28 @@ export class PagoService {
 
       if (obra.pago.length === 0) {
         const montoRequerido = totalPresupuestado * 0.7
-        // Check equivalence with 2 decimal precision tolerance due to floats
+        // Check equivalence with 0.01 tolerance due to float precision
         if (Math.abs(nuevoMonto - montoRequerido) > 0.01) {
-          throw new Error(
-            `El primer pago debe ser exactamente del 70% del presupuesto (${montoRequerido.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}).`
+          throw new ValidationError(
+            `El primer pago debe ser exactamente el 70% del presupuesto (${montoRequerido.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}).`,
+            'INVALID_FIRST_PAYMENT'
           )
         }
       }
 
       if (nuevoMonto > montoRestante + 0.01) {
-        throw new Error(
+        throw new ValidationError(
           `El monto del pago (${nuevoMonto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}) excede el saldo restante (${montoRestante.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}).`,
+          'PAYMENT_EXCEEDS_BALANCE'
         )
       }
 
       const esPagoFinal = nuevoTotalPagado >= totalPresupuestado - 0.01
 
       if (esPagoFinal && obra.estado !== 'PRODUCCION FINALIZADA') {
-        throw new Error(
-          'El pago total solo puede registrarse si el estado de la obra es "PRODUCCION FINALIZADA".',
+        throw new ValidationError(
+          'El pago total solo puede registrarse si el estado del proyecto es "PRODUCCION FINALIZADA".',
+          'INVALID_STATE_FOR_FINAL_PAYMENT'
         )
       }
 
@@ -125,6 +119,9 @@ export class PagoService {
     return pagoCreado
   }
 
+  /**
+   * Creates a basic payment entry.
+   */
   async createOne(data: Prisma.pagoCreateInput): Promise<pago> {
     let fecha_pago = data.fecha_pago
     if (
@@ -136,6 +133,9 @@ export class PagoService {
     return await this.repository.createOne({ ...data, fecha_pago })
   }
 
+  /**
+   * Gets all payments with optional filtering.
+   */
   async findAll(filters?: {
     search?: string
     cliente?: string
@@ -145,7 +145,7 @@ export class PagoService {
     montoMin?: number
     montoMax?: number
   }) {
-    let pagos
+    let pagos;
     if (filters && Object.keys(filters).length > 0) {
       pagos = await this.repository.findAllWithFilters(filters)
     } else {
@@ -165,6 +165,9 @@ export class PagoService {
     }))
   }
 
+  /**
+   * Formats a CUIL string to XX-XXXXXXXX-X format.
+   */
   private formatCUIL(cuil: string): string {
     if (cuil.length === 11) {
       return `${cuil.slice(0, 2)}-${cuil.slice(2, 10)}-${cuil.slice(10)}`
@@ -172,11 +175,22 @@ export class PagoService {
     return cuil
   }
 
-  async findById(id: number): Promise<pago | null> {
-    return await this.repository.findById(id)
+  /**
+   * Gets a payment by its ID.
+   */
+  async findById(id: number): Promise<pago> {
+    const entry = await this.repository.findById(id)
+    if (!entry) {
+      throw new AppError('Pago no encontrado', 404, 'PAGO_NOT_FOUND')
+    }
+    return entry
   }
 
+  /**
+   * Updates an existing payment.
+   */
   async update(id: number, data: Prisma.pagoUpdateInput): Promise<pago> {
+    await this.findById(id) // Ensure existence
     let fecha_pago = data.fecha_pago
     if (
       typeof fecha_pago === 'string' &&
@@ -187,15 +201,19 @@ export class PagoService {
     return await this.repository.update(id, { ...data, fecha_pago })
   }
 
+  /**
+   * Deletes a payment by its ID.
+   */
   async remove(id: number): Promise<pago> {
-    const existingPago = await this.repository.findById(id)
-    if (!existingPago) {
-      throw new Error('No existe un pago con el código proporcionado.')
-    }
+    await this.findById(id)
     return await this.repository.delete(id)
   }
 
+  /**
+   * Gets all payments associated with a specific construction project.
+   */
   async findByObra(cod_obra: number): Promise<pago[]> {
     return await this.repository.findManyByObra(cod_obra)
   }
 }
+

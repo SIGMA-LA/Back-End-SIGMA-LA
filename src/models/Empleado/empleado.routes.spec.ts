@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import jwt from 'jsonwebtoken'
 import app from '../../app.js'
 import { EmpleadoRepository } from './empleado.repository.js'
+import { empleado } from '@prisma/client'
 
 /**
  * Tests de Integración - Empleado Routes
@@ -45,7 +46,7 @@ describe('Integration Tests - Empleado Routes', () => {
 
     it('debería devolver 200 y la lista de empleados activos', async () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findAllPublic').mockResolvedValue([
-        { cuil: CUIL_VALIDO, nombre: 'Juan', apellido: 'Pérez', activo: true } as any,
+        { cuil: CUIL_VALIDO, nombre: 'Juan', apellido: 'Pérez', activo: true } as unknown as empleado,
       ])
 
       const response = await request(app)
@@ -53,7 +54,7 @@ describe('Integration Tests - Empleado Routes', () => {
         .set('Authorization', `Bearer ${adminToken}`)
 
       expect(response.status).toBe(200)
-      expect(response.body.success).toBe(true)
+      expect(response.body.status).toBe('success')
       expect(response.body.data).toHaveLength(1)
     })
   })
@@ -86,8 +87,8 @@ describe('Integration Tests - Empleado Routes', () => {
         activo: true,
         contrasenia: null,
         refreshTokenHash: null,
-        fecha_ingreso: new Date() as any,
-      } as any)
+        fecha_ingreso: new Date(),
+      } as unknown as empleado)
 
       const response = await request(app)
         .post('/api/empleados')
@@ -101,14 +102,14 @@ describe('Integration Tests - Empleado Routes', () => {
         })
 
       expect(response.status).toBe(201)
-      expect(response.body.success).toBe(true)
+      expect(response.body.status).toBe('success')
     })
 
     it('debería devolver 409 si el cuil ya está registrado', async () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
         cuil: CUIL_VALIDO,
         activo: true,
-      } as any)
+      } as unknown as empleado)
 
       const response = await request(app)
         .post('/api/empleados')
@@ -122,7 +123,7 @@ describe('Integration Tests - Empleado Routes', () => {
         })
 
       expect(response.status).toBe(409)
-      expect(response.body.success).toBe(false)
+      expect(response.body.status).toBe('fail')
     })
   })
 
@@ -137,7 +138,7 @@ describe('Integration Tests - Empleado Routes', () => {
     })
 
     it('debería devolver 404 si el empleado no existe', async () => {
-      vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue(null)
+      vi.spyOn(EmpleadoRepository.prototype, 'findByCuilPublic').mockResolvedValue(null)
 
       const response = await request(app)
         .delete(`/api/empleados/${CUIL_VALIDO}`)
@@ -147,10 +148,14 @@ describe('Integration Tests - Empleado Routes', () => {
     })
 
     it('debería devolver 200 con el empleado desactivado', async () => {
-      vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
+      vi.spyOn(EmpleadoRepository.prototype, 'findByCuilPublic').mockResolvedValue({
         cuil: CUIL_VALIDO,
         activo: true,
-      } as any)
+        nombre: 'Ana',
+        apellido: 'García',
+        rol_actual: 'VISITADOR',
+        area_trabajo: 'Campo',
+      } as unknown as empleado)
       vi.spyOn(EmpleadoRepository.prototype, 'update').mockResolvedValue({
         cuil: CUIL_VALIDO,
         nombre: 'Ana',
@@ -158,14 +163,14 @@ describe('Integration Tests - Empleado Routes', () => {
         rol_actual: 'VISITADOR',
         area_trabajo: 'Campo',
         activo: false,
-      } as any)
+      } as unknown as empleado)
 
       const response = await request(app)
         .delete(`/api/empleados/${CUIL_VALIDO}`)
         .set('Authorization', `Bearer ${adminToken}`)
 
       expect(response.status).toBe(200)
-      expect(response.body.success).toBe(true)
+      expect(response.body.status).toBe('success')
       expect(response.body.data.activo).toBe(false)
     })
   })

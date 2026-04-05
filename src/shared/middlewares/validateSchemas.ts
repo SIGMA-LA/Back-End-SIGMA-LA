@@ -84,9 +84,10 @@ export const validate = (schemas: SchemaType) => {
     if (errors.length > 0) {
       console.error('[VALIDATION_ERROR]', JSON.stringify(errors, null, 2))
       res.status(400).json({
-        success: false,
-        message: 'Error de validación',
-        errors: errors,
+        status: 'fail',
+        message: 'Validation failed',
+        errorCode: 'VALIDATION_ERROR',
+        details: errors,
       })
       return
     }

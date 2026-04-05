@@ -2,6 +2,8 @@ import request from 'supertest'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import app from '../../app.js'
 import { AuthService } from './auth.service.js'
+import { empleado } from '@prisma/client'
+import { AppError } from '../../shared/errors/AppError.js'
 
 /**
  * Tests de Integración - Auth Routes
@@ -21,20 +23,21 @@ describe('Integration Tests - Auth Routes', () => {
   describe('POST /api/auth/login', () => {
     it('debería devolver 401 si las credenciales son inválidas', async () => {
       vi.spyOn(AuthService.prototype, 'login').mockRejectedValue(
-        new Error('Credenciales inválidas'),
+        new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS'),
       )
       const response = await request(app)
         .post('/api/auth/login')
         .send({ cuil: '20111111112', contrasenia: 'incorrecta' })
 
       expect(response.status).toBe(401)
-      expect(response.body).toHaveProperty('error', 'Credenciales inválidas')
+      expect(response.body.status).toBe('fail')
+      expect(response.body).toHaveProperty('message', 'CUIL o contraseña incorrectos')
     })
 
     it('debería devolver 400 si el body no pasa la validación del schema', async () => {
       const response = await request(app)
         .post('/api/auth/login')
-        .send({ cuil: '123', contrasenia: '' })
+        .send({ cuil: '20111111112', contrasenia: '' })
 
       expect(response.status).toBe(400)
     })
@@ -49,7 +52,7 @@ describe('Integration Tests - Auth Routes', () => {
           apellido: 'Test',
           rol_actual: 'ADMIN',
           activo: true,
-        } as any,
+        } as unknown as empleado,
       })
 
       const response = await request(app)
@@ -57,8 +60,9 @@ describe('Integration Tests - Auth Routes', () => {
         .send({ cuil: '20111111112', contrasenia: 'pass1234' })
 
       expect(response.status).toBe(200)
-      expect(response.body).toHaveProperty('accessToken', 'mock-access-token')
-      expect(response.body.usuario).toMatchObject({ cuil: '20111111112', nombre: 'Carlos' })
+      expect(response.body.status).toBe('success')
+      expect(response.body.data).toHaveProperty('accessToken', 'mock-access-token')
+      expect(response.body.data.usuario).toMatchObject({ cuil: '20111111112', nombre: 'Carlos' })
       const cookies = response.headers['set-cookie'] as unknown as string[]
       expect(cookies.some((c: string) => c.startsWith('accessToken='))).toBe(true)
     })
@@ -82,7 +86,8 @@ describe('Integration Tests - Auth Routes', () => {
     it('debería devolver 401 si no se envía token', async () => {
       const response = await request(app).get('/api/auth/profile')
       expect(response.status).toBe(401)
-      expect(response.body).toHaveProperty('error', 'Token no proporcionado')
+      expect(response.body.status).toBe('fail')
+      expect(response.body).toHaveProperty('message', 'Token no proporcionado')
     })
 
     it('debería devolver 403 si el token es inválido', async () => {
@@ -91,7 +96,8 @@ describe('Integration Tests - Auth Routes', () => {
         .set('Authorization', 'Bearer token-falso-invalido')
 
       expect(response.status).toBe(403)
-      expect(response.body).toHaveProperty('error', 'Token inválido')
+      expect(response.body.status).toBe('fail')
+      expect(response.body).toHaveProperty('message', 'Token inválido')
     })
   })
 })

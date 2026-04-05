@@ -4,7 +4,12 @@ import {
   OrdenProduccionRepository,
 } from './ordenProduccion.repository.js'
 import { prisma } from '../../shared/db/prismaClient.js'
+import { AppError } from '../../shared/errors/AppError.js'
+import { ValidationError } from '../../shared/errors/validationError.js'
 
+/**
+ * Service to manage production orders (orden de producción).
+ */
 export class OrdenProduccionService {
   private repository: OrdenProduccionRepository
 
@@ -12,6 +17,9 @@ export class OrdenProduccionService {
     this.repository = new OrdenProduccionRepository()
   }
 
+  /**
+   * Creates a new production order.
+   */
   async create(data: {
     cod_obra: number
     url: string
@@ -31,71 +39,114 @@ export class OrdenProduccionService {
     return await this.repository.create(prismaData)
   }
 
+  /**
+   * Gets all production orders with optional filters.
+   */
   async findAll(
     filters?: OrdenProduccionFilters,
   ): Promise<orden_de_produccion[]> {
     return this.repository.findAll(filters)
   }
 
-  async findById(cod_op: number): Promise<orden_de_produccion | null> {
-    return await this.repository.findById(cod_op)
+  /**
+   * Gets a production order by its ID.
+   */
+  async findById(cod_op: number): Promise<orden_de_produccion> {
+    const entry = await this.repository.findById(cod_op)
+    if (!entry) {
+      throw new AppError('Orden de producción no encontrada', 404, 'ORDEN_NOT_FOUND')
+    }
+    return entry
   }
 
+  /**
+   * Gets all validated production orders.
+   */
   async findValidadas(): Promise<orden_de_produccion[]> {
     return await this.repository.findValidadas()
   }
 
+  /**
+   * Gets all production orders currently in production.
+   */
   async findEnProduccion(): Promise<orden_de_produccion[]> {
     return await this.repository.findEnProduccion()
   }
 
+  /**
+   * Updates an existing production order.
+   */
   async update(
     cod_op: number,
     data: Prisma.orden_de_produccionUpdateInput,
   ): Promise<orden_de_produccion> {
+    await this.findById(cod_op) // Ensure existence
     return await this.repository.update(cod_op, data)
   }
 
+  /**
+   * Deletes a production order by its ID.
+   */
   async remove(cod_op: number): Promise<orden_de_produccion> {
-    const existingOrden = await this.repository.findById(cod_op)
-    if (!existingOrden) {
-      throw new Error(
-        'No existe una orden de producción con el código proporcionado.',
-      )
-    }
+    await this.findById(cod_op)
     return await this.repository.delete(cod_op)
   }
 
+  /**
+   * Gets production orders associated with a specific obra.
+   */
   async findByObra(cod_obra: number): Promise<orden_de_produccion[]> {
     return await this.repository.findByObra(cod_obra)
   }
 
+  /**
+   * Gets finished production orders associated with a specific obra.
+   */
   async findByObraAndFinalizada(cod_obra: number): Promise<orden_de_produccion[]> {
     return await this.repository.findByObraAndFinalizada(cod_obra)
   }
 
+  /**
+   * Marks a production order as finished.
+   */
   async finalizarProduccion(cod_op: number): Promise<orden_de_produccion> {
-    const orden = await this.repository.findById(cod_op)
-    if (!orden) {
-      throw new Error('Orden de producción no encontrada.')
-    }
+    const orden = await this.findById(cod_op)
+
     if (orden.estado !== 'EN PRODUCCION') {
-      throw new Error(
-        'Solo se pueden finalizar órdenes que están "En Producción".',
+      throw new ValidationError(
+        'Solo las órdenes que están "En Producción" pueden ser finalizadas.',
+        'INVALID_STATE'
       )
     }
+
     const [ordenActualizada] = await prisma.$transaction([
       prisma.orden_de_produccion.update({
         where: { cod_op },
         data: { estado: 'FINALIZADA' },
       }),
-
     ])
 
     console.log(
-      `[NOTIFICACIÓN] La producción de la Orden #${orden.cod_op} ha finalizado. Notificar a Coordinación.`,
+      `[NOTIFICATION] Production of Order #${orden.cod_op} has finished. Notifying Coordination.`,
     )
 
     return ordenActualizada
   }
+
+  /**
+   * Marks a production order as starting production.
+   */
+  async iniciarProduccion(cod_op: number): Promise<orden_de_produccion> {
+    const orden = await this.findById(cod_op)
+
+    if (orden.estado !== 'VALIDADA') {
+      throw new ValidationError(
+        'Solo las órdenes "Validadas" pueden iniciar producción.',
+        'INVALID_STATE'
+      )
+    }
+
+    return await this.repository.update(cod_op, { estado: 'EN PRODUCCION' })
+  }
 }
+

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import app from '../../app.js'
 import { ObraRepository } from './obra.repository.js'
 
+
 /**
  * Tests de Integración - Obra Routes
  * Mockeamos el repositorio para interceptar el singleton del controlador.
@@ -35,16 +36,16 @@ describe('Integration Tests - Obra Routes', () => {
 
     it('debería devolver 200 y lista de obras', async () => {
       vi.spyOn(ObraRepository.prototype, 'findAll').mockResolvedValue([
-        { cod_obra: 1, direccion: 'Calle Falsa 123', estado: 'ACTIVA' } as any,
-        { cod_obra: 2, direccion: 'Av. Siempre Viva', estado: 'EN PRODUCCION' } as any,
-      ])
+        { cod_obra: 1, direccion: 'Calle Falsa 123', estado: 'ACTIVA' },
+        { cod_obra: 2, direccion: 'Av. Siempre Viva', estado: 'EN PRODUCCION' },
+      ] as unknown as Awaited<ReturnType<ObraRepository['findAll']>>)
 
       const response = await request(app)
         .get('/api/obras')
         .set('Authorization', `Bearer ${token}`)
 
       expect(response.status).toBe(200)
-      expect(response.body).toHaveLength(2)
+      expect(response.body.data).toHaveLength(2)
     })
   })
 
@@ -55,7 +56,7 @@ describe('Integration Tests - Obra Routes', () => {
         cod_obra: 10,
         direccion: 'Calle Falsa 123',
         estado: 'ACTIVA',
-      } as any)
+      } as unknown as Awaited<ReturnType<ObraRepository['create']>>)
 
       const response = await request(app)
         .post('/api/obras')
@@ -72,7 +73,7 @@ describe('Integration Tests - Obra Routes', () => {
       vi.spyOn(ObraRepository.prototype, 'findById').mockResolvedValue({
         cod_obra: 1,
         estado: 'PENDIENTE',
-      } as any)
+      } as unknown as Awaited<ReturnType<ObraRepository['findById']>>)
 
       const response = await request(app)
         .patch('/api/obras/1/solicitar-stock')
@@ -85,20 +86,20 @@ describe('Integration Tests - Obra Routes', () => {
       vi.spyOn(ObraRepository.prototype, 'findById').mockResolvedValue({
         cod_obra: 1,
         estado: 'PAGADA PARCIALMENTE',
-      } as any)
+      } as unknown as Awaited<ReturnType<ObraRepository['findById']>>)
       vi.spyOn(ObraRepository.prototype, 'update').mockResolvedValue({
         cod_obra: 1,
         estado: 'EN ESPERA DE STOCK',
-      } as any)
+      } as unknown as Awaited<ReturnType<ObraRepository['update']>>)
 
       const response = await request(app)
         .patch('/api/obras/1/solicitar-stock')
         .set('Authorization', `Bearer ${token}`)
 
       expect(response.status).toBe(200)
-      // El controller devuelve { message, obra }
-      expect(response.body.mensaje ?? response.body.message).toBeTruthy()
-      expect(response.body.obra?.estado ?? response.body.estado).toBe('EN ESPERA DE STOCK')
+      // El controller devuelve sendSuccess(res, obra, message)
+      expect(response.body.message).toBeTruthy()
+      expect(response.body.data.estado).toBe('EN ESPERA DE STOCK')
     })
   })
 

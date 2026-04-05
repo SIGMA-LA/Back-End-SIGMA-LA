@@ -5,6 +5,7 @@ import {
   uso_vehiculo_visita,
 } from '@prisma/client'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 export type AvailabilityStatus = 'DISPONIBLE' | 'ADVERTENCIA' | 'NO_DISPONIBLE'
 
@@ -15,15 +16,6 @@ export type VehiculoConDisponibilidad = vehiculo & {
 
 /**
  * Servicio para manejar la lógica de negocio de vehiculos.
- * @class VehiculoService
- * @method create - Crea un nuevo vehiculo validando que la patente no exista.
- * @method findAll - Obtiene todos los vehiculos.
- * @method findByPatente - Obtiene un vehiculo por su patente.
- * @method update - Actualiza un vehiculo existente verificando que existe.
- * @method remove - Elimina un vehiculo por su patente verificando que existe.
- * @method count - Cuenta el total de vehiculos registrados.
- * @returns {Promise<vehiculo | vehiculo[] | number | null>} - Resultado de la operación.
- * @throws {Error} - Si ocurre un error durante la operación.
  */
 export class VehiculoService {
   private vehiculoRepository: VehiculoRepository
@@ -45,7 +37,7 @@ export class VehiculoService {
       data.patente,
     )
     if (existingVehiculo) {
-      throw new Error('Ya existe un vehiculo con esa patente')
+      throw new AppError('Ya existe un vehiculo con esa patente', 409, 'DUPLICATE_PATENTE')
     }
 
     return await this.vehiculoRepository.create(data)
@@ -82,7 +74,7 @@ export class VehiculoService {
       let availabilityStatus: AvailabilityStatus = 'DISPONIBLE'
       let warningMessage: string | undefined = undefined
 
-      const allUsages = [
+      const allUsages: (uso_vehiculo_entrega | uso_vehiculo_visita)[] = [
         ...(vehiculo.uso_vehiculo_entrega ?? []),
         ...(vehiculo.uso_vehiculo_visita ?? []),
       ]
@@ -149,8 +141,12 @@ export class VehiculoService {
   }
 
   // Obtener vehiculo por patente
-  async findByPatente(patente: string): Promise<vehiculo | null> {
-    return await this.vehiculoRepository.findByPatente(patente)
+  async findByPatente(patente: string): Promise<vehiculo> {
+    const vehiculo = await this.vehiculoRepository.findByPatente(patente)
+    if (!vehiculo) {
+      throw new AppError('Vehiculo no encontrado', 404, 'VEHICULO_NOT_FOUND')
+    }
+    return vehiculo
   }
 
   // Actualizar vehiculo
@@ -164,25 +160,16 @@ export class VehiculoService {
       modelo?: string
     },
   ): Promise<vehiculo> {
-    const existingVehiculo =
-      await this.vehiculoRepository.findByPatente(patente)
-    if (!existingVehiculo) {
-      throw new Error('Vehiculo no encontrado')
-    }
-
+    await this.findByPatente(patente) // Throws if not found
     return await this.vehiculoRepository.update(patente, data)
   }
 
   // Eliminar vehiculo
   async remove(patente: string): Promise<vehiculo> {
-    const existingVehiculo =
-      await this.vehiculoRepository.findByPatente(patente)
-    if (!existingVehiculo) {
-      throw new Error('Vehiculo no encontrado')
-    }
-
+    await this.findByPatente(patente) // Throws if not found
     return await this.vehiculoRepository.remove(patente)
   }
 }
 
 export const vehiculoService = new VehiculoService()
+

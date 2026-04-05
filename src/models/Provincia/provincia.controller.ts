@@ -1,25 +1,40 @@
 import { Request, Response } from 'express'
 import { ProvinciaService } from './provincia.service.js'
+import { catchAsync } from '../../shared/utils/catchAsync.js'
+import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 const provinciaService = new ProvinciaService()
 
+/**
+ * Controller to handle province (provincia) routes.
+ */
 export class ProvinciaController {
-  async create(req: Request, res: Response) {
+  /**
+   * Creates a new province.
+   */
+  create = catchAsync(async (req: Request, res: Response) => {
     const provincia = await provinciaService.create(req.body)
-    res.status(201).json(provincia)
-  }
-  async getOne(req: Request, res: Response) {
-    const cod_provincia = parseInt(req.params.id, 10)
-    const provincia = await provinciaService.findById(cod_provincia)
-    if (provincia) {
-      res.json(provincia)
-    } else {
-      res.status(404).json({ message: 'Provincia no encontrada' })
-    }
-  }
+    return sendSuccess(res, provincia, 'Province created successfully', 201)
+  })
 
-  async getAll(req: Request, res: Response) {
+  /**
+   * Gets a specific province by ID.
+   */
+  getOne = catchAsync(async (req: Request, res: Response) => {
+    const codProvincia = parseInt(req.params.id, 10)
+    if (isNaN(codProvincia)) throw new AppError('ID de provincia inválido', 400, 'INVALID_ID')
+
+    const provincia = await provinciaService.findById(codProvincia)
+    return sendSuccess(res, provincia)
+  })
+
+  /**
+   * Gets all province records.
+   */
+  getAll = catchAsync(async (req: Request, res: Response) => {
     const provincias = await provinciaService.findAll()
-    res.json(provincias)
-  }
+    return sendSuccess(res, provincias)
+  })
 }
+

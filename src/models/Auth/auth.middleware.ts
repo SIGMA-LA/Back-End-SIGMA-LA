@@ -1,6 +1,7 @@
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
 import { env } from '../../config/env.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 /**
  * Middleware para verificar autenticación por JWT.
@@ -21,14 +22,14 @@ export function authenticateJWT(
     req.cookies?.accessToken || (authHeader && authHeader.split(' ')[1])
 
   if (!token) {
-    return res.status(401).json({ error: 'Token no proporcionado' })
+    throw new AppError('Token no proporcionado', 401, 'TOKEN_REQUIRED')
   }
   try {
     const user = jwt.verify(token, env.JWT_SECRET) as JwtPayload
     req.user = user
     next()
   } catch {
-    return res.status(403).json({ error: 'Token inválido' })
+    throw new AppError('Token inválido', 403, 'INVALID_TOKEN')
   }
 }
 
@@ -41,7 +42,7 @@ export function authenticateJWT(
 export function authorizeRoles(roles: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user || !roles.includes(req.user.rol_actual ?? '')) {
-      return res.status(403).json({ error: 'No autorizado' })
+      throw new AppError('No autorizado', 403, 'FORBIDDEN')
     }
     next()
   }

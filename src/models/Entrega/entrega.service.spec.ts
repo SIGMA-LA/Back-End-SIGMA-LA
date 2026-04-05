@@ -1,10 +1,11 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { EntregaService } from './entrega.service'
-import { EntregaRepository } from './entrega.repository'
-import { EmpleadoService } from '../Empleado/empleado.service'
-import { VehiculoService } from '../Vehiculo/vehiculo.service'
 import { MaquinariaService } from '../Maquinaria/maquinaria.service'
 import { prisma } from '../../shared/db/prismaClient'
+import { EntregaRepository, type EntregaWithRelations } from './entrega.repository'
+import { EmpleadoService } from '../Empleado/empleado.service'
+import { VehiculoService } from '../Vehiculo/vehiculo.service'
+import { Prisma } from '@prisma/client'
 
 // Mockeamos servicios internos y repositorios
 vi.mock('./entrega.repository')
@@ -27,7 +28,7 @@ vi.mock('../../shared/db/prismaClient', () => {
       entrega: { findUnique: vi.fn() },
       $transaction: vi.fn(async (cb) => {
         // Ejecutamos el callback pasando el "transactor" simulado
-        return await cb(mockPrismaTx)
+        return await cb(mockPrismaTx as unknown as Prisma.TransactionClient)
       }),
     },
   }
@@ -58,7 +59,7 @@ describe('EntregaService - Pruebas Unitarias', () => {
     })
 
     it('debería arrojar error si falla la validación cruzada de disponibilidad', async () => {
-      vi.mocked(prisma.obra.findUnique).mockResolvedValue({ cod_obra: 1 } as any)
+      vi.mocked(prisma.obra.findUnique).mockResolvedValue({ cod_obra: 1 } as unknown as Awaited<ReturnType<typeof prisma.obra.findUnique>>)
 
       vi.spyOn(EmpleadoService.prototype, 'verificarDisponibilidadEmpleados').mockResolvedValue(undefined)
       // Simulamos que el vehículo arroja error de disponibilidad
@@ -78,7 +79,7 @@ describe('EntregaService - Pruebas Unitarias', () => {
     })
 
     it('debería procesar el create exitosamente cuando todo es válido', async () => {
-      vi.mocked(prisma.obra.findUnique).mockResolvedValue({ cod_obra: 1 } as any)
+      vi.mocked(prisma.obra.findUnique).mockResolvedValue({ cod_obra: 1 } as unknown as Awaited<ReturnType<typeof prisma.obra.findUnique>>)
       
       vi.spyOn(EmpleadoService.prototype, 'verificarDisponibilidadEmpleados').mockResolvedValue(undefined)
       vi.spyOn(VehiculoService.prototype, 'verificarDisponibilidadVehiculos').mockResolvedValue(undefined)
@@ -86,7 +87,7 @@ describe('EntregaService - Pruebas Unitarias', () => {
 
       const createMock = vi.spyOn(EntregaRepository.prototype, 'create').mockResolvedValue({
         cod_entrega: 100,
-      } as any)
+      } as unknown as EntregaWithRelations)
 
       const result = await entregaService.create({
         cod_obra: 1,
@@ -108,7 +109,7 @@ describe('EntregaService - Pruebas Unitarias', () => {
       vi.mocked(prisma.entrega.findUnique).mockResolvedValue({
         esFinal: false,
         cod_obra: 1,
-      } as any)
+      } as unknown as Awaited<ReturnType<typeof prisma.entrega.findUnique>>)
 
       // Configuramos el comportamiento del prisma mock transaccional
       // Nota: vi.mocked no funciona directo con el parametro del callback si no lo extraemos
