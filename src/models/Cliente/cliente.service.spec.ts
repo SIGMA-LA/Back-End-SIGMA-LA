@@ -55,14 +55,13 @@ describe('ClienteService - Pruebas Unitarias', () => {
   })
 
   describe('remove()', () => {
-    it('debería devolver un estado "not_found" si el cuil no existe', async () => {
+    it('debería arrojar AppError si el cuil no existe', async () => {
       vi.spyOn(ClienteRepository.prototype, 'findById').mockResolvedValue(null)
 
-      const result = await clienteService.remove('invalido')
-      expect(result).toEqual({ status: 'not_found' })
+      await expect(clienteService.remove('invalido')).rejects.toThrow('Cliente no encontrado')
     })
 
-    it('debería devolver estado "has_dependencies" si el cliente tiene registros asociados', async () => {
+    it('debería arrojar AppError si el cliente tiene registros asociados', async () => {
       // Simulamos que el cliente sí existe
       vi.spyOn(ClienteRepository.prototype, 'findById').mockResolvedValue({ cuil: '111' } as any)
       
@@ -73,19 +72,10 @@ describe('ClienteService - Pruebas Unitarias', () => {
         visitasInicialesSinObra: 0
       })
 
-      const result = await clienteService.remove('111')
-      
-      expect(result).toEqual({
-        status: 'has_dependencies',
-        details: {
-          obras: 2,
-          visitasConObra: 1,
-          visitasInicialesSinObra: 0
-        }
-      })
+      await expect(clienteService.remove('111')).rejects.toThrow('No se puede eliminar el cliente porque tiene obras o visitas asociadas')
     })
 
-    it('debería devolver estado "deleted" con el cliente eliminado cuando no hay dependencias', async () => {
+    it('debería eliminar el cliente cuando no hay dependencias', async () => {
       vi.spyOn(ClienteRepository.prototype, 'findById').mockResolvedValue({ cuil: '111', razon_social: 'Borrar' } as any)
       // Sin dependencias
       vi.spyOn(ClienteRepository.prototype, 'countDeleteDependencies').mockResolvedValue({
@@ -99,12 +89,8 @@ describe('ClienteService - Pruebas Unitarias', () => {
         razon_social: 'Borrar'
       } as any)
 
-      const result = await clienteService.remove('111')
+      await clienteService.remove('111')
 
-      expect(result).toEqual({
-        status: 'deleted',
-        cliente: { cuil: '111', razon_social: 'Borrar' }
-      })
       expect(deleteMock).toHaveBeenCalledWith('111')
     })
   })

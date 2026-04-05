@@ -51,7 +51,7 @@ describe('Integration Tests - Visita Routes', () => {
         .set('Authorization', `Bearer ${token}`)
 
       expect(response.status).toBe(200)
-      expect(response.body).toHaveLength(2)
+      expect(response.body.data).toHaveLength(2)
     })
   })
 
@@ -99,7 +99,7 @@ describe('Integration Tests - Visita Routes', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ observaciones: 'Medidas tomadas' })
 
-      expect(response.status).toBe(400)
+      expect(response.status).toBe(404)
     })
 
     it('debería devolver 200 y la visita completada', async () => {
@@ -119,7 +119,7 @@ describe('Integration Tests - Visita Routes', () => {
         .send({ observaciones: 'Medidas tomadas' })
 
       expect(response.status).toBe(200)
-      expect(response.body.estado).toBe('COMPLETADA')
+      expect(response.body.data.estado).toBe('COMPLETADA')
     })
   })
 
@@ -142,7 +142,7 @@ describe('Integration Tests - Visita Routes', () => {
         .send({ motivo: 'Cliente ausente' })
 
       expect(response.status).toBe(200)
-      expect(response.body.estado).toBe('CANCELADA')
+      expect(response.body.data.estado).toBe('CANCELADA')
     })
   })
 })

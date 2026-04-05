@@ -44,7 +44,7 @@ describe('Integration Tests - Obra Routes', () => {
         .set('Authorization', `Bearer ${token}`)
 
       expect(response.status).toBe(200)
-      expect(response.body).toHaveLength(2)
+      expect(response.body.data).toHaveLength(2)
     })
   })
 
@@ -96,9 +96,9 @@ describe('Integration Tests - Obra Routes', () => {
         .set('Authorization', `Bearer ${token}`)
 
       expect(response.status).toBe(200)
-      // El controller devuelve { message, obra }
-      expect(response.body.mensaje ?? response.body.message).toBeTruthy()
-      expect(response.body.obra?.estado ?? response.body.estado).toBe('EN ESPERA DE STOCK')
+      // El controller devuelve sendSuccess(res, obra, message)
+      expect(response.body.message).toBeTruthy()
+      expect(response.body.data.estado).toBe('EN ESPERA DE STOCK')
     })
   })
 

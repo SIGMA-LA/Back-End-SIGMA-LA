@@ -60,7 +60,7 @@ describe('AuthService - Pruebas Unitarias', () => {
   describe('login()', () => {
     it('debería rechazar si el usuario o la contraseña no existen o son inválidos', async () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue(null)
-      await expect(authService.login('111', 'pass')).rejects.toThrow('Credenciales inválidas')
+      await expect(authService.login('111', 'pass')).rejects.toThrow('Invalid credentials')
 
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
         cuil: '111',
@@ -68,7 +68,7 @@ describe('AuthService - Pruebas Unitarias', () => {
       } as any)
       vi.mocked(bcrypt.compare).mockResolvedValue(false as any)
       
-      await expect(authService.login('111', 'badpass')).rejects.toThrow('Credenciales inválidas')
+      await expect(authService.login('111', 'badpass')).rejects.toThrow('Invalid credentials')
     })
 
     it('debería generar token y refreshToken si las credenciales son válidas', async () => {
@@ -111,7 +111,7 @@ describe('AuthService - Pruebas Unitarias', () => {
 
     it('debería arrojar error si la firma falla', async () => {
       vi.mocked(jwt.verify).mockImplementation(() => { throw new Error('invalid') })
-      await expect(authService.refreshAccessToken('rt-malo')).rejects.toThrow('Refresh token inválido')
+      await expect(authService.refreshAccessToken('rt-malo')).rejects.toThrow('Refresh token invalid or expired')
     })
   })
 })

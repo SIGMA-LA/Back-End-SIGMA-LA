@@ -5,7 +5,6 @@ import {
 } from './obra.repository.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
-import { prisma } from '../../shared/db/prismaClient.js'
 
 type ObraCreateInputExtended = Prisma.obraCreateInput & {
   cuil?: string

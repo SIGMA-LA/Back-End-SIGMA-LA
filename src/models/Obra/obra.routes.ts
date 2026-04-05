@@ -3,7 +3,6 @@ import { ObraController } from './obra.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
 import {
   upload,
-  deleteUploadedFile,
 } from '../../shared/middlewares/upload.middleware.js'
 import { idParamsSchema } from 'sigma-la-schemas'
 

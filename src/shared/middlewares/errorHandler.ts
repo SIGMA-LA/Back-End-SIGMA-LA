@@ -56,10 +56,16 @@ export const errorHandler = (
     }
   } else if (err instanceof Error) {
     message = err.message
-    if (err.name === 'ValidationError') {
+    if (err.name === 'ValidationError' || err.name === 'ValiError') {
       statusCode = 400
+      status = 'fail'
       errorCode = (err as { code?: string }).code ?? 'VALIDATION_ERROR'
       isOperational = true
+      
+      // Extract details for Valibot errors if possible
+      if ('issues' in err) {
+        details = (err as { issues: unknown }).issues
+      }
     }
   }
 

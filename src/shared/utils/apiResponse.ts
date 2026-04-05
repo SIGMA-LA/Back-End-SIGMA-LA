@@ -2,9 +2,7 @@ import { Response } from 'express'
 
 /**
  * Common success response format.
- * Ensures consistent JSON structure: { "status": "success", "message"?: string, "data"?: any }
- * Wait, the user said NO ANY.
- * I'll use `unknown` or a generic.
+ * Ensures consistent JSON structure: { "status": "success", "message"?: string, "data"?: unknown }
  */
 
 export interface ApiResponse<T = unknown> {

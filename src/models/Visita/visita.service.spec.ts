@@ -37,7 +37,7 @@ describe('VisitaService - Pruebas Unitarias', () => {
           motivo_visita: 'Medición',
           vehiculo: 'AB123CD',
         })
-      ).rejects.toThrow('Se detectaron sobreposiciones de agenda:\nEl empleado Juan ya tiene asignada otra visita')
+      ).rejects.toThrow('Agenda overlaps detected:\nEl empleado Juan ya tiene asignada otra visita')
     })
 
     it('debería crear correctamente si no hay conflictos', async () => {

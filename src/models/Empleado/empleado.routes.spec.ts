@@ -53,7 +53,7 @@ describe('Integration Tests - Empleado Routes', () => {
         .set('Authorization', `Bearer ${adminToken}`)
 
       expect(response.status).toBe(200)
-      expect(response.body.success).toBe(true)
+      expect(response.body.status).toBe('success')
       expect(response.body.data).toHaveLength(1)
     })
   })
@@ -101,7 +101,7 @@ describe('Integration Tests - Empleado Routes', () => {
         })
 
       expect(response.status).toBe(201)
-      expect(response.body.success).toBe(true)
+      expect(response.body.status).toBe('success')
     })
 
     it('debería devolver 409 si el cuil ya está registrado', async () => {
@@ -122,7 +122,7 @@ describe('Integration Tests - Empleado Routes', () => {
         })
 
       expect(response.status).toBe(409)
-      expect(response.body.success).toBe(false)
+      expect(response.body.status).toBe('fail')
     })
   })
 
@@ -137,7 +137,7 @@ describe('Integration Tests - Empleado Routes', () => {
     })
 
     it('debería devolver 404 si el empleado no existe', async () => {
-      vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue(null)
+      vi.spyOn(EmpleadoRepository.prototype, 'findByCuilPublic').mockResolvedValue(null)
 
       const response = await request(app)
         .delete(`/api/empleados/${CUIL_VALIDO}`)
@@ -147,9 +147,13 @@ describe('Integration Tests - Empleado Routes', () => {
     })
 
     it('debería devolver 200 con el empleado desactivado', async () => {
-      vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
+      vi.spyOn(EmpleadoRepository.prototype, 'findByCuilPublic').mockResolvedValue({
         cuil: CUIL_VALIDO,
         activo: true,
+        nombre: 'Ana',
+        apellido: 'García',
+        rol_actual: 'VISITADOR',
+        area_trabajo: 'Campo',
       } as any)
       vi.spyOn(EmpleadoRepository.prototype, 'update').mockResolvedValue({
         cuil: CUIL_VALIDO,
@@ -165,7 +169,7 @@ describe('Integration Tests - Empleado Routes', () => {
         .set('Authorization', `Bearer ${adminToken}`)
 
       expect(response.status).toBe(200)
-      expect(response.body.success).toBe(true)
+      expect(response.body.status).toBe('success')
       expect(response.body.data.activo).toBe(false)
     })
   })

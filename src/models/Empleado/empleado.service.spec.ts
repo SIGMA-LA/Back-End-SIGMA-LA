@@ -82,16 +82,14 @@ describe('EmpleadoService - Pruebas Unitarias', () => {
   })
 
   describe('findByCuil()', () => {
-    it('debería devolver null si el empleado existe en DB pero no está activo', async () => {
+    it('debería arrojar error si el empleado existe en DB pero no está activo', async () => {
       // Simulamos que el repositorio encuentra el empleado público, pero con activo: false
       const findMock = vi.spyOn(EmpleadoRepository.prototype, 'findByCuilPublic').mockResolvedValue({
         cuil: '111',
         activo: false,
       } as any)
 
-      const result = await empleadoService.findByCuil('111')
-      
-      expect(result).toBeNull()
+      await expect(empleadoService.findByCuil('111')).rejects.toThrow('Empleado no encontrado o inactivo')
       expect(findMock).toHaveBeenCalledWith('111')
     })
   })
@@ -135,7 +133,7 @@ describe('EmpleadoService - Pruebas Unitarias', () => {
   describe('remove()', () => {
     it('debería hacer un soft-delete actualizando activo a false', async () => {
       // Simulamos que el empleado es encontrado y está activo
-      vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
+      vi.spyOn(EmpleadoRepository.prototype, 'findByCuilPublic').mockResolvedValue({
         cuil: '999',
         activo: true,
       } as any)

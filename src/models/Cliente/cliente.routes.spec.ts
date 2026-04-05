@@ -47,7 +47,7 @@ describe('Integration Tests - Cliente Routes', () => {
         .set('Authorization', `Bearer ${token}`)
 
       expect(response.status).toBe(200)
-      expect(response.body).toHaveLength(2)
+      expect(response.body.data).toHaveLength(2)
     })
   })
 
