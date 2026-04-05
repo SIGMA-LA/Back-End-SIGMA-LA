@@ -4,16 +4,11 @@ import { ProvinciaController } from './provincia.controller.js'
 const provinciaController = new ProvinciaController()
 const provinciaRouter = Router()
 
-provinciaRouter.get('/', (req, res) => {
-  provinciaController.getAll(req, res)
-})
+provinciaRouter.get('/', provinciaController.getAll)
 
-provinciaRouter.get('/:id', (req, res) => {
-  provinciaController.getOne(req, res)
-})
+provinciaRouter.get('/:id', provinciaController.getOne)
 
-provinciaRouter.post('/', (req, res) => {
-  provinciaController.create(req, res)
-})
+provinciaRouter.post('/', provinciaController.create)
+
 
 export default provinciaRouter

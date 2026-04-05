@@ -1,21 +1,7 @@
 import express from 'express'
 import { Prisma } from '@prisma/client'
 import { env } from '../../config/env.js'
-
-interface ApiErrorPayload {
-  status?: number
-  code?: string
-  message?: string
-  details?: unknown
-}
-
-const isApiErrorPayload = (value: unknown): value is ApiErrorPayload => {
-  if (!value || typeof value !== 'object') {
-    return false
-  }
-
-  return true
-}
+import { AppError } from '../errors/AppError.js'
 
 export const errorHandler = (
   err: unknown,
@@ -23,35 +9,70 @@ export const errorHandler = (
   res: express.Response,
   next: express.NextFunction,
 ) => {
-  console.error('Error:', err)
-
   if (res.headersSent) {
     return next(err)
   }
 
-  if (
-    err instanceof Prisma.PrismaClientKnownRequestError &&
-    err.code === 'P2003'
-  ) {
-    return res.status(409).json({
-      code: 'CLIENTE_CON_DEPENDENCIAS',
-      message:
-        'No se puede eliminar el cliente porque tiene obras o visitas asociadas. Debe desvincularlas antes.',
-    })
+  // Consistent error object structure
+  let statusCode = 500
+  let status = 'error'
+  let errorCode = 'INTERNAL_SERVER_ERROR'
+  let message = 'Algo salió mal'
+  let details: unknown = undefined
+  let isOperational = false
+
+  if (err instanceof AppError) {
+    statusCode = err.statusCode
+    status = err.status
+    errorCode = err.errorCode
+    message = err.message
+    details = err.details
+    isOperational = err.isOperational
+  } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    statusCode = 400
+    isOperational = true
+    
+    switch (err.code) {
+      case 'P2002': // Unique constraint failed
+        statusCode = 409
+        errorCode = 'DUPLICATE_ENTRY'
+        message = 'Ya existe un registro con estos datos'
+        details = err.meta
+        break
+      case 'P2003': // Foreign key constraint failed
+        statusCode = 409
+        errorCode = 'FOREIGN_KEY_CONSTRAINT'
+        message = 'No se puede realizar la operación debido a dependencias con otros registros'
+        details = err.meta
+        break
+      case 'P2025': // Record not found
+        statusCode = 404
+        errorCode = 'RECORD_NOT_FOUND'
+        message = 'El registro solicitado no existe'
+        break
+      default:
+        errorCode = `PRISMA_${err.code}`
+        message = 'Error de base de datos'
+    }
+  } else if (err instanceof Error) {
+    message = err.message
+    if (err.name === 'ValidationError') {
+      statusCode = 400
+      errorCode = (err as { code?: string }).code ?? 'VALIDATION_ERROR'
+      isOperational = true
+    }
   }
 
-  if (isApiErrorPayload(err) && typeof err.status === 'number') {
-    return res.status(err.status).json({
-      code: err.code ?? 'APPLICATION_ERROR',
-      message: err.message ?? 'Error de aplicacion',
-      details: err.details,
-    })
+  // Log error (in production maybe use a more sophisticated logger)
+  if (!isOperational || env.NODE_ENV === 'development') {
+    console.error(`[ERROR][${errorCode}]`, err)
   }
 
-  const message = err instanceof Error ? err.message : 'Something went wrong'
-
-  res.status(500).json({
-    code: 'INTERNAL_SERVER_ERROR',
-    message: env.NODE_ENV === 'development' ? message : 'Something went wrong',
+  res.status(statusCode).json({
+    status,
+    message: statusCode === 500 && env.NODE_ENV === 'production' ? 'Error interno del servidor' : message,
+    errorCode,
+    details: details ?? undefined,
   })
 }
+

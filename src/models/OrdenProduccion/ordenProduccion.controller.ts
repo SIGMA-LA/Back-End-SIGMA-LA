@@ -1,317 +1,133 @@
-import { OrdenProduccionService } from './ordenProduccion.service.js'
 import { Request, Response } from 'express'
+import { OrdenProduccionService } from './ordenProduccion.service.js'
+import { catchAsync } from '../../shared/utils/catchAsync.js'
+import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
-const ordenService = new OrdenProduccionService()
-const ORDEN_ESTADOS = ['PENDIENTE', 'APROBADA', 'EN PRODUCCION', 'FINALIZADA']
+const ordenProduccionService = new OrdenProduccionService()
 
+/**
+ * Controller to handle production order (orden de producción) routes.
+ */
 export class OrdenProduccionController {
-  async create(req: Request, res: Response) {
-    try {
-      const { cod_obra } = req.body
-      const file = req.file
+  /**
+   * Creates a new production order.
+   */
+  create = catchAsync(async (req: Request, res: Response) => {
+    const nueva = await ordenProduccionService.create(req.body)
+    return sendSuccess(res, nueva, 'Production order created successfully', 201)
+  })
 
-      if (!file) {
-        return res.status(400).json({ message: 'No se envió ningún archivo' })
-      }
+  /**
+   * Gets all production orders with optional filters.
+   */
+  getAll = catchAsync(async (req: Request, res: Response) => {
+    const { cod_obra, estado } = req.query
+    const ordenes = await ordenProduccionService.findAll({
+      cod_obra: cod_obra ? Number(cod_obra) : undefined,
+      estado: estado as string | undefined,
+    })
+    return sendSuccess(res, ordenes)
+  })
 
-      const nueva = await ordenService.create({
-        cod_obra: parseInt(cod_obra),
-        url: file.path,
-        public_id: file.filename,
-      })
+  /**
+   * Gets a specific production order by ID.
+   */
+  getOne = catchAsync(async (req: Request, res: Response) => {
+    const { cod_op } = req.params
+    const codOpNum = Number(cod_op)
+    if (isNaN(codOpNum)) throw new AppError('Invalid order code', 400, 'INVALID_ID')
 
-      res.status(201).json(nueva)
-    } catch (error) {
-      console.error('Error al crear orden:', error)
-      res.status(500).json({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al crear orden de producción',
-      })
-    }
-  }
+    const orden = await ordenProduccionService.findById(codOpNum)
+    return sendSuccess(res, orden)
+  })
 
-  async getAll(req: Request, res: Response) {
-    try {
-      const { estado, fechaDesde, fechaHasta } = req.query as {
-        estado?: string
-        fechaDesde?: string
-        fechaHasta?: string
-      }
+  /**
+   * Gets all validated production orders.
+   */
+  getValidadas = catchAsync(async (req: Request, res: Response) => {
+    const ordenes = await ordenProduccionService.findValidadas()
+    return sendSuccess(res, ordenes)
+  })
 
-      const allowedQueryParams = new Set(['estado', 'fechaDesde', 'fechaHasta'])
-      const invalidQueryParams = Object.keys(req.query).filter(
-        key => !allowedQueryParams.has(key),
-      )
+  /**
+   * Gets all production orders currently in production.
+   */
+  getEnProduccion = catchAsync(async (req: Request, res: Response) => {
+    const ordenes = await ordenProduccionService.findEnProduccion()
+    return sendSuccess(res, ordenes)
+  })
 
-      if (invalidQueryParams.length > 0) {
-        return res.status(400).json({
-          message:
-            'Parámetros no permitidos. Solo se aceptan estado, fechaDesde y fechaHasta',
-        })
-      }
+  /**
+   * Updates an existing production order.
+   */
+  update = catchAsync(async (req: Request, res: Response) => {
+    const { cod_op } = req.params
+    const codOpNum = Number(cod_op)
+    if (isNaN(codOpNum)) throw new AppError('Invalid order code', 400, 'INVALID_ID')
 
-      if (estado && !ORDEN_ESTADOS.includes(estado)) {
-        return res.status(400).json({
-          message:
-            'El estado debe ser PENDIENTE, APROBADA, EN PRODUCCION o FINALIZADA',
-        })
-      }
+    const orden = await ordenProduccionService.update(codOpNum, req.body)
+    return sendSuccess(res, orden, 'Production order updated successfully')
+  })
 
-      const fechaDesdeDate = fechaDesde ? new Date(fechaDesde) : null
-      const fechaHastaDate = fechaHasta ? new Date(fechaHasta) : null
+  /**
+   * Removes a production order by its ID.
+   */
+  remove = catchAsync(async (req: Request, res: Response) => {
+    const { cod_op } = req.params
+    const codOpNum = Number(cod_op)
+    if (isNaN(codOpNum)) throw new AppError('Invalid order code', 400, 'INVALID_ID')
 
-      if (fechaDesde && Number.isNaN(fechaDesdeDate?.getTime())) {
-        return res.status(400).json({ message: 'fechaDesde inválida' })
-      }
+    await ordenProduccionService.remove(codOpNum)
+    return res.status(204).send()
+  })
 
-      if (fechaHasta && Number.isNaN(fechaHastaDate?.getTime())) {
-        return res.status(400).json({ message: 'fechaHasta inválida' })
-      }
+  /**
+   * Gets production orders associated with a specific obra.
+   */
+  getByObra = catchAsync(async (req: Request, res: Response) => {
+    const { cod_obra } = req.params
+    const codObraNum = Number(cod_obra)
+    if (isNaN(codObraNum)) throw new AppError('Invalid obra code', 400, 'INVALID_ID')
 
-      if (
-        fechaDesdeDate &&
-        fechaHastaDate &&
-        fechaDesdeDate.getTime() > fechaHastaDate.getTime()
-      ) {
-        return res.status(400).json({
-          message: 'fechaDesde no puede ser mayor a fechaHasta',
-        })
-      }
+    const ordenes = await ordenProduccionService.findByObra(codObraNum)
+    return sendSuccess(res, ordenes)
+  })
 
-      const ordenes = await ordenService.findAll({
-        estado,
-        fechaDesde,
-        fechaHasta,
-      })
+  /**
+   * Gets finished production orders associated with a specific obra.
+   */
+  getByObraAndFinalizada = catchAsync(async (req: Request, res: Response) => {
+    const { cod_obra } = req.params
+    const codObraNum = Number(cod_obra)
+    if (isNaN(codObraNum)) throw new AppError('Invalid obra code', 400, 'INVALID_ID')
 
-      res.status(200).json(ordenes)
-    } catch (error) {
-      console.error('Error al obtener órdenes:', error)
-      res.status(500).json({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al obtener órdenes de producción',
-      })
-    }
-  }
+    const ordenes = await ordenProduccionService.findByObraAndFinalizada(codObraNum)
+    return sendSuccess(res, ordenes)
+  })
 
-  async getOne(req: Request, res: Response) {
-    try {
-      const cod_op = parseInt(req.params.cod_op, 10)
+  /**
+   * Marks a production order as starting production.
+   */
+  iniciarProduccion = catchAsync(async (req: Request, res: Response) => {
+    const { cod_op } = req.params
+    const codOpNum = Number(cod_op)
+    if (isNaN(codOpNum)) throw new AppError('Invalid order code', 400, 'INVALID_ID')
 
-      if (isNaN(cod_op)) {
-        return res.status(400).json({ message: 'Código de orden inválido' })
-      }
+    const orden = await ordenProduccionService.iniciarProduccion(codOpNum)
+    return sendSuccess(res, orden, 'Production started for this order')
+  })
 
-      const orden = await ordenService.findById(cod_op)
-      if (!orden) {
-        return res.status(404).json({ message: 'Not found' })
-      }
-      res.status(200).json(orden)
-    } catch (error) {
-      console.error('Error al obtener orden:', error)
-      res.status(500).json({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al obtener orden de producción',
-      })
-    }
-  }
+  /**
+   * Marks a production order as finished.
+   */
+  finalizarProduccion = catchAsync(async (req: Request, res: Response) => {
+    const { cod_op } = req.params
+    const codOpNum = Number(cod_op)
+    if (isNaN(codOpNum)) throw new AppError('Invalid order code', 400, 'INVALID_ID')
 
-  async update(req: Request, res: Response) {
-    try {
-      const cod_op = parseInt(req.params.cod_op, 10)
+    const orden = await ordenProduccionService.finalizarProduccion(codOpNum)
+    return sendSuccess(res, orden, 'Production order finalized successfully')
+  })
 
-      if (isNaN(cod_op)) {
-        return res.status(400).json({ message: 'Código de orden inválido' })
-      }
-
-      // Verificar que la orden existe
-      const ordenExistente = await ordenService.findById(cod_op)
-      if (!ordenExistente) {
-        return res
-          .status(404)
-          .json({ message: 'Orden de producción no encontrada' })
-      }
-
-      const body = { ...req.body }
-      if (typeof body.fecha_validacion === 'string') {
-        const parsedDate = new Date(body.fecha_validacion)
-        if (Number.isNaN(parsedDate.getTime())) {
-          return res.status(400).json({ message: 'fecha_validacion inválida' })
-        }
-        body.fecha_validacion = parsedDate
-      }
-
-      const orden = await ordenService.update(cod_op, body)
-      res.status(200).json(orden)
-    } catch (error) {
-      console.error('Error al actualizar orden:', error)
-      res.status(500).json({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al actualizar orden de producción',
-      })
-    }
-  }
-
-  async remove(req: Request, res: Response) {
-    try {
-      const cod_op = parseInt(req.params.cod_op, 10)
-
-      if (isNaN(cod_op)) {
-        return res.status(400).json({ message: 'Código de orden inválido' })
-      }
-
-      const orden = await ordenService.remove(cod_op)
-      res.status(200).json(orden)
-    } catch (error) {
-      console.error('Error al eliminar orden:', error)
-
-      if (
-        error instanceof Error &&
-        error.message.includes('No existe una orden')
-      ) {
-        return res.status(404).json({ message: error.message })
-      }
-
-      res.status(500).json({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al eliminar orden de producción',
-      })
-    }
-  }
-  async getValidadas(req: Request, res: Response) {
-    try {
-      const ordenes = await ordenService.findValidadas()
-      res.status(200).json(ordenes)
-    } catch (error) {
-      console.error('Error al obtener órdenes validadas:', error)
-      res.status(500).json({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al obtener órdenes validadas',
-      })
-    }
-  }
-
-  async getEnProduccion(req: Request, res: Response) {
-    try {
-      const ordenes = await ordenService.findEnProduccion()
-      res.status(200).json(ordenes)
-    } catch (error) {
-      console.error('Error al obtener órdenes en producción:', error)
-      res.status(500).json({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al obtener órdenes en producción',
-      })
-    }
-  }
-
-  async iniciarProduccion(req: Request, res: Response) {
-    try {
-      const cod_op = parseInt(req.params.cod_op, 10)
-
-      const orden = await ordenService.findById(cod_op)
-      if (!orden) {
-        return res
-          .status(404)
-          .json({ message: 'Orden de producción no encontrada' })
-      }
-
-      await ordenService.update(cod_op, {
-        estado: 'EN PRODUCCION',
-      })
-
-      const { ObraService } = await import('../Obra/obra.service.js')
-      const obraService = new ObraService()
-
-      await obraService.update(orden.cod_obra, {
-        estado: 'EN PRODUCCION',
-      })
-
-      res.json({ message: 'Producción iniciada correctamente' })
-    } catch (error) {
-      console.error('Error al iniciar producción:', error)
-      res.status(500).json({ message: 'Error al iniciar producción' })
-    }
-  }
-
-  async finalizarProduccion(req: Request, res: Response) {
-    try {
-      const cod_op = parseInt(req.params.cod_op, 10)
-
-      const orden = await ordenService.findById(cod_op)
-      if (!orden) {
-        return res
-          .status(404)
-          .json({ message: 'Orden de producción no encontrada' })
-      }
-
-      await ordenService.finalizarProduccion(cod_op)
-
-      const { ObraService } = await import('../Obra/obra.service.js')
-      const obraService = new ObraService()
-      await obraService.update(orden.cod_obra, {
-        estado: 'PRODUCCION FINALIZADA',
-      })
-
-      res.json({ message: 'Producción finalizada correctamente' })
-    } catch (error) {
-      console.error('Error al finalizar producción:', error)
-      res.status(500).json({ message: 'Error al finalizar producción' })
-    }
-  }
-
-  async getByObra(req: Request, res: Response) {
-    try {
-      const cod_obra = parseInt(req.params.cod_obra, 10)
-
-      if (isNaN(cod_obra)) {
-        return res.status(400).json({ message: 'Código de obra inválido' })
-      }
-
-      const ordenes = await ordenService.findByObra(cod_obra)
-      res.status(200).json(ordenes)
-    } catch (error) {
-      console.error('Error al obtener órdenes por obra:', error)
-      res.status(500).json({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al obtener órdenes por obra',
-      })
-    }
-  }
-
-  async getByObraAndFinalizada(req: Request, res: Response) {
-    try {
-      const cod_obra = parseInt(req.params.cod_obra, 10)
-
-      if (isNaN(cod_obra)) {
-        return res.status(400).json({ message: 'Código de obra inválido' })
-      }
-
-      const ordenes = await ordenService.findByObraAndFinalizada(cod_obra)
-      res.status(200).json(ordenes)
-    } catch (error) {
-      console.error('Error al obtener órdenes por obra:', error)
-      res.status(500).json({
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Error al obtener órdenes por obra',
-      })
-    }
-  }
 }

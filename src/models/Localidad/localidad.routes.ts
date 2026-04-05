@@ -6,25 +6,16 @@ import { updateLocalidadSchema, idParamsSchema } from 'sigma-la-schemas'
 const localidadController = new LocalidadController()
 const localidadRouter = Router()
 
-localidadRouter.get('/provincias/:provinciaId', (req, res) => {
-  const provinciaId = parseInt(req.params.provinciaId, 10)
-  localidadController.getByProvincia(provinciaId, req, res)
-})
+localidadRouter.get('/provincias/:provinciaId', localidadController.getByProvincia)
 
-localidadRouter.get('/', (req, res) => {
-  localidadController.getAll(req, res)
-})
+localidadRouter.get('/', localidadController.getAll)
 
-localidadRouter.post('/', (req, res) => {
-  localidadController.create(req, res)
-})
+localidadRouter.post('/', localidadController.create)
 
 localidadRouter.get(
   '/:id',
   validate({ params: idParamsSchema }),
-  (req, res) => {
-    localidadController.getOne(req, res)
-  },
+  localidadController.getOne,
 )
 
 localidadRouter.put(
@@ -33,17 +24,13 @@ localidadRouter.put(
     params: idParamsSchema,
     body: updateLocalidadSchema,
   }),
-  (req, res) => {
-    localidadController.update(req, res)
-  },
+  localidadController.update,
 )
 
 localidadRouter.delete(
   '/:id',
   validate({ params: idParamsSchema }),
-  (req, res) => {
-    localidadController.remove(req, res)
-  },
+  localidadController.remove,
 )
 
 export default localidadRouter

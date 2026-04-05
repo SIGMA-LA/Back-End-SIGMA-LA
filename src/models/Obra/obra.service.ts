@@ -3,6 +3,9 @@ import {
   NotasFabricaFilters,
   ObraRepository,
 } from './obra.repository.js'
+import { AppError } from '../../shared/errors/AppError.js'
+import { ValidationError } from '../../shared/errors/validationError.js'
+import { prisma } from '../../shared/db/prismaClient.js'
 
 type ObraCreateInputExtended = Prisma.obraCreateInput & {
   cuil?: string
@@ -24,7 +27,7 @@ type ObraUpdateInputExtended = Prisma.obraUpdateInput & {
 }
 
 /**
- * Servicio para gestionar las operaciones relacionadas con las obras.
+ * Service to manage obra (construction project) operations.
  */
 export class ObraService {
   private repository: ObraRepository
@@ -33,68 +36,98 @@ export class ObraService {
     this.repository = new ObraRepository()
   }
 
-  // ----------- FILTROS Y BÚSQUEDAS -----------
+  // ----------- FILTERS AND SEARCHES -----------
 
-  /** Filtra obras por estado, localidad o ambos */
-  async filtrar(filtros: { estado?: string; cod_localidad?: number }) {
+  /**
+   * Filters obras by status, location, or both.
+   */
+  async filtrar(filtros: { estado?: string; cod_localidad?: number }): Promise<obra[]> {
     return this.repository.filtrar(filtros)
   }
 
-  /** Busca obras por texto (dirección, cliente, etc.) */
-  async buscar(q: string) {
+  /**
+   * Searches obras by text (address, client, etc.).
+   */
+  async buscar(q: string): Promise<obra[]> {
+    if (!q) return this.findAll()
     return this.repository.buscar(q)
   }
 
-  /** Obtiene obras de un cliente específico */
-  async findByCliente(cuil_cliente: string) {
+  /**
+   * Gets obras for a specific client.
+   */
+  async findByCliente(cuil_cliente: string): Promise<obra[]> {
     return this.repository.findByCliente(cuil_cliente)
   }
 
-  /** Obtiene todas las obras */
+  /**
+   * Gets all obras.
+   */
   async findAll(): Promise<obra[]> {
     return this.repository.findAll()
   }
 
-  /** Obtiene una obra por ID */
-  async findById(id: number): Promise<obra | null> {
-    return await this.repository.findById(id)
+  /**
+   * Gets an obra by its ID.
+   */
+  async findById(id: number): Promise<obra> {
+    const entry = await this.repository.findById(id)
+    if (!entry) {
+      throw new AppError('Obra not found', 404, 'OBRA_NOT_FOUND')
+    }
+    return entry
   }
 
-  // ----------- NOTA DE FÁBRICA -----------
+  // ----------- FACTORY NOTE (NOTAS DE FÁBRICA) -----------
 
-  /** Obtiene obras para la pantalla de Notas de Fábrica */
+  /**
+   * Gets obras for the factory notes screen.
+   */
   async findNotasFabrica(filtros: NotasFabricaFilters): Promise<obra[]> {
     return this.repository.findNotasFabrica(filtros)
   }
 
-  /** Sube nota de fábrica a una obra */
+  /**
+   * Uploads a factory note file to an obra.
+   */
   async subirNotaFabrica(
     id: number,
     file: Express.Multer.File,
   ): Promise<obra> {
+    await this.findById(id) // Ensure existence
     return this.repository.subirNotaFabrica(id, file.path, file.filename)
   }
 
-  /** Elimina la nota de fábrica de una obra */
+  /**
+   * Deletes the factory note from an obra.
+   */
   async deleteNotaFabrica(id: number): Promise<obra> {
+    await this.findById(id) // Ensure existence
     return this.repository.update(id, {
       nota_fabrica: null,
       nota_fabrica_pid: null,
     })
   }
 
-  /** Obtiene obras con nota de fábrica sin orden aprobada */
+  /**
+   * Gets obras with factory notes but without an approved order.
+   */
   async findNotasSinOrdenAprobada(): Promise<obra[]> {
     return await this.repository.findNotasSinOrdenAprobada()
   }
 
-  /** Obtiene obras con nota de fábrica y orden en proceso */
+  /**
+   * Gets obras with factory notes and order in process.
+   */
   async findNotasConOrdenEnProceso(): Promise<obra[]> {
     return await this.repository.findNotasConOrdenEnProceso()
   }
 
-  // ----------- CRUD DE OBRAS -----------
+  // ----------- OBRA CRUD -----------
 
+  /**
+   * Creates a new construction project (obra).
+   */
   async create(data: ObraCreateInputExtended): Promise<obra> {
     const {
       cuil,
@@ -102,11 +135,10 @@ export class ObraService {
       cuil_arquitecto,
       cod_localidad,
       presupuestos,
-      presupuesto,
       ...rest
     } = data
 
-    // Procesar los datos de presupuestos desde ambas posibles key y castear las fechas a Date
+    // Handle budgeting data from multiple potential keys and cast dates
     let parsedPresupuestosCreate = undefined
     if (presupuestos && Array.isArray(presupuestos)) {
       parsedPresupuestosCreate = presupuestos.map(
@@ -123,36 +155,6 @@ export class ObraService {
             ? new Date(p.fecha_aceptacion + 'T00:00:00.000Z')
             : null,
         }),
-      )
-    } else if (presupuesto?.create && Array.isArray(presupuesto.create)) {
-      parsedPresupuestosCreate = presupuesto.create.map(
-        (p: {
-          nro_presupuesto?: number
-          valor: number
-          fecha_emision: string | Date
-          fecha_aceptacion?: string | Date | null
-          [key: string]: unknown
-        }) => {
-          const pRest = { ...p }
-          delete pRest.nro_presupuesto
-          if (
-            typeof pRest.fecha_emision === 'string' &&
-            /^\d{4}-\d{2}-\d{2}$/.test(pRest.fecha_emision)
-          ) {
-            pRest.fecha_emision = new Date(
-              pRest.fecha_emision + 'T00:00:00.000Z',
-            )
-          }
-          if (
-            typeof pRest.fecha_aceptacion === 'string' &&
-            /^\d{4}-\d{2}-\d{2}$/.test(pRest.fecha_aceptacion)
-          ) {
-            pRest.fecha_aceptacion = new Date(
-              pRest.fecha_aceptacion + 'T00:00:00.000Z',
-            )
-          }
-          return pRest
-        },
       )
     }
 
@@ -187,7 +189,10 @@ export class ObraService {
 
     return await this.repository.create(prismaData)
   }
-  /** Actualiza una obra por ID */
+
+  /**
+   * Updates an existing construction project.
+   */
   async update(id: number, data: ObraUpdateInputExtended): Promise<obra> {
     const {
       cuil,
@@ -196,6 +201,8 @@ export class ObraService {
       cod_localidad,
       ...rest
     } = data
+
+    await this.findById(id) // Ensure existence
 
     const prismaData: Prisma.obraUpdateInput = {
       ...rest,
@@ -231,26 +238,31 @@ export class ObraService {
     return await this.repository.update(id, prismaData)
   }
 
-  /** Baja lógica de una obra (cambia estado a CANCELADA) */
-  async bajaLogica(id: number) {
-    return this.repository.bajaLogica(id)
+  /**
+   * Performs a logical deletion by changing status to CANCELADA.
+   */
+  async bajaLogica(id: number): Promise<obra> {
+    await this.findById(id)
+    return (await this.repository.bajaLogica(id)) as obra
   }
 
-  /** Elimina una obra por ID */
-  async remove(id: number) {
-    const existingObra = await this.repository.findById(id)
-    if (!existingObra) {
-      throw new Error('No existe una obra con el código proporcionado.')
-    }
-    return await this.repository.delete(id)
+  /**
+   * Deletes a construction project from the database.
+   */
+  async remove(id: number): Promise<obra> {
+    await this.findById(id)
+    return (await this.repository.delete(id)) as obra
   }
 
+  /**
+   * Gets obras with accepted budgets and calculates financial status.
+   */
   async findObrasConPresupuestoAceptado(search?: string) {
     const obrasConPresupuesto =
       await this.repository.findObrasConPresupuestoAceptado(search)
 
     return obrasConPresupuesto.map(obra => {
-      const presupuestoAceptado = obra.presupuesto[0] // Ya filtrado en el query
+      const presupuestoAceptado = obra.presupuesto[0]
       const totalPagado = obra.pago.reduce((sum, pago) => sum + pago.monto, 0)
       const saldoPendiente = presupuestoAceptado.valor - totalPagado
       const porcentajePagado =
@@ -273,7 +285,7 @@ export class ObraService {
           valor: presupuestoAceptado.valor,
           fecha_aceptacion: presupuestoAceptado.fecha_aceptacion
             ?.toISOString()
-            .split('T')[0], // Solo fecha YYYY-MM-DD
+            .split('T')[0],
         },
         totalPagado,
         saldoPendiente,
@@ -283,47 +295,53 @@ export class ObraService {
     })
   }
 
-  /** Obtiene obras para creación de entregas según si es parcial o final */
-  async findObrasParaEntrega(search: string | undefined, esFinal: boolean) {
+  /**
+   * Gets obras eligible for delivery creation based on whether it is partial or final.
+   */
+  async findObrasParaEntrega(search: string | undefined, esFinal: boolean): Promise<obra[]> {
     return this.repository.findObrasParaEntrega(search, esFinal)
   }
 
-  /** Obtiene obras de empresas para realizar pedido de stock */
-  async findObrasParaPedidoStock() {
+  /**
+   * Gets company construction projects for stock ordering.
+   */
+  async findObrasParaPedidoStock(): Promise<obra[]> {
     return this.repository.findObrasParaPedidoStock()
   }
 
-  /** Cambia el estado de una obra a EN ESPERA DE STOCK */
+  /**
+   * Changes obra status to EN ESPERA DE STOCK.
+   */
   async solicitarStock(id: number): Promise<obra> {
-    const obra = await this.repository.findById(id)
-    if (!obra) {
-      throw new Error('Obra no encontrada.')
-    }
+    const obra = await this.findById(id)
     if (obra.estado !== 'PAGADA PARCIALMENTE') {
-      throw new Error(
-        'Solo se puede solicitar stock para obras con pago parcial.',
+      throw new ValidationError(
+        'Stock can only be requested for projects with partial payment.',
+        'INVALID_STATE'
       )
     }
     return await this.repository.update(id, { estado: 'EN ESPERA DE STOCK' })
   }
 
-  /** Cambia el estado de una obra a EN PRODUCCION */
+  /**
+   * Changes obra status to EN PRODUCCION.
+   */
   async recibirStock(id: number): Promise<obra> {
-    const obra = await this.repository.findById(id)
-    if (!obra) {
-      throw new Error('Obra no encontrada.')
-    }
+    const obra = await this.findById(id)
     if (obra.estado !== 'EN ESPERA DE STOCK') {
-      throw new Error('Esta obra no está esperando stock.')
+      throw new ValidationError('This project is not waiting for stock.', 'INVALID_STATE')
     }
     return await this.repository.update(id, { estado: 'EN PRODUCCION' })
   }
 
+  /**
+   * Formats CUIL with hyphens (e.g., 20-12345678-9).
+   */
   private formatCUIL(cuil: string): string {
-    // Formatear CUIL con guiones: 20-12345678-9
     if (cuil.length === 11) {
       return `${cuil.slice(0, 2)}-${cuil.slice(2, 10)}-${cuil.slice(10)}`
     }
     return cuil
   }
 }
+

@@ -10,24 +10,18 @@ import { validate } from '../../shared/middlewares/validateSchemas.js'
 const controller = new UsoMaquinariaController()
 const usoMaquinariaRouter = Router()
 
-usoMaquinariaRouter.get('/', (req, res) => {
-  controller.getAll(req, res)
-})
+usoMaquinariaRouter.get('/', controller.getAll)
 
 usoMaquinariaRouter.post(
   '/',
   validate({ body: createUsoMaquinariaSchema }),
-  (req, res) => {
-    controller.create(req, res)
-  },
+  controller.create,
 )
 
 usoMaquinariaRouter.get(
   '/:cod_maquina/:cod_entrega',
   validate({ params: idParamsSchema }),
-  (req, res) => {
-    controller.getOne(req, res)
-  },
+  controller.getOne,
 )
 
 usoMaquinariaRouter.put(
@@ -36,17 +30,14 @@ usoMaquinariaRouter.put(
     params: idParamsSchema,
     body: updateUsoMaquinariaSchema,
   }),
-  (req, res) => {
-    controller.update(req, res)
-  },
+  controller.update,
 )
 
 usoMaquinariaRouter.delete(
   '/:cod_maquina/:cod_entrega',
   validate({ params: idParamsSchema }),
-  (req, res) => {
-    controller.remove(req, res)
-  },
+  controller.remove,
 )
+
 
 export default usoMaquinariaRouter

@@ -2,18 +2,10 @@ import { EmpleadoRepository } from './empleado.repository.js'
 import bcrypt from 'bcryptjs'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { type empleado, Prisma } from '@prisma/client'
+import { AppError } from '../../shared/errors/AppError.js'
 
 /**
  * Servicio para manejar la lógica de negocio de empleados.
- * @class EmpleadoService
- * @method create - Crea un nuevo empleado validando que el CUIL no exista.
- * @method findAll - Obtiene todos los empleados activos.
- * @method findByCuil - Obtiene un empleado activo por su CUIL.
- * @method update - Actualiza un empleado existente verificando que existe.
- * @method remove - Desactiva un empleado (soft delete).
- * @method count - Cuenta el total de empleados activos.
- * @returns {Promise<EmpleadoPayload | EmpleadoPayload[] | number | null>} - Resultado de la operación.
- * @throws {Error} - Si ocurre un error durante la operación.
  */
 
 export interface EmpleadoPayload {
@@ -34,6 +26,14 @@ export interface ConfigCoordinacionUpdate {
   nueva_orden_produccion?: boolean
 }
 
+export interface NotificationMetadata {
+  configuracion: {
+    canales: { id: string; label: string }[]
+    eventos: { id: string; label: string }[]
+  }
+  valores: Record<string, boolean>
+}
+
 export class EmpleadoService {
   private empleadoRepository: EmpleadoRepository
 
@@ -52,7 +52,7 @@ export class EmpleadoService {
   }): Promise<EmpleadoPayload> {
     const existingEmpleado = await this.empleadoRepository.findByCuil(data.cuil)
     if (existingEmpleado) {
-      throw new ValidationError('Ya existe un empleado con ese CUIL', 'CONFLICTO_CUIL')
+      throw new AppError('Ya existe un empleado con ese CUIL', 409, 'CONFLICTO_CUIL')
     }
 
     // Si se proporciona contraseña, hashearla. Si no, dejar en null
@@ -60,7 +60,7 @@ export class EmpleadoService {
       ? await bcrypt.hash(data.contrasenia, 10)
       : null
 
-    const empleado = await this.empleadoRepository.create({
+    const empleadoResult = await this.empleadoRepository.create({
       cuil: data.cuil,
       nombre: data.nombre,
       apellido: data.apellido,
@@ -69,14 +69,13 @@ export class EmpleadoService {
       contrasenia: hashedPassword,
     })
 
-    // Retornar sin la contraseña
     return {
-      cuil: empleado.cuil,
-      nombre: empleado.nombre,
-      apellido: empleado.apellido,
-      rol_actual: empleado.rol_actual,
-      area_trabajo: empleado.area_trabajo,
-      activo: empleado.activo,
+      cuil: empleadoResult.cuil,
+      nombre: empleadoResult.nombre,
+      apellido: empleadoResult.apellido,
+      rol_actual: empleadoResult.rol_actual,
+      area_trabajo: empleadoResult.area_trabajo,
+      activo: empleadoResult.activo,
     }
   }
 
@@ -91,40 +90,40 @@ export class EmpleadoService {
   async findAll(): Promise<EmpleadoPayload[]> {
     return await this.empleadoRepository.findAllPublic()
   }
-  // Este any le da dinamismo al objeto no tocar
-  async getPerfil(cuil: string): Promise<(EmpleadoPayload & { notificaciones: any }) | null> {
-    const empleado = await this.empleadoRepository.findPerfil(cuil)
-    if (!empleado) return null
 
-    // Generar metadata dinámicamente según el rol
+  async getPerfil(cuil: string): Promise<EmpleadoPayload & { notificaciones: NotificationMetadata }> {
+    const empleadoResult = await this.empleadoRepository.findPerfil(cuil)
+    if (!empleadoResult) {
+      throw new AppError('Empleado no encontrado', 404, 'EMPLEADO_NOT_FOUND')
+    }
+
     const notificacionesMetadata = this.getNotificationMetadata(
-      empleado.rol_actual,
-      empleado as unknown as EmpleadoPayload,
-      empleado.config_coordinacion
+      empleadoResult.rol_actual,
+      empleadoResult as unknown as EmpleadoPayload,
+      empleadoResult.config_coordinacion
     )
 
-    // Ocultar los campos de la DB que ya están mapeados en 'notificaciones' para evitar redundancia
-    const {
-      config_coordinacion,
-      notificacion_email,
-      notificacion_whatsapp,
-      ...frontendData
-    } = empleado as any
-
-    return {
-      ...frontendData,
+    const result: EmpleadoPayload & { notificaciones: NotificationMetadata } = {
+      cuil: empleadoResult.cuil,
+      nombre: empleadoResult.nombre,
+      apellido: empleadoResult.apellido,
+      rol_actual: empleadoResult.rol_actual,
+      area_trabajo: empleadoResult.area_trabajo,
+      activo: empleadoResult.activo,
+      mail: empleadoResult.mail,
       notificaciones: notificacionesMetadata
     }
+
+    return result
   }
 
-  private getNotificationMetadata(rol: string, empleado: EmpleadoPayload, values?: ConfigCoordinacionUpdate | null) {
-    // Configuración base por defecto
-    const metadata = {
+  private getNotificationMetadata(rol: string, empleadoData: EmpleadoPayload, values?: ConfigCoordinacionUpdate | null): NotificationMetadata {
+    const metadata: NotificationMetadata = {
       configuracion: {
-        canales: [] as { id: string; label: string }[],
-        eventos: [] as { id: string; label: string }[]
+        canales: [],
+        eventos: []
       },
-      valores: {} as Record<string, boolean>
+      valores: {}
     }
 
     if (rol === 'COORDINACION') {
@@ -138,12 +137,11 @@ export class EmpleadoService {
         { id: 'whatsapp', label: 'Recibir por WhatsApp' }
       ]
 
-      // Valores actuales de la DB
       metadata.valores = {
         visita_completada: values?.visita_completada || false,
         nueva_orden_produccion: values?.nueva_orden_produccion || false,
-        email: empleado.notificacion_email || false,
-        whatsapp: empleado.notificacion_whatsapp || false
+        email: empleadoData.notificacion_email || false,
+        whatsapp: empleadoData.notificacion_whatsapp || false
       }
     }
 
@@ -151,16 +149,12 @@ export class EmpleadoService {
   }
 
   // Obtener empleado por CUIL
-  async findByCuil(cuil: string): Promise<EmpleadoPayload | null> {
-    const empleado = await this.empleadoRepository.findByCuilPublic(cuil)
-    if (!empleado) {
-      return null
+  async findByCuil(cuil: string): Promise<EmpleadoPayload> {
+    const empleadoResult = await this.empleadoRepository.findByCuilPublic(cuil)
+    if (!empleadoResult || !empleadoResult.activo) {
+      throw new AppError('Empleado no encontrado o inactivo', 404, 'EMPLEADO_NOT_FOUND')
     }
-    // Verificar que esté activo
-    if (!empleado.activo) {
-      return null
-    }
-    return empleado
+    return empleadoResult
   }
 
   async findDisponiblesParaEntrega(): Promise<EmpleadoPayload[]> {
@@ -179,7 +173,6 @@ export class EmpleadoService {
   ): Promise<void> {
     if (cuiles.length === 0) return
 
-    // Buscar usos desde 30 días atrás por si hay entregas o visitas muy largas
     const thirtyDaysAgo = new Date(
       fechaInicio.getTime() - 30 * 24 * 60 * 60 * 1000,
     )
@@ -190,11 +183,10 @@ export class EmpleadoService {
 
     const empleadosEnConflicto: string[] = []
 
-    for (const empleado of empleadosConUsos) {
+    for (const emp of empleadosConUsos) {
       let hayConflicto = false
 
-      // Check entregas
-      for (const ee of empleado.entrega_empleado) {
+      for (const ee of emp.entrega_empleado) {
         const entrega = ee.entrega
         if (!entrega) continue
         if (excludeCodEntrega && entrega.cod_entrega === excludeCodEntrega)
@@ -213,9 +205,8 @@ export class EmpleadoService {
         }
       }
 
-      // Check visitas
       if (!hayConflicto) {
-        for (const ev of empleado.empleado_visita) {
+        for (const ev of emp.empleado_visita) {
           const visita = ev.visita
           if (!visita) continue
           if (excludeCodVisita && visita.cod_visita === excludeCodVisita)
@@ -236,7 +227,7 @@ export class EmpleadoService {
       }
 
       if (hayConflicto) {
-        empleadosEnConflicto.push(`${empleado.nombre} ${empleado.apellido}`)
+        empleadosEnConflicto.push(`${emp.nombre} ${emp.apellido}`)
       }
     }
 
@@ -260,27 +251,21 @@ export class EmpleadoService {
       contrasenia?: string
     }>,
   ): Promise<EmpleadoPayload> {
-    const existingEmpleado =
-      await this.empleadoRepository.findByCuilPublic(cuil)
-    if (!existingEmpleado || !existingEmpleado.activo) {
-      throw new Error('Empleado no encontrado')
-    }
+    await this.findByCuil(cuil) // Throws if not found
 
-    // Si se proporciona contraseña, hashearla
     const updateData = data.contrasenia
       ? { ...data, contrasenia: await bcrypt.hash(data.contrasenia, 10) }
       : data
 
-    const empleado = await this.empleadoRepository.update(cuil, updateData)
+    const empleadoResult = await this.empleadoRepository.update(cuil, updateData)
 
-    // Retornar sin la contraseña
     return {
-      cuil: empleado.cuil,
-      nombre: empleado.nombre,
-      apellido: empleado.apellido,
-      rol_actual: empleado.rol_actual,
-      area_trabajo: empleado.area_trabajo,
-      activo: empleado.activo,
+      cuil: empleadoResult.cuil,
+      nombre: empleadoResult.nombre,
+      apellido: empleadoResult.apellido,
+      rol_actual: empleadoResult.rol_actual,
+      area_trabajo: empleadoResult.area_trabajo,
+      activo: empleadoResult.activo,
     }
   }
 
@@ -290,18 +275,18 @@ export class EmpleadoService {
     currentPass: string,
     newPass: string,
   ): Promise<void> {
-    const empleado = await this.empleadoRepository.findByCuil(cuil)
-    if (!empleado || !empleado.activo) {
-      throw new Error('Empleado no encontrado')
+    const empleadoResult = await this.empleadoRepository.findByCuil(cuil)
+    if (!empleadoResult || !empleadoResult.activo) {
+      throw new AppError('Empleado no encontrado', 404, 'EMPLEADO_NOT_FOUND')
     }
 
-    if (!empleado.contrasenia) {
-      throw new Error('El empleado no posee una contraseña configurable')
+    if (!empleadoResult.contrasenia) {
+      throw new AppError('El empleado no posee una contraseña configurable', 400, 'NO_PASSWORD_CONFIGURABLE')
     }
 
-    const isMatch = await bcrypt.compare(currentPass, empleado.contrasenia)
+    const isMatch = await bcrypt.compare(currentPass, empleadoResult.contrasenia)
     if (!isMatch) {
-      throw new Error('La contraseña actual es incorrecta')
+      throw new AppError('La contraseña actual es incorrecta', 401, 'INVALID_PASSWORD')
     }
 
     const hashedNew = await bcrypt.hash(newPass, 10)
@@ -310,23 +295,19 @@ export class EmpleadoService {
 
   // Soft delete - Desactivar empleado
   async remove(cuil: string): Promise<EmpleadoPayload> {
-    const existingEmpleado = await this.empleadoRepository.findByCuil(cuil)
-    if (!existingEmpleado || !existingEmpleado.activo) {
-      throw new Error('Empleado no encontrado')
-    }
+    await this.findByCuil(cuil) // Throws if not found
 
-    const empleado = await this.empleadoRepository.update(cuil, {
+    const empleadoResult = await this.empleadoRepository.update(cuil, {
       activo: false,
     })
 
-    // Retornar sin la contraseña
     return {
-      cuil: empleado.cuil,
-      nombre: empleado.nombre,
-      apellido: empleado.apellido,
-      rol_actual: empleado.rol_actual,
-      area_trabajo: empleado.area_trabajo,
-      activo: empleado.activo,
+      cuil: empleadoResult.cuil,
+      nombre: empleadoResult.nombre,
+      apellido: empleadoResult.apellido,
+      rol_actual: empleadoResult.rol_actual,
+      area_trabajo: empleadoResult.area_trabajo,
+      activo: empleadoResult.activo,
     }
   }
 
@@ -340,28 +321,29 @@ export class EmpleadoService {
     rol: string,
     notifications: Record<string, boolean>,
   ): Promise<empleado> {
-    const empleado = await this.empleadoRepository.findByCuil(cuil)
-    if (!empleado || !empleado.activo) {
-      throw new Error('Empleado no encontrado')
-    }
+    await this.findByCuil(cuil) // Throws if not found
 
     const { email, whatsapp, ...eventos } = notifications;
-    const data: Prisma.empleadoUpdateInput = {}
+    
+    // We use a structured object that matches what the repository expects (Prisma.empleadoUpdateInput)
+    // but we use a type cast to the base Prisma input type to satisfy the compiler if needed,
+    // while ensuring we only use valid fields from our schema.
+    const updateContainer: Prisma.empleadoUpdateInput = {};
 
-    // Actualizamos campos globales del empleado si se envían
-    if (email !== undefined) data.notificacion_email = email;
-    if (whatsapp !== undefined) data.notificacion_whatsapp = whatsapp;
+    if (email !== undefined) (updateContainer as Record<string, unknown>).notificacion_email = email;
+    if (whatsapp !== undefined) (updateContainer as Record<string, unknown>).notificacion_whatsapp = whatsapp;
 
-    // Lógica por rol para decidir qué tabla de configuración actualizar
     if (rol === 'COORDINACION') {
-      data.config_coordinacion = {
+      (updateContainer as Record<string, unknown>).config_coordinacion = {
         upsert: {
-          create: eventos as Prisma.config_coordinacionCreateWithoutEmpleadoInput,
-          update: eventos as Prisma.config_coordinacionUpdateWithoutEmpleadoInput,
+          create: eventos,
+          update: eventos,
         },
-      }
+      };
     }
 
-    return await this.empleadoRepository.update(cuil, data)
+    return await this.empleadoRepository.update(cuil, updateContainer)
   }
 }
+
+

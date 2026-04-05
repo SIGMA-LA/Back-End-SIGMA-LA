@@ -16,63 +16,49 @@ const empleadoRouter = Router()
  * @desc    Obtener todos los empleados activos
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.get('/', (req, res, next) => {
-  empleadoController.getAll(req, res, next)
-})
+empleadoRouter.get('/', empleadoController.getAll)
 
 /**
  * @route   GET /api/empleados/configuraciones
  * @desc    Obtener las configuraciones de los empleados
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.get('/configuraciones/perfil', (req, res, next) => {
-  empleadoController.getPerfil(req, res, next)
-})
+empleadoRouter.get('/configuraciones/perfil', empleadoController.getPerfil)
 
 /**
  * @route   PUT /api/empleados/configuraciones/password
  * @desc    Actualizar la contraseña del empleado
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.put('/configuraciones/password', (req, res, next) => {
-  empleadoController.updatePassword(req, res, next)
-})
+empleadoRouter.put('/configuraciones/password', empleadoController.updatePassword)
 
 /**
  * @route   PUT /api/empleados/configuraciones/perfil
  * @desc    Actualizar el perfil del empleado
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.put('/configuraciones/perfil', (req, res, next) => {
-  empleadoController.updatePerfil(req, res, next)
-})
+empleadoRouter.put('/configuraciones/perfil', empleadoController.updatePerfil)
 
 /**
  * @route   GET /api/empleados/visitadores
  * @desc    Obtener todos los visitadores activos
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.get('/visitadores', (req, res, next) => {
-  empleadoController.getVisitadores(req, res, next)
-})
+empleadoRouter.get('/visitadores', empleadoController.getVisitadores)
 
 /**
  * @route   GET /api/empleados/me
  * @desc    Obtener información del empleado autenticado
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.get('/me', (req, res, next) => {
-  empleadoController.getMe(req, res, next)
-})
+empleadoRouter.get('/me', empleadoController.getMe)
 
 /**
  * @route   GET /api/empleados/disponibles-entrega
  * @desc    Obtener empleados disponibles para entrega (VISITADOR o PLANTA)
  * @access  Privado (requiere autenticación)
  */
-empleadoRouter.get('/disponibles-entrega', (req, res, next) => {
-  empleadoController.getDisponiblesParaEntrega(req, res, next)
-})
+empleadoRouter.get('/disponibles-entrega', empleadoController.getDisponiblesParaEntrega)
 
 /**
  * @route   POST /api/empleados
@@ -83,9 +69,7 @@ empleadoRouter.post(
   '/',
   authorizeRoles(['ADMIN']),
   validate({ body: createEmpleadoSchema }),
-  (req, res, next) => {
-    empleadoController.create(req, res, next)
-  },
+  empleadoController.create,
 )
 
 /**
@@ -96,9 +80,7 @@ empleadoRouter.post(
 empleadoRouter.get(
   '/:cuil',
   validate({ params: cuilParamsSchema }),
-  (req, res, next) => {
-    empleadoController.getOne(req, res, next)
-  },
+  empleadoController.getOne,
 )
 
 /**
@@ -113,9 +95,7 @@ empleadoRouter.put(
     params: cuilParamsSchema,
     body: updateEmpleadoSchema,
   }),
-  (req, res, next) => {
-    empleadoController.update(req, res, next)
-  },
+  empleadoController.update,
 )
 
 /**
@@ -127,9 +107,8 @@ empleadoRouter.delete(
   '/:cuil',
   authorizeRoles(['ADMIN']),
   validate({ params: cuilParamsSchema }),
-  (req, res, next) => {
-    empleadoController.remove(req, res, next)
-  },
+  empleadoController.remove,
 )
+
 
 export default empleadoRouter

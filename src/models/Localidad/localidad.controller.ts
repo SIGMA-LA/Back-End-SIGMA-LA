@@ -1,52 +1,74 @@
 import { Request, Response } from 'express'
 import { LocalidadService } from './localidad.service.js'
+import { catchAsync } from '../../shared/utils/catchAsync.js'
+import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 const localidadService = new LocalidadService()
 
 /**
- * LocalidadController
- * @class LocalidadController
- * @method create - Maneja la creación de una nueva localidad.
- * @method getAll - Maneja la obtención de todas las localidades.
- * @method getOne - Maneja la obtención de una localidad por su ID.
- * @method update - Maneja la actualización de una localidad existente.
- * @method remove - Maneja la eliminación de una localidad por su ID.
- * @returns {Promise<void>} - Respuesta HTTP.
- * @throws {Error} - Si ocurre un error durante la operación.
+ * Controller to handle location (localidad) routes.
  */
 export class LocalidadController {
-  async create(req: Request, res: Response) {
+  /**
+   * Creates a new location.
+   */
+  create = catchAsync(async (req: Request, res: Response) => {
     const localidad = await localidadService.create(req.body)
-    res.status(201).json(localidad)
-  }
-  async getByProvincia(provinciaId: number, req: Request, res: Response) {
-    const localidades = await localidadService.findByProvincia(provinciaId)
-    res.json(localidades)
-  }
+    return sendSuccess(res, localidad, 'Location created successfully', 201)
+  })
 
-  async getAll(req: Request, res: Response) {
+  /**
+   * Gets all locations within a specific province.
+   */
+  getByProvincia = catchAsync(async (req: Request, res: Response) => {
+    const { provinciaId } = req.params // Assuming it comes from params in some routes or needs to be handled
+    const id = parseInt(provinciaId)
+    if (isNaN(id)) throw new AppError('Invalid province ID', 400, 'INVALID_ID')
+
+    const localidades = await localidadService.findByProvincia(id)
+    return sendSuccess(res, localidades)
+  })
+
+  /**
+   * Gets all location records.
+   */
+  getAll = catchAsync(async (req: Request, res: Response) => {
     const localidades = await localidadService.findAll()
-    res.json(localidades)
-  }
+    return sendSuccess(res, localidades)
+  })
 
-  async getOne(req: Request, res: Response) {
+  /**
+   * Gets a specific location by ID.
+   */
+  getOne = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
+    if (isNaN(id)) throw new AppError('Invalid location ID', 400, 'INVALID_ID')
+
     const localidad = await localidadService.findById(id)
-    if (!localidad) {
-      return res.status(404).json({ message: 'Localidad no encontrada' })
-    }
-    res.json(localidad)
-  }
+    return sendSuccess(res, localidad)
+  })
 
-  async update(req: Request, res: Response) {
+  /**
+   * Updates an existing location record.
+   */
+  update = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
+    if (isNaN(id)) throw new AppError('Invalid location ID', 400, 'INVALID_ID')
+
     const localidad = await localidadService.update(id, req.body)
-    res.json(localidad)
-  }
+    return sendSuccess(res, localidad, 'Location updated successfully')
+  })
 
-  async remove(req: Request, res: Response) {
+  /**
+   * Removes a location record.
+   */
+  remove = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
-    const localidad = await localidadService.remove(id)
-    res.json(localidad)
-  }
+    if (isNaN(id)) throw new AppError('Invalid location ID', 400, 'INVALID_ID')
+
+    await localidadService.remove(id)
+    return res.status(204).send()
+  })
 }
+

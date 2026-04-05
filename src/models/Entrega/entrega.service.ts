@@ -5,6 +5,7 @@ import { prisma } from '../../shared/db/prismaClient.js'
 import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 import { EmpleadoService } from '../Empleado/empleado.service.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 /**
  * Servicio para manejar la lógica de negocio de entregas.
@@ -51,7 +52,7 @@ export class EntregaService {
     } = data
 
     const obra = await prisma.obra.findUnique({ where: { cod_obra } })
-    if (!obra) throw new ValidationError(`Obra no encontrada (ID: ${cod_obra})`)
+    if (!obra) throw new AppError(`Obra no encontrada (ID: ${cod_obra})`, 404, 'OBRA_NOT_FOUND')
 
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
     const fechaSalidaPrisma = fecha_salida_estimada ? new Date(fecha_salida_estimada) : fechaParaPrisma
@@ -75,7 +76,7 @@ export class EntregaService {
     }
 
     const results = await Promise.all(checks)
-    const errMessages = results.filter(Boolean) as string[]
+    const errMessages = results.filter((msg): msg is string => typeof msg === 'string')
     if (errMessages.length > 0) throw new ValidationError(`Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`, 'CONFLICTO_AGENDA')
 
     const payload: Prisma.entregaCreateInput = {
@@ -139,8 +140,10 @@ export class EntregaService {
     return this.entregaRepository.findAll(search, estado)
   }
 
-  async findById(cod_entrega: number): Promise<EntregaWithRelations | null> {
-    return this.entregaRepository.findById(cod_entrega)
+  async findById(cod_entrega: number): Promise<EntregaWithRelations> {
+    const entry = await this.entregaRepository.findById(cod_entrega)
+    if (!entry) throw new AppError('Entrega no encontrada', 404, 'ENTREGA_NOT_FOUND')
+    return entry
   }
 
   async update(cod_entrega: number, data: {
@@ -156,8 +159,7 @@ export class EntregaService {
     fecha_regreso_estimado?: string
     cod_ops?: number[]
   }): Promise<EntregaWithRelations> {
-    const existingEntrega = await this.entregaRepository.findById(cod_entrega)
-    if (!existingEntrega) throw new ValidationError('Entrega no encontrada')
+    const existingEntrega = await this.findById(cod_entrega) // Throws if not found
 
     const { fecha_hora_entrega, fecha_salida_estimada, fecha_regreso_estimado, vehiculos, maquinarias, empleados, cod_ops, ...simpleFields } = data
 
@@ -286,6 +288,7 @@ export class EntregaService {
   }
 
   async delete(cod_entrega: number): Promise<entrega> {
+    await this.findById(cod_entrega) // Throws if not found
     return this.entregaRepository.delete(cod_entrega)
   }
 
@@ -294,22 +297,22 @@ export class EntregaService {
   }
 
   async agregarOrdenesDeProduccion(cod_entrega: number, cod_ops: number[]): Promise<entrega> {
-    if (!cod_ops || cod_ops.length === 0) throw new ValidationError('Debe proporcionar al menos una orden de producción')
+    if (!cod_ops || cod_ops.length === 0) throw new ValidationError('Debe proporcionar al menos una orden de producción', 'MISSING_PARAMS')
     const ops = await prisma.orden_de_produccion.findMany({ where: { cod_op: { in: cod_ops } } })
-    if (ops.length !== cod_ops.length) throw new ValidationError('Una o más órdenes de producción no existen')
+    if (ops.length !== cod_ops.length) throw new ValidationError('Una o más órdenes de producción no existen', 'ORDEN_NOT_FOUND')
     const yaAsignadas = ops.filter(op => op.cod_entrega !== null && op.cod_entrega !== cod_entrega)
-    if (yaAsignadas.length > 0) throw new ValidationError(`Las siguientes OPs ya están asignadas a otra entrega: ${yaAsignadas.map(op => op.cod_op).join(', ')}`)
+    if (yaAsignadas.length > 0) throw new ValidationError(`Las siguientes OPs ya están asignadas a otra entrega: ${yaAsignadas.map(op => op.cod_op).join(', ')}`, 'CONFLICTO_OP')
     return this.entregaRepository.update(cod_entrega, { ordenes_de_produccion: { connect: cod_ops.map(cod_op => ({ cod_op })) } })
   }
 
   async quitarOrdenesDeProduccion(cod_entrega: number, cod_ops: number[]): Promise<entrega> {
-    if (!cod_ops || cod_ops.length === 0) throw new ValidationError('Debe proporcionar al menos una orden de producción')
+    if (!cod_ops || cod_ops.length === 0) throw new ValidationError('Debe proporcionar al menos una orden de producción', 'MISSING_PARAMS')
     return this.entregaRepository.update(cod_entrega, { ordenes_de_produccion: { disconnect: cod_ops.map(cod_op => ({ cod_op })) } })
   }
 
   async finalizar(cod_entrega: number, observaciones?: string): Promise<entrega> {
     const entregaActual = await prisma.entrega.findUnique({ where: { cod_entrega }, select: { esFinal: true, cod_obra: true } })
-    if (!entregaActual) throw new ValidationError(`Entrega no encontrada (ID: ${cod_entrega})`)
+    if (!entregaActual) throw new AppError(`Entrega no encontrada (ID: ${cod_entrega})`, 404, 'ENTREGA_NOT_FOUND')
 
     return (await prisma.$transaction(async tx => {
       const updated = await tx.entrega.update({
@@ -326,6 +329,7 @@ export class EntregaService {
   }
 
   async cancelar(cod_entrega: number, motivo?: string): Promise<entrega> {
+    await this.findById(cod_entrega) // Throws if not found
     return (await prisma.$transaction(async tx => {
       const updated = await tx.entrega.update({
         where: { cod_entrega },
@@ -341,3 +345,4 @@ export class EntregaService {
     }))
   }
 }
+

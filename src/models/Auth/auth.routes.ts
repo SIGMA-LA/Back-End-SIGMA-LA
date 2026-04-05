@@ -39,21 +39,18 @@ const loginRateLimit = rateLimit({
   },
 })
 
-router.post('/register', validate({ body: registerSchema }), (req, res) =>
-  authController.register(req, res),
-)
+router.post('/register', validate({ body: registerSchema }), authController.register)
 router.post(
   '/login',
   loginAttemptLogger,
   loginRateLimit,
   validate({ body: loginSchema }),
-  (req, res) => authController.login(req, res),
+  authController.login,
 )
-router.post('/logout', (req, res) => authController.logout(req, res))
+router.post('/logout', authController.logout)
 
-router.post('/refresh', (req, res) => authController.refresh(req, res))
+router.post('/refresh', authController.refresh)
 
-router.get('/profile', authenticateJWT, (req, res) =>
-  authController.getProfile(req, res),
-)
+router.get('/profile', authenticateJWT, authController.getProfile)
+
 export default router

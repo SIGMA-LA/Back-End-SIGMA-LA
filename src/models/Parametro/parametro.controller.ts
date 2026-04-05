@@ -1,56 +1,75 @@
 import { ParametroService } from './parametro.service.js'
 import { Request, Response } from 'express'
+import { catchAsync } from '../../shared/utils/catchAsync.js'
+import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 const parametroService = new ParametroService()
 
 /**
- * Controlador para manejar las solicitudes relacionadas con los parámetros.
- * @class ParametroController
- * @method create - Crea un nuevo parámetro.
- * @method getAll - Obtiene todos los parámetros.
- * @method getOne - Obtiene un parámetro por su clave primaria compuesta (fecha_cambio y hora_cambio).
- * @method update - Actualiza un parámetro existente.
- * @method remove - Elimina un parámetro existente.
- * @returns {Promise<void>} - Respuesta HTTP.
- * @throws {Error} - Si ocurre un error durante la operación.
+ * Controller to handle system parameter (parametro) routes.
  */
 export class ParametroController {
-  async create(req: Request, res: Response) {
+  /**
+   * Creates a new parameter record.
+   */
+  create = catchAsync(async (req: Request, res: Response) => {
     const parametro = await parametroService.create(req.body)
-    res.status(201).json(parametro)
-  }
+    return sendSuccess(res, parametro, 'Parameter created successfully', 201)
+  })
 
-  async getAll(req: Request, res: Response) {
-    const parametro = await parametroService.findAll()
-    res.json(parametro)
-  }
+  /**
+   * Gets all parameter records.
+   */
+  getAll = catchAsync(async (req: Request, res: Response) => {
+    const parameters = await parametroService.findAll()
+    return sendSuccess(res, parameters)
+  })
 
-  async getOne(req: Request, res: Response) {
+  /**
+   * Gets a specific parameter by ID.
+   */
+  getOne = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params
-    const parametro = await parametroService.findById(Number(id))
-    if (!parametro) {
-      return res.status(404).json({ message: 'Parametro no encontrado' })
-    }
-    res.json(parametro)
-  }
+    const idNum = Number(id)
+    if (isNaN(idNum)) throw new AppError('Invalid parameter ID', 400, 'INVALID_ID')
 
-  async getActualViatico(req: Request, res: Response) {
-    const viatico = await parametroService.findActualViatico();
-    if (!viatico) {
-      return res.status(404).json({ message: 'No se encontraron parámetros de viáticos configurados.' });
-    }
-    res.json(viatico);
-  }
+    const parameter = await parametroService.findById(idNum)
+    return sendSuccess(res, parameter)
+  })
 
-  async update(req: Request, res: Response) {
+  /**
+   * Gets the current travel allowance (viatico) configuration.
+   */
+  getActualViatico = catchAsync(async (req: Request, res: Response) => {
+    const viatico = await parametroService.findActualViatico()
+    return sendSuccess(res, viatico)
+  })
+
+  /**
+   * Updates an existing parameter record.
+   */
+  update = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params
-    const parametro = await parametroService.update(Number(id), req.body)
-    res.json(parametro)
-  }
+    const idNum = Number(id)
+    if (isNaN(idNum)) throw new AppError('Invalid parameter ID', 400, 'INVALID_ID')
 
-  async remove(req: Request, res: Response) {
+    const parameter = await parametroService.update(idNum, req.body)
+    return sendSuccess(res, parameter, 'Parameter updated successfully')
+  })
+
+  /**
+   * Removes a parameter record.
+   */
+  remove = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params
-    const parametro = await parametroService.remove(Number(id))
-    res.json(parametro)
-  }
+    const idNum = Number(id)
+    if (isNaN(idNum)) throw new AppError('Invalid parameter ID', 400, 'INVALID_ID')
+
+    await parametroService.remove(idNum)
+    return res.status(204).send()
+  })
 }
+
+export const parametroController = new ParametroController()
+

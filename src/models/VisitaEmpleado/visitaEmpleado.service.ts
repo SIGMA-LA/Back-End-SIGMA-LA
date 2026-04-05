@@ -1,6 +1,10 @@
 import { empleado_visita, Prisma } from '@prisma/client'
 import { VisitaEmpleadoRepository } from './visitaEmpleado.repository.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
+/**
+ * Servicio para gestionar las operaciones relacionadas con las relaciones empleado-visita.
+ */
 export class VisitaEmpleadoService {
   private repository: VisitaEmpleadoRepository
 
@@ -21,8 +25,12 @@ export class VisitaEmpleadoService {
   async findById(
     cuil: string,
     cod_visita: number,
-  ): Promise<empleado_visita | null> {
-    return await this.repository.findById(cuil, cod_visita)
+  ): Promise<empleado_visita> {
+    const relacion = await this.repository.findById(cuil, cod_visita)
+    if (!relacion) {
+      throw new AppError('Relación empleado-visita no encontrada', 404, 'VISITA_EMPLEADO_NOT_FOUND')
+    }
+    return relacion
   }
 
   async update(
@@ -30,14 +38,12 @@ export class VisitaEmpleadoService {
     cod_visita: number,
     data: Prisma.empleado_visitaUpdateInput,
   ): Promise<empleado_visita> {
+    await this.findById(cuil, cod_visita)
     return await this.repository.update(cuil, cod_visita, data)
   }
 
-  async delete(cuil: string, cod_visita: number): Promise<empleado_visita> {
-    const existingRelacion = await this.repository.findById(cuil, cod_visita)
-    if (!existingRelacion) {
-      throw new Error('Relación empleado-visita no encontrada')
-    }
+  async remove(cuil: string, cod_visita: number): Promise<empleado_visita> {
+    await this.findById(cuil, cod_visita)
     return await this.repository.delete(cuil, cod_visita)
   }
 }

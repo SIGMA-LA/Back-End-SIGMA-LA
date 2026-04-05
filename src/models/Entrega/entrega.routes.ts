@@ -5,21 +5,13 @@ import { idParamsSchema } from 'sigma-la-schemas'
 const entregaController = new EntregaController()
 const entregaRouter = Router()
 
-entregaRouter.get('/', (req, res) => {
-  entregaController.getAll(req, res)
-})
+entregaRouter.get('/', entregaController.getAll)
 
-entregaRouter.get('/:cuil_empleado/:estado', (req, res) => {
-  entregaController.getEntregasByEmpleadoEstado(req, res)
-})
+entregaRouter.get('/:cuil_empleado/:estado', entregaController.getEntregasByEmpleadoEstado)
 
-entregaRouter.post('/', (req, res) => {
-  entregaController.create(req, res)
-})
+entregaRouter.post('/', entregaController.create)
 
-entregaRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
-  entregaController.getOne(req, res)
-})
+entregaRouter.get('/:id', validate({ params: idParamsSchema }), entregaController.getOne)
 
 /**
  * [PARCHE TEMPORAL]
@@ -35,33 +27,22 @@ entregaRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
  * TODO: Actualizar 'sigma-la-schemas' (v1.0.28+) para incluir todos los campos del servicio
  * y corregir los nombres de picklist para poder reactivar esta validación.
  */
-entregaRouter.put('/:id', (req, res) => {
-  entregaController.update(req, res)
-})
+entregaRouter.put('/:id', entregaController.update)
 
 entregaRouter.delete(
   '/:id',
   validate({ params: idParamsSchema }),
-  (req, res) => {
-    entregaController.remove(req, res)
-  },
+  entregaController.remove,
 )
 
-entregaRouter.patch('/:id/finalizar', (req, res) => {
-  entregaController.finalizarEntrega(req, res)
-})
+entregaRouter.patch('/:id/finalizar', entregaController.finalizarEntrega)
 
-entregaRouter.patch('/:id/cancelar', (req, res) => {
-  entregaController.cancelarEntrega(req, res)
-})
+entregaRouter.patch('/:id/cancelar', entregaController.cancelarEntrega)
 
 // Gestión de órdenes de producción vinculadas a una entrega
-entregaRouter.patch('/:id/ordenes-produccion', (req, res) => {
-  entregaController.agregarOPs(req, res)
-})
+entregaRouter.patch('/:id/ordenes-produccion', entregaController.agregarOPs)
 
-entregaRouter.delete('/:id/ordenes-produccion', (req, res) => {
-  entregaController.quitarOPs(req, res)
-})
+entregaRouter.delete('/:id/ordenes-produccion', entregaController.quitarOPs)
+
 
 export default entregaRouter

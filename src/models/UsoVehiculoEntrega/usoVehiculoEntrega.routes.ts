@@ -9,34 +9,25 @@ import {
 const usoVehiculoEntregaController = new UsoVehiculoEntregaController()
 const usoVehiculoEntregaRouter = Router()
 
-usoVehiculoEntregaRouter.get('/', (req, res) => {
-  usoVehiculoEntregaController.getAll(req, res)
-})
+usoVehiculoEntregaRouter.get('/', usoVehiculoEntregaController.getAll)
 
 usoVehiculoEntregaRouter.post(
   '/',
   validate({ body: createUsoVehiculoEntregaSchema }),
-  (req, res) => {
-    usoVehiculoEntregaController.create(req, res)
-  },
+  usoVehiculoEntregaController.create,
 )
 
-usoVehiculoEntregaRouter.get('/:cod_entrega/:patente', (req, res) => {
-  usoVehiculoEntregaController.getOne(req, res)
-})
+usoVehiculoEntregaRouter.get('/:cod_entrega/:patente', usoVehiculoEntregaController.getOne)
 
 usoVehiculoEntregaRouter.put(
   '/:cod_entrega/:patente',
   validate({
     body: updateUsoVehiculoEntregaSchema,
   }),
-  (req, res) => {
-    usoVehiculoEntregaController.update(req, res)
-  },
+  usoVehiculoEntregaController.update,
 )
 
-usoVehiculoEntregaRouter.delete('/:cod_entrega/:patente', (req, res) => {
-  usoVehiculoEntregaController.remove(req, res)
-})
+usoVehiculoEntregaRouter.delete('/:cod_entrega/:patente', usoVehiculoEntregaController.remove)
+
 
 export default usoVehiculoEntregaRouter

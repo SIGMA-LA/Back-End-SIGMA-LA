@@ -1,16 +1,9 @@
 import { parametro, Prisma } from '@prisma/client'
 import { ParametroRepository } from './parametro.repository.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 /**
- * Servicio para manejar operaciones CRUD de parámetros.
- * @class ParametroService
- * @method create - Crea un nuevo parámetro.
- * @method findAll - Obtiene todos los parámetros.
- * @method findById - Obtiene un parámetro por su clave primaria compuesta (fecha_cambio y hora_cambio).
- * @method update - Actualiza un parámetro existente.
- * @method remove - Elimina un parámetro por su clave primaria compuesta (fecha_cambio y hora_cambio).
- * @returns {Promise<parametro | parametro[] | null>} - Resultado de la operación.
- * @throws {Error} - Si ocurre un error durante la operación.
+ * Service to manage system parameters (parametro) operations.
  */
 export class ParametroService {
   private repository: ParametroRepository
@@ -20,55 +13,75 @@ export class ParametroService {
   }
 
   /**
-   * Crea un nuevo registro de parámetro.
-   * @param data Los datos para el nuevo parámetro.
-   * @returns El parámetro creado.
+   * Creates a new parameter record.
+   * @param data The parameter data.
+   * @returns The created parameter.
    */
   async create(data: Prisma.parametroCreateInput): Promise<parametro> {
-    // Ajuste para fecha_cambio
+    // Handling fecha_cambio string input
     if (
       typeof data.fecha_cambio === 'string' &&
       /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_cambio)
     ) {
       data.fecha_cambio = new Date(data.fecha_cambio + 'T00:00:00.000Z')
     }
-    // Ajuste para hora_cambio
+    // Handling hora_cambio string input
     if (
       typeof data.hora_cambio === 'string' &&
       /^\d{2}:\d{2}:\d{2}$/.test(data.hora_cambio)
     ) {
-      // Usar una fecha dummy y la hora recibida
+      // Use a dummy date and the received time
       data.hora_cambio = new Date('1970-01-01T' + data.hora_cambio + '.000Z')
     }
     return await this.repository.create(data)
   }
 
+  /**
+   * Gets all parameter records.
+   * @returns A list of all parameters.
+   */
   async findAll(): Promise<parametro[]> {
     return await this.repository.findAll()
   }
 
-  async findById(id: number): Promise<parametro | null> {
-    return await this.repository.findOne(id)
-  }
-
-  async findActualViatico(): Promise<{ viatico_dia_persona: number } | null> {
-    const ultimoParametro = await this.repository.findLatest();
-    if (!ultimoParametro) {
-      return null;
+  /**
+   * Finds a parameter by its ID (cod_parametro).
+   * @param id The parameter ID.
+   * @returns The found parameter.
+   */
+  async findById(id: number): Promise<parametro> {
+    const entry = await this.repository.findOne(id)
+    if (!entry) {
+      throw new AppError('Parameter not found', 404, 'PARAMETRO_NOT_FOUND')
     }
-    return { viatico_dia_persona: ultimoParametro.viatico_dia_persona ?? 0 };
+    return entry
   }
 
+  /**
+   * Finds the latest viatico (travel allowance) value.
+   * @returns The latest viatico amount.
+   */
+  async findActualViatico(): Promise<{ viatico_dia_persona: number }> {
+    const latest = await this.repository.findLatest()
+    if (!latest) {
+      return { viatico_dia_persona: 0 }
+    }
+    return { viatico_dia_persona: latest.viatico_dia_persona ?? 0 }
+  }
+
+  /**
+   * Updates an existing parameter record.
+   * @param id The parameter ID to update.
+   * @param data The new data for the parameter.
+   * @returns The updated parameter.
+   */
   async update(
     id: number,
     data: Prisma.parametroUpdateInput,
   ): Promise<parametro> {
-    const existingParametro = await this.repository.findOne(id)
-    if (!existingParametro) {
-      throw new Error('Parametro no encontrado.')
-    }
+    await this.findById(id) // Ensure existence
 
-    // Ajuste también para update si es necesario
+    // Handling fecha_cambio string input if needed for update
     if (
       typeof data.fecha_cambio === 'string' &&
       /^\d{4}-\d{2}-\d{2}$/.test(data.fecha_cambio)
@@ -79,12 +92,14 @@ export class ParametroService {
     return await this.repository.update(id, data)
   }
 
+  /**
+   * Deletes a parameter record.
+   * @param id The parameter ID to delete.
+   * @returns The deleted parameter.
+   */
   async remove(id: number): Promise<parametro> {
-    const existingParametro = await this.repository.findOne(id)
-    if (!existingParametro) {
-      throw new Error('Parametro no encontrado.')
-    }
-
+    await this.findById(id)
     return await this.repository.delete(id)
   }
 }
+

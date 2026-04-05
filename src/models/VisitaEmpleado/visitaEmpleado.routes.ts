@@ -4,24 +4,15 @@ import { VisitaEmpleadoController } from './visitaEmpleado.controller.js'
 const visitaEmpleadoController = new VisitaEmpleadoController()
 const visitaEmpleadoRouter = Router()
 
-visitaEmpleadoRouter.get('/', (req, res) => {
-  visitaEmpleadoController.getAll(req, res)
-})
+visitaEmpleadoRouter.get('/', visitaEmpleadoController.getAll)
 
-visitaEmpleadoRouter.post('/', (req, res) => {
-  visitaEmpleadoController.create(req, res)
-})
+visitaEmpleadoRouter.post('/', visitaEmpleadoController.create)
 
-visitaEmpleadoRouter.get('/:cuil/:cod_visita', (req, res) => {
-  visitaEmpleadoController.getOne(req, res)
-})
+visitaEmpleadoRouter.get('/:cuil/:cod_visita', visitaEmpleadoController.getOne)
 
-visitaEmpleadoRouter.put('/:cuil/:cod_visita', (req, res) => {
-  visitaEmpleadoController.update(req, res)
-})
+visitaEmpleadoRouter.put('/:cuil/:cod_visita', visitaEmpleadoController.update)
 
-visitaEmpleadoRouter.delete('/:cuil/:cod_visita', (req, res) => {
-  visitaEmpleadoController.remove(req, res)
-})
+visitaEmpleadoRouter.delete('/:cuil/:cod_visita', visitaEmpleadoController.remove)
+
 
 export default visitaEmpleadoRouter

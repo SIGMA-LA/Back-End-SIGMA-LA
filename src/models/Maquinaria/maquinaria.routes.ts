@@ -11,32 +11,22 @@ const maquinariaController = new MaquinariaController()
 const maquinariaRouter = Router()
 
 // GET /api/maquinarias/disponibles - debe ir antes de /:cod_maquina
-maquinariaRouter.get('/disponibles', (req, res) => {
-  maquinariaController.getDisponibles(req, res)
-})
+maquinariaRouter.get('/disponibles', maquinariaController.getDisponibles)
 
-maquinariaRouter.get('/', (req, res) => {
-  maquinariaController.getAll(req, res)
-})
+maquinariaRouter.get('/', maquinariaController.getAll)
 
-maquinariaRouter.get('/disponibilidad', (req, res) => {
-  maquinariaController.getDisponibilidadPorFecha(req, res)
-})
+maquinariaRouter.get('/disponibilidad', maquinariaController.getDisponibilidadPorFecha)
 
 maquinariaRouter.post(
   '/',
   validate({ body: createMaquinariaSchema }),
-  (req, res) => {
-    maquinariaController.create(req, res)
-  },
+  maquinariaController.create,
 )
 
 maquinariaRouter.get(
   '/:id',
   validate({ params: idParamsSchema }),
-  (req, res) => {
-    maquinariaController.getOne(req, res)
-  },
+  maquinariaController.getOne,
 )
 
 maquinariaRouter.put(
@@ -45,26 +35,21 @@ maquinariaRouter.put(
     params: idParamsSchema,
     body: updateMaquinariaSchema,
   }),
-  (req, res) => {
-    maquinariaController.update(req, res)
-  },
+  maquinariaController.update,
 )
 
 // PATCH /api/maquinarias/:id/estado
 maquinariaRouter.patch(
   '/:id/estado',
   validate({ params: idParamsSchema }),
-  (req, res) => {
-    maquinariaController.updateEstado(req, res)
-  },
+  maquinariaController.updateEstado,
 )
 
 maquinariaRouter.delete(
   '/:id',
   validate({ params: idParamsSchema }),
-  (req, res) => {
-    maquinariaController.remove(req, res)
-  },
+  maquinariaController.remove,
 )
+
 
 export default maquinariaRouter

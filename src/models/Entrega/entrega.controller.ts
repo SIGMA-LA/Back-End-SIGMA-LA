@@ -1,141 +1,106 @@
 import { Request, Response } from 'express'
 import { EntregaService } from './entrega.service.js'
+import { catchAsync } from '../../shared/utils/catchAsync.js'
+import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 const entregaService = new EntregaService()
 
 /**
  * Controlador para manejar las rutas de entregas.
- * @class EntregaController
  */
 export class EntregaController {
-  async create(req: Request, res: Response) {
-    try {
-      const entrega = await entregaService.create(req.body)
-      res.status(201).json(entrega)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error desconocido'
-      const status = (error as { status?: number }).status || 400
-      res.status(status).json({ message })
-    }
-  }
+  create = catchAsync(async (req: Request, res: Response) => {
+    const entrega = await entregaService.create(req.body)
+    return sendSuccess(res, entrega, 'Entrega creada exitosamente', 201)
+  })
 
-  async getAll(req: Request, res: Response) {
-    try {
-      const search = req.query.q as string | undefined
-      const estado = req.query.estado as string | undefined
-      const entregas = await entregaService.findAll(search, estado)
-      res.json(entregas)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al obtener entregas'
-      res.status(500).json({ message })
-    }
-  }
+  getAll = catchAsync(async (req: Request, res: Response) => {
+    const search = req.query.q as string | undefined
+    const estado = req.query.estado as string | undefined
+    const entregas = await entregaService.findAll(search, estado)
+    return sendSuccess(res, entregas)
+  })
 
-  async getOne(req: Request, res: Response) {
-    try {
-      const cod_entrega = parseInt(req.params.id)
-      const entrega = await entregaService.findById(cod_entrega)
-      if (!entrega) {
-        return res.status(404).json({ message: 'Entrega no encontrada' })
-      }
-      res.json(entrega)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al obtener la entrega'
-      res.status(500).json({ message })
+  getOne = catchAsync(async (req: Request, res: Response) => {
+    const cod_entrega = parseInt(req.params.id)
+    if (isNaN(cod_entrega)) throw new AppError('ID de entrega inválido', 400, 'INVALID_ID')
+    
+    const entrega = await entregaService.findById(cod_entrega)
+    if (!entrega) {
+      throw new AppError('Entrega no encontrada', 404, 'ENTREGA_NOT_FOUND')
     }
-  }
+    return sendSuccess(res, entrega)
+  })
 
-  async update(req: Request, res: Response) {
-    try {
-      const cod_entrega = parseInt(req.params.id)
-      const entrega = await entregaService.update(cod_entrega, req.body)
-      res.json(entrega)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al actualizar entrega'
-      const status = (error as { status?: number }).status || 400
-      res.status(status).json({ message })
-    }
-  }
+  update = catchAsync(async (req: Request, res: Response) => {
+    const cod_entrega = parseInt(req.params.id)
+    if (isNaN(cod_entrega)) throw new AppError('ID de entrega inválido', 400, 'INVALID_ID')
+    
+    const entrega = await entregaService.update(cod_entrega, req.body)
+    return sendSuccess(res, entrega, 'Entrega actualizada exitosamente')
+  })
 
-  async remove(req: Request, res: Response) {
-    try {
-      const cod_entrega = parseInt(req.params.id)
-      const entrega = await entregaService.delete(cod_entrega)
-      res.json(entrega)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al eliminar entrega'
-      res.status(400).json({ message })
-    }
-  }
+  remove = catchAsync(async (req: Request, res: Response) => {
+    const cod_entrega = parseInt(req.params.id)
+    if (isNaN(cod_entrega)) throw new AppError('ID de entrega inválido', 400, 'INVALID_ID')
+    
+    await entregaService.delete(cod_entrega)
+    return res.status(204).send()
+  })
 
-  async getEntregasByEmpleadoEstado(req: Request, res: Response) {
-    try {
-      const { cuil_empleado, estado } = req.params
-      const { search, date } = req.query as { search?: string; date?: string }
-      const entregas = await entregaService.getByEmpleadoEstado(
-        cuil_empleado,
-        estado,
-        search,
-        date,
-      )
-      res.json(entregas)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al obtener entregas por empleado'
-      res.status(500).json({ message })
-    }
-  }
+  getEntregasByEmpleadoEstado = catchAsync(async (req: Request, res: Response) => {
+    const { cuil_empleado, estado } = req.params
+    const { search, date } = req.query as { search?: string; date?: string }
+    const entregas = await entregaService.getByEmpleadoEstado(
+      cuil_empleado,
+      estado,
+      search,
+      date,
+    )
+    return sendSuccess(res, entregas)
+  })
 
-  async finalizarEntrega(req: Request, res: Response) {
-    try {
-      const cod_entrega = parseInt(req.params.id)
-      const { observaciones } = req.body
-      const entrega = await entregaService.finalizar(cod_entrega, observaciones)
-      res.json(entrega)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al finalizar la entrega'
-      res.status(400).json({ message })
-    }
-  }
+  finalizarEntrega = catchAsync(async (req: Request, res: Response) => {
+    const cod_entrega = parseInt(req.params.id)
+    if (isNaN(cod_entrega)) throw new AppError('ID de entrega inválido', 400, 'INVALID_ID')
+    
+    const { observaciones } = req.body
+    const entrega = await entregaService.finalizar(cod_entrega, observaciones)
+    return sendSuccess(res, entrega, 'Entrega finalizada exitosamente')
+  })
 
-  async cancelarEntrega(req: Request, res: Response) {
-    try {
-      const cod_entrega = parseInt(req.params.id)
-      const { motivo } = req.body
-      const entrega = await entregaService.cancelar(cod_entrega, motivo)
-      res.json(entrega)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al cancelar la entrega'
-      res.status(400).json({ message })
-    }
-  }
+  cancelarEntrega = catchAsync(async (req: Request, res: Response) => {
+    const cod_entrega = parseInt(req.params.id)
+    if (isNaN(cod_entrega)) throw new AppError('ID de entrega inválido', 400, 'INVALID_ID')
+    
+    const { motivo } = req.body
+    const entrega = await entregaService.cancelar(cod_entrega, motivo)
+    return sendSuccess(res, entrega, 'Entrega cancelada exitosamente')
+  })
 
-  async agregarOPs(req: Request, res: Response) {
-    try {
-      const cod_entrega = parseInt(req.params.id)
-      const { cod_ops } = req.body as { cod_ops: number[] }
-      const entrega = await entregaService.agregarOrdenesDeProduccion(
-        cod_entrega,
-        cod_ops,
-      )
-      res.json(entrega)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al agregar órdenes de producción'
-      res.status(400).json({ message })
-    }
-  }
+  agregarOPs = catchAsync(async (req: Request, res: Response) => {
+    const cod_entrega = parseInt(req.params.id)
+    if (isNaN(cod_entrega)) throw new AppError('ID de entrega inválido', 400, 'INVALID_ID')
+    
+    const { cod_ops } = req.body as { cod_ops: number[] }
+    const entrega = await entregaService.agregarOrdenesDeProduccion(
+      cod_entrega,
+      cod_ops,
+    )
+    return sendSuccess(res, entrega, 'Órdenes de producción agregadas exitosamente')
+  })
 
-  async quitarOPs(req: Request, res: Response) {
-    try {
-      const cod_entrega = parseInt(req.params.id)
-      const { cod_ops } = req.body as { cod_ops: number[] }
-      const entrega = await entregaService.quitarOrdenesDeProduccion(
-        cod_entrega,
-        cod_ops,
-      )
-      res.json(entrega)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al quitar órdenes de producción'
-      res.status(400).json({ message })
-    }
-  }
+  quitarOPs = catchAsync(async (req: Request, res: Response) => {
+    const cod_entrega = parseInt(req.params.id)
+    if (isNaN(cod_entrega)) throw new AppError('ID de entrega inválido', 400, 'INVALID_ID')
+    
+    const { cod_ops } = req.body as { cod_ops: number[] }
+    const entrega = await entregaService.quitarOrdenesDeProduccion(
+      cod_entrega,
+      cod_ops,
+    )
+    return sendSuccess(res, entrega, 'Órdenes de producción quitadas exitosamente')
+  })
 }
+

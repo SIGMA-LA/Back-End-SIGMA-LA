@@ -10,25 +10,15 @@ import {
 const pagoController = new PagoController()
 const pagoRouter = Router()
 
-pagoRouter.get('/', (req, res) => {
-  pagoController.getAll(req, res)
-})
+pagoRouter.get('/', pagoController.getAll)
 
-pagoRouter.post('/', validate({ body: createPagoSchema }), (req, res) => {
-  pagoController.create(req, res)
-})
+pagoRouter.post('/', validate({ body: createPagoSchema }), pagoController.create)
 
-pagoRouter.post('/obra/:cod_obra', (req, res) => {
-  pagoController.createForObra(req, res)
-})
+pagoRouter.post('/obra/:cod_obra', pagoController.createForObra)
 
-pagoRouter.get('/obra/:cod_obra', (req, res) => {
-  pagoController.getByObra(req, res)
-})
+pagoRouter.get('/obra/:cod_obra', pagoController.getByObra)
 
-pagoRouter.get('/:id', validate({ params: idParamsSchema }), (req, res) => {
-  pagoController.getOne(req, res)
-})
+pagoRouter.get('/:id', validate({ params: idParamsSchema }), pagoController.getOne)
 
 pagoRouter.put(
   '/:id',
@@ -36,13 +26,9 @@ pagoRouter.put(
     params: idParamsSchema,
     body: updatePagoSchema,
   }),
-  (req, res) => {
-    pagoController.update(req, res)
-  },
+  pagoController.update,
 )
 
-pagoRouter.delete('/:id', validate({ params: idParamsSchema }), (req, res) => {
-  pagoController.remove(req, res)
-})
+pagoRouter.delete('/:id', validate({ params: idParamsSchema }), pagoController.remove)
 
 export default pagoRouter

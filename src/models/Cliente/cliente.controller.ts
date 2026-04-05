@@ -1,98 +1,57 @@
-import { NextFunction, Request, Response } from 'express'
+import { Request, Response } from 'express'
 import { ClienteService } from './cliente.service.js'
+import { catchAsync } from '../../shared/utils/catchAsync.js'
+import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { AppError } from '../../shared/errors/AppError.js'
 
 const clienteService = new ClienteService()
 
 /**
  * Controlador para manejar las rutas de clientes.
- * @class ClienteController
- * @method create - Maneja la creación de un nuevo cliente.
- * @method getAll - Maneja la obtención de todos los clientes.
- * @method getOne - Maneja la obtención de un cliente por su CUIL.
- * @method update - Maneja la actualización de un cliente existente.
- * @method remove - Maneja la eliminación de un cliente por su CUIL.
- * @returns {Promise<void>} - Respuesta HTTP.
- * @throws {Error} - Si ocurre un error durante la operación.
  */
 export class ClienteController {
-  async create(req: Request, res: Response) {
+  create = catchAsync(async (req: Request, res: Response) => {
     const cliente = await clienteService.create(req.body)
-    res.status(201).json(cliente)
-  }
+    return sendSuccess(res, cliente, 'Cliente creado exitosamente', 201)
+  })
 
-  async getAll(req: Request, res: Response) {
+  getAll = catchAsync(async (req: Request, res: Response) => {
     const clientes = await clienteService.findAll()
-    res.json(clientes)
-  }
+    return sendSuccess(res, clientes)
+  })
 
-  async getOne(req: Request, res: Response) {
+  getOne = catchAsync(async (req: Request, res: Response) => {
     const cuil = req.params.cuil
     const cliente = await clienteService.findById(cuil)
-    if (!cliente) {
-      return res.status(404).json({ message: 'Cliente no encontrado' })
+    return sendSuccess(res, cliente)
+  })
+
+  buscar = catchAsync(async (req: Request, res: Response) => {
+    const q = String(req.query.q ?? '').trim()
+    const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
+    const pageSize = Math.max(
+      1,
+      Math.min(100, parseInt(String(req.query.pageSize ?? '25'), 10)),
+    )
+
+    if (!q) {
+      throw new AppError('Parámetro "q" es requerido', 400, 'QUERY_PARAM_REQUIRED')
     }
-    res.json(cliente)
-  }
 
-  async buscar(req: Request, res: Response) {
-    try {
-      const q = String(req.query.q ?? '').trim()
-      const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
-      const pageSize = Math.max(
-        1,
-        Math.min(100, parseInt(String(req.query.pageSize ?? '25'), 10)),
-      )
+    const clientes = await clienteService.buscar(q, page, pageSize)
+    return sendSuccess(res, clientes)
+  })
 
-      if (!q) {
-        return res.status(400).json({ message: 'Parametro "q" es requerido' })
-      }
-
-      const clientes = await clienteService.buscar(q, page, pageSize)
-      return res.status(200).json(clientes)
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido'
-      return res.status(500).json({ error: message })
-    }
-  }
-
-  async update(req: Request, res: Response) {
+  update = catchAsync(async (req: Request, res: Response) => {
     const cuil = req.params.cuil
     const cliente = await clienteService.update(cuil, req.body)
-    res.json(cliente)
-  }
+    return sendSuccess(res, cliente, 'Cliente actualizado exitosamente')
+  })
 
-  async remove(req: Request, res: Response, next?: NextFunction) {
-    try {
-      const cuil = req.params.cuil
-      const result = await clienteService.remove(cuil)
-
-      if (result.status === 'not_found') {
-        return res.status(404).json({
-          code: 'CLIENTE_NO_ENCONTRADO',
-          message: 'Cliente no encontrado',
-        })
-      }
-
-      if (result.status === 'has_dependencies') {
-        return res.status(409).json({
-          code: 'CLIENTE_CON_DEPENDENCIAS',
-          message:
-            'No se puede eliminar el cliente porque tiene obras o visitas asociadas. Debe desvincularlas antes.',
-          details: result.details,
-        })
-      }
-
-      return res.status(204).send()
-    } catch (error: unknown) {
-      if (next) {
-        return next(error)
-      }
-
-      return res.status(500).json({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Error interno del servidor',
-      })
-    }
-  }
+  remove = catchAsync(async (req: Request, res: Response) => {
+    const cuil = req.params.cuil
+    await clienteService.remove(cuil)
+    return res.status(204).send()
+  })
 }
+

@@ -5,51 +5,27 @@ import { upload } from '../../shared/middlewares/upload.middleware.js'
 const ordenProduccionController = new OrdenProduccionController()
 const ordenProduccionRouter = Router()
 
-ordenProduccionRouter.get('/', (req, res) => {
-  ordenProduccionController.getAll(req, res)
-})
+ordenProduccionRouter.get('/', ordenProduccionController.getAll)
 
-ordenProduccionRouter.get('/validadas', (req, res) => {
-  ordenProduccionController.getValidadas(req, res)
-})
+ordenProduccionRouter.get('/validadas', ordenProduccionController.getValidadas)
 
-ordenProduccionRouter.get('/en-produccion', (req, res) => {
-  ordenProduccionController.getEnProduccion(req, res)
-})
+ordenProduccionRouter.get('/en-produccion', ordenProduccionController.getEnProduccion)
 
-ordenProduccionRouter.post('/', 
-  upload.single('file'),
-  (req, res) => {
-    ordenProduccionController.create(req, res)
-  }
-)
+ordenProduccionRouter.post('/', upload.single('file'), ordenProduccionController.create)
 
-ordenProduccionRouter.get('/obra/:cod_obra/finalizada', (req, res) => {
-  ordenProduccionController.getByObraAndFinalizada(req, res)
-})
+ordenProduccionRouter.get('/obra/:cod_obra/finalizada', ordenProduccionController.getByObraAndFinalizada)
 
-ordenProduccionRouter.get('/obra/:cod_obra', (req, res) => {
-  ordenProduccionController.getByObra(req, res)
-})
+ordenProduccionRouter.get('/obra/:cod_obra', ordenProduccionController.getByObra)
 
-ordenProduccionRouter.post('/:cod_op/iniciar', (req, res) => {
-  ordenProduccionController.iniciarProduccion(req, res)
-})
+ordenProduccionRouter.post('/:cod_op/iniciar', ordenProduccionController.iniciarProduccion)
 
-ordenProduccionRouter.post('/:cod_op/finalizar', (req, res) => {
-  ordenProduccionController.finalizarProduccion(req, res)
-})
+ordenProduccionRouter.post('/:cod_op/finalizar', ordenProduccionController.finalizarProduccion)
 
-ordenProduccionRouter.get('/:cod_op', (req, res) => {
-  ordenProduccionController.getOne(req, res)
-})
+ordenProduccionRouter.get('/:cod_op', ordenProduccionController.getOne)
 
-ordenProduccionRouter.put('/:cod_op', (req, res) => {
-  ordenProduccionController.update(req, res)
-})
+ordenProduccionRouter.put('/:cod_op', ordenProduccionController.update)
 
-ordenProduccionRouter.delete('/:cod_op', (req, res) => {
-  ordenProduccionController.remove(req, res)
-})
+ordenProduccionRouter.delete('/:cod_op', ordenProduccionController.remove)
+
 
 export default ordenProduccionRouter

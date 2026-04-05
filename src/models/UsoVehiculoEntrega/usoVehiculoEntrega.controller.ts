@@ -1,42 +1,42 @@
-import { UsoVehiculoEntregaService } from './usoVehiculoEntrega.service.js'
 import { Request, Response } from 'express'
+import { UsoVehiculoEntregaService } from './usoVehiculoEntrega.service.js'
+import { catchAsync } from '../../shared/utils/catchAsync.js'
+import { sendSuccess } from '../../shared/utils/apiResponse.js'
 
 const usoService = new UsoVehiculoEntregaService()
 
+/**
+ * Controlador para manejar las rutas de los usos de vehículos por entrega.
+ */
 export class UsoVehiculoEntregaController {
-  async create(req: Request, res: Response) {
+  create = catchAsync(async (req: Request, res: Response) => {
     const nuevoUso = await usoService.create(req.body)
-    res.status(201).json(nuevoUso)
-  }
+    return sendSuccess(res, nuevoUso, 'Uso de vehículo registrado exitosamente', 201)
+  })
 
-  async getAll(req: Request, res: Response) {
+  getAll = catchAsync(async (req: Request, res: Response) => {
     const usos = await usoService.findAll()
-    res.status(200).json(usos)
-  }
+    return sendSuccess(res, usos)
+  })
 
-  async getOne(req: Request, res: Response) {
+  getOne = catchAsync(async (req: Request, res: Response) => {
     const cod_entrega = Number(req.params.cod_entrega)
     const patente = req.params.patente
     const uso = await usoService.findById(cod_entrega, patente)
-    if (!uso) {
-      return res
-        .status(404)
-        .json({ message: 'Uso de vehículo en entrega no encontrado' })
-    }
-    res.json(uso)
-  }
+    return sendSuccess(res, uso)
+  })
 
-  async update(req: Request, res: Response) {
+  update = catchAsync(async (req: Request, res: Response) => {
     const cod_entrega = Number(req.params.cod_entrega)
     const patente = req.params.patente
     const uso = await usoService.update(cod_entrega, patente, req.body)
-    res.json(uso)
-  }
+    return sendSuccess(res, uso, 'Uso de vehículo actualizado exitosamente')
+  })
 
-  async remove(req: Request, res: Response) {
+  remove = catchAsync(async (req: Request, res: Response) => {
     const cod_entrega = Number(req.params.cod_entrega)
     const patente = req.params.patente
-    const uso = await usoService.remove(cod_entrega, patente)
-    res.json(uso)
-  }
+    await usoService.remove(cod_entrega, patente)
+    return res.status(204).send()
+  })
 }

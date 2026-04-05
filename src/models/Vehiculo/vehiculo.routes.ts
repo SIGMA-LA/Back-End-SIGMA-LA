@@ -3,32 +3,19 @@ import { VehiculoController } from './vehiculo.controller.js'
 const vehiculoController = new VehiculoController()
 const vehiculoRouter = Router()
 
-vehiculoRouter.get('/', (req, res) => {
-  vehiculoController.getAll(req, res)
-})
+vehiculoRouter.get('/', vehiculoController.getAll)
 
-vehiculoRouter.post('/', (req, res) => {
-  vehiculoController.create(req, res)
-})
+vehiculoRouter.post('/', vehiculoController.create)
 
-vehiculoRouter.get('/disponibilidad', (req, res) => {
-  vehiculoController.getDisponibilidadPorFecha(req, res)
-})
+vehiculoRouter.get('/disponibilidad', vehiculoController.getDisponibilidadPorFecha)
 
-vehiculoRouter.get('/disponibles', (req, res) => {
-  vehiculoController.getDisponibles(req, res)
-})
+vehiculoRouter.get('/disponibles', vehiculoController.getDisponibles)
 
-vehiculoRouter.get('/:patente', (req, res) => {
-  vehiculoController.getOne(req, res)
-})
+vehiculoRouter.get('/:patente', vehiculoController.getOne)
 
-vehiculoRouter.put('/:patente', (req, res) => {
-  vehiculoController.update(req, res)
-})
+vehiculoRouter.put('/:patente', vehiculoController.update)
 
-vehiculoRouter.delete('/:patente', (req, res) => {
-  vehiculoController.remove(req, res)
-})
+vehiculoRouter.delete('/:patente', vehiculoController.remove)
+
 
 export default vehiculoRouter
