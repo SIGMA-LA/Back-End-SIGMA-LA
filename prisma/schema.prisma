@@ -238,5 +238,7 @@ model config_coordinacion {
   cuil                   String   @id
   visita_completada      Boolean  @default(false)
   nueva_orden_produccion Boolean  @default(false)
+  cambio_estado          Boolean  @default(false)
+  pago_completo_obra     Boolean  @default(false)
   empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
 }

@@ -94,6 +94,8 @@ export class EmpleadoRepository {
           select: {
             visita_completada: true,
             nueva_orden_produccion: true,
+            cambio_estado: true,
+            pago_completo_obra: true,
           },
         },
       },

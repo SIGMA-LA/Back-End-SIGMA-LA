@@ -24,6 +24,8 @@ export interface EmpleadoPayload {
 export interface ConfigCoordinacionUpdate {
   visita_completada?: boolean
   nueva_orden_produccion?: boolean
+  cambio_estado?: boolean
+  pago_completo_obra?: boolean
 }
 
 export interface NotificationMetadata {
@@ -129,7 +131,9 @@ export class EmpleadoService {
     if (rol === 'COORDINACION') {
       metadata.configuracion.eventos = [
         { id: 'visita_completada', label: 'Visita Técnica Completada' },
-        { id: 'nueva_orden_produccion', label: 'Nueva Orden de Producción' }
+        { id: 'nueva_orden_produccion', label: 'Nueva Orden de Producción' },
+        { id: 'cambio_estado', label: 'Cambios de estado en las obras' },
+        { id: 'pago_completo_obra', label: 'Pago completo de la obra' }
       ]
 
       metadata.configuracion.canales = [
@@ -140,6 +144,8 @@ export class EmpleadoService {
       metadata.valores = {
         visita_completada: values?.visita_completada || false,
         nueva_orden_produccion: values?.nueva_orden_produccion || false,
+        cambio_estado: values?.cambio_estado || false,
+        pago_completo_obra: values?.pago_completo_obra || false,
         email: empleadoData.notificacion_email || false,
         whatsapp: empleadoData.notificacion_whatsapp || false
       }
@@ -324,7 +330,7 @@ export class EmpleadoService {
     await this.findByCuil(cuil) // Throws if not found
 
     const { email, whatsapp, ...eventos } = notifications;
-    
+
     // We use a structured object that matches what the repository expects (Prisma.empleadoUpdateInput)
     // but we use a type cast to the base Prisma input type to satisfy the compiler if needed,
     // while ensuring we only use valid fields from our schema.

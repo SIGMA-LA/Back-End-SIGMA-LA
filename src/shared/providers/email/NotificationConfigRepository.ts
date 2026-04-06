@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import { prisma } from '../../db/prismaClient.js'
 
 export type ConfigRolesFields = {
-  COORDINACION: 'visita_completada' | 'nueva_orden_produccion';
+  COORDINACION: 'visita_completada' | 'nueva_orden_produccion' | 'cambio_estado' | 'pago_completo_obra';
   // Agregar otros roles y sus campos de notificación aquí en el futuro
   // ADMINISTRACION: 'pago_recibido' | 'nueva_obra'; 
 };
