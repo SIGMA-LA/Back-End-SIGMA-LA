@@ -5,7 +5,7 @@ import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { emailService } from '../../shared/providers/email/index.js'
-import { notificationConfigRepository } from '../../shared/providers/email/NotificationConfigRepository.js'
+import { eventBus } from '../../shared/events/eventBus.js'
 
 /**
  * Interface for creating a new Visita.
@@ -398,37 +398,10 @@ export class VisitaService {
 
     const visitaCompletada = await this.visitaRepository.update(cod_visita, updateData)
 
-    // Notify coordination according to their preferences
-    this.notificarFinalizacionACoordinacion(visitaCompletada)
-      .catch(err => console.error('Error sending coordination notifications:', err));
+    // Notify coordination using events
+    eventBus.emit('visita.finalizada', visitaCompletada)
 
     return visitaCompletada
-  }
-
-  /**
-   * Internal method to notify coordination about finished visits.
-   */
-  private async notificarFinalizacionACoordinacion(visita: VisitaWithRelations) {
-    // 1. Get emails of coordinators with 'visita_completada' option enabled
-    const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'visita_completada')
-    
-    if (emails.length === 0) return;
-
-    const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
-    
-    // 2. Send email to all interested parties
-    await emailService.sendNotification(
-      emails,
-      `Aviso Interno: Visita Técnica Finalizada - ${visita.motivo_visita}`,
-      `Hola equipo de Coordinación,<br><br>` +
-      `Les informamos que se ha marcado como FINALIZADA una visita técnica en el sistema.<br><br>` +
-      `<b>Detalles de la operación:</b><br>` +
-      `- <b>Cliente:</b> ${clienteNombre}<br>` +
-      `- <b>Motivo:</b> ${visita.motivo_visita}<br>` +
-      `- <b>Fecha:</b> ${visita.fecha_hora_visita.toLocaleString()}<br>` +
-      `- <b>Observaciones finales:</b> ${visita.observaciones || 'Sin observaciones'}<br><br>` +
-      `<i>Este es un aviso automático generado por el sistema SIGMA-LA para el personal de Coordinación. Por favor no responder a este correo.</i>`
-    );
   }
 
   /**
