@@ -6,6 +6,8 @@ import {
 import { prisma } from '../../shared/db/prismaClient.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { emailService } from '../../shared/providers/email/index.js'
+import { notificationConfigRepository } from '../../shared/providers/email/NotificationConfigRepository.js'
 
 /**
  * Service to manage production orders (orden de producción).
@@ -36,7 +38,31 @@ export class OrdenProduccionService {
       public_id: data.public_id,
     }
 
-    return await this.repository.create(prismaData)
+    const nuevaOrden = await this.repository.create(prismaData)
+
+    // Notificar a COORDINACION según sus preferencias (sin bloquear el flujo)
+    this.notificarNuevaOrdenACoordinacion(nuevaOrden)
+      .catch(err => console.error('Error enviando notificaciones a coordinacion sobre nueva OP:', err));
+
+    return nuevaOrden
+  }
+
+  private async notificarNuevaOrdenACoordinacion(orden: orden_de_produccion) {
+    const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'nueva_orden_produccion')
+
+    if (emails.length === 0) return;
+
+    await emailService.sendNotification(
+      emails,
+      `Aviso Interno: Nueva Orden de Producción - Obra #${orden.cod_obra}`,
+      `Hola equipo de Coordinación,<br><br>` +
+      `Les informamos que se ha generado una <b>Nueva Orden de Producción</b> en el sistema.<br><br>` +
+      `<b>Detalles de la operación:</b><br>` +
+      `- <b>ID Operación:</b> #${orden.cod_op}<br>` +
+      `- <b>Cód. Obra ASOC:</b> #${orden.cod_obra}<br>` +
+      `- <b>Fecha Gen:</b> ${new Date(orden.fecha_confeccion).toLocaleDateString()}<br><br>` +
+      `<i>Este es un aviso automático generado por el sistema SIGMA-LA para el personal de Coordinación. Por favor no responder a este correo.</i>`
+    );
   }
 
   /**
