@@ -33,6 +33,7 @@ model empleado {
   notificacion_email    Boolean              @default(false)
   notificacion_whatsapp Boolean              @default(false)
   config_coordinacion   config_coordinacion?
+  config_produccion     config_produccion?
   empleado_visita       empleado_visita[]
   entrega_empleado      entrega_empleado[]
 }
@@ -233,6 +234,13 @@ model visita {
   @@index([cod_localidad])
   @@index([fecha_hora_visita])
 }
+
+model config_produccion {
+  cuil                   String   @id
+  orden_aprobada      Boolean  @default(false)
+  empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
+}
+
 
 model config_coordinacion {
   cuil                   String   @id

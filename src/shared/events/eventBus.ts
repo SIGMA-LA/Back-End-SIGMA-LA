@@ -5,6 +5,8 @@ import { VisitaWithRelations } from '../../models/Visita/visita.repository.js';
 export interface AppEvents {
   'visita.finalizada': (visita: VisitaWithRelations) => void | Promise<void>;
   'orden_produccion.creada': (orden: orden_de_produccion) => void | Promise<void>;
+  'orden_produccion.aprobada': (orden: orden_de_produccion) => void | Promise<void>;
+  'obra.pagada_totalmente': (data: { cod_obra: number }) => void | Promise<void>;
 }
 
 class TypedEventEmitter extends EventEmitter {

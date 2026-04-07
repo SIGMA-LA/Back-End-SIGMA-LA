@@ -98,6 +98,11 @@ export class EmpleadoRepository {
             pago_completo_obra: true,
           },
         },
+        config_produccion: {
+          select: {
+            orden_aprobada: true,
+          },
+        },
       },
     })
   }

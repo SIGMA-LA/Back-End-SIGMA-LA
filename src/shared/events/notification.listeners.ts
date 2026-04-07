@@ -47,4 +47,45 @@ export function setupNotificationListeners() {
       console.error('Error procesando evento orden_produccion.creada:', err);
     }
   });
+
+  eventBus.on('orden_produccion.aprobada', async (orden) => {
+    try {
+      const emails = await notificationConfigRepository.getEmailsForRoleNotification('PRODUCCION', 'orden_aprobada');
+      if (emails.length === 0) return;
+
+      await emailService.sendNotification(
+        emails,
+        `Aviso Interno: Orden de Producción Aprobada - Operación #${orden.cod_op}`,
+        `Hola equipo de Producción,<br><br>` +
+        `Les informamos que la <b>Orden de Producción #${orden.cod_op}</b> ha sido <b>APROBADA</b> y está lista para que inicien la producción.<br><br>` +
+        `<b>Detalles de la operación:</b><br>` +
+        `- <b>ID Operación:</b> #${orden.cod_op}<br>` +
+        `- <b>Cód. Obra ASOC:</b> #${orden.cod_obra}<br>` +
+        `- <b>Fecha Validación:</b> ${orden.fecha_validacion ? new Date(orden.fecha_validacion).toLocaleDateString() : 'N/A'}<br><br>` +
+        `<i>Este es un aviso automático generado por el sistema SIGMA-LA para el personal de Producción. Por favor no responder a este correo.</i>`
+      );
+    } catch (err) {
+      console.error('Error procesando evento orden_produccion.aprobada:', err);
+    }
+  });
+
+  eventBus.on('obra.pagada_totalmente', async ({ cod_obra }) => {
+    try {
+      const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'pago_completo_obra');
+      if (emails.length === 0) return;
+
+      await emailService.sendNotification(
+        emails,
+        `Aviso Interno: Pago Completo Recibido - Obra #${cod_obra}`,
+        `Hola equipo de Coordinación,<br><br>` +
+        `Les informamos que se ha registrado el pago final y la obra se encuentra <b>TOTALMENTE PAGADA</b> en el sistema.<br><br>` +
+        `<b>Detalles de la operación:</b><br>` +
+        `- <b>Cód. Obra ASOC:</b> #${cod_obra}<br>` +
+        `- <b>Estado Actualizado:</b> PAGADA TOTALMENTE<br><br>` +
+        `<i>Este es un aviso automático generado por el sistema SIGMA-LA para el personal de Coordinación. Por favor no responder a este correo.</i>`
+      );
+    } catch (err) {
+      console.error('Error procesando evento obra.pagada_totalmente:', err);
+    }
+  });
 }

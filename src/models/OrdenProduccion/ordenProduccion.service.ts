@@ -86,8 +86,15 @@ export class OrdenProduccionService {
     cod_op: number,
     data: Prisma.orden_de_produccionUpdateInput,
   ): Promise<orden_de_produccion> {
-    await this.findById(cod_op) // Ensure existence
-    return await this.repository.update(cod_op, data)
+    const orden = await this.findById(cod_op) // Ensure existence
+    const nuevaOrden = await this.repository.update(cod_op, data)
+
+    // Emitir evento si la orden de producción acaba de ser aprobada
+    if (orden.estado !== 'APROBADA' && nuevaOrden.estado === 'APROBADA') {
+      eventBus.emit('orden_produccion.aprobada', nuevaOrden)
+    }
+
+    return nuevaOrden
   }
 
   /**

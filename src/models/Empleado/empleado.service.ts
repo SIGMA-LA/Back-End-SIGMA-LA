@@ -19,6 +19,7 @@ export interface EmpleadoPayload {
   notificacion_email?: boolean
   notificacion_whatsapp?: boolean
   config_coordinacion?: ConfigCoordinacionUpdate | null
+  config_produccion?: ConfigProduccionUpdate | null
 }
 
 export interface ConfigCoordinacionUpdate {
@@ -26,6 +27,10 @@ export interface ConfigCoordinacionUpdate {
   nueva_orden_produccion?: boolean
   cambio_estado?: boolean
   pago_completo_obra?: boolean
+}
+
+export interface ConfigProduccionUpdate {
+  orden_aprobada?: boolean
 }
 
 export interface NotificationMetadata {
@@ -102,24 +107,33 @@ export class EmpleadoService {
     const notificacionesMetadata = this.getNotificationMetadata(
       empleadoResult.rol_actual,
       empleadoResult as unknown as EmpleadoPayload,
-      empleadoResult.config_coordinacion
+      empleadoResult.config_coordinacion,
+      (empleadoResult as any).config_produccion
     )
 
-    const result: EmpleadoPayload & { notificaciones: NotificationMetadata } = {
+    const result: any = {
       cuil: empleadoResult.cuil,
       nombre: empleadoResult.nombre,
       apellido: empleadoResult.apellido,
       rol_actual: empleadoResult.rol_actual,
       area_trabajo: empleadoResult.area_trabajo,
-      activo: empleadoResult.activo,
       mail: empleadoResult.mail,
-      notificaciones: notificacionesMetadata
+      activo: empleadoResult.activo,
     }
 
-    return result
+    // Ocultar los campos de la DB que ya están mapeados en 'notificaciones' para evitar redundancia
+    delete (result as any).config_coordinacion;
+    delete (result as any).config_produccion;
+    delete (result as any).notificacion_email;
+    delete (result as any).notificacion_whatsapp;
+
+    return {
+      ...result,
+      notificaciones: notificacionesMetadata
+    }
   }
 
-  private getNotificationMetadata(rol: string, empleadoData: EmpleadoPayload, values?: ConfigCoordinacionUpdate | null): NotificationMetadata {
+  private getNotificationMetadata(rol: string, empleadoData: EmpleadoPayload, valuesCoord?: ConfigCoordinacionUpdate | null, valuesProd?: ConfigProduccionUpdate | null): NotificationMetadata {
     const metadata: NotificationMetadata = {
       configuracion: {
         canales: [],
@@ -142,10 +156,25 @@ export class EmpleadoService {
       ]
 
       metadata.valores = {
-        visita_completada: values?.visita_completada || false,
-        nueva_orden_produccion: values?.nueva_orden_produccion || false,
-        cambio_estado: values?.cambio_estado || false,
-        pago_completo_obra: values?.pago_completo_obra || false,
+        visita_completada: valuesCoord?.visita_completada || false,
+        nueva_orden_produccion: valuesCoord?.nueva_orden_produccion || false,
+        cambio_estado: valuesCoord?.cambio_estado || false,
+        pago_completo_obra: valuesCoord?.pago_completo_obra || false,
+        email: empleadoData.notificacion_email || false,
+        whatsapp: empleadoData.notificacion_whatsapp || false
+      }
+    } else if (rol === 'PRODUCCION') {
+      metadata.configuracion.eventos = [
+        { id: 'orden_aprobada', label: 'Notificación de Orden Aprobada' }
+      ]
+
+      metadata.configuracion.canales = [
+        { id: 'email', label: 'Recibir por Email' },
+        { id: 'whatsapp', label: 'Recibir por WhatsApp' }
+      ]
+
+      metadata.valores = {
+        orden_aprobada: valuesProd?.orden_aprobada || false,
         email: empleadoData.notificacion_email || false,
         whatsapp: empleadoData.notificacion_whatsapp || false
       }
@@ -341,6 +370,13 @@ export class EmpleadoService {
 
     if (rol === 'COORDINACION') {
       (updateContainer as Record<string, unknown>).config_coordinacion = {
+        upsert: {
+          create: eventos,
+          update: eventos,
+        },
+      };
+    } else if (rol === 'PRODUCCION') {
+      (updateContainer as Record<string, unknown>).config_produccion = {
         upsert: {
           create: eventos,
           update: eventos,
