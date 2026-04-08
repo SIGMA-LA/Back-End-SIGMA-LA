@@ -103,6 +103,12 @@ export class EmpleadoRepository {
             orden_aprobada: true,
           },
         },
+        config_visitador: {
+          select: {
+            asignacion_visita: true,
+            actualizacion_visita: true,
+          },
+        },
       },
     })
   }

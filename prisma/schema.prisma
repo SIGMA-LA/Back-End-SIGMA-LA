@@ -32,6 +32,7 @@ model empleado {
   mail                  String?              @db.VarChar(100)
   notificacion_email    Boolean              @default(false)
   notificacion_whatsapp Boolean              @default(false)
+  config_visitador      config_visitador?
   config_coordinacion   config_coordinacion?
   config_produccion     config_produccion?
   empleado_visita       empleado_visita[]
@@ -233,6 +234,14 @@ model visita {
   @@index([cod_obra])
   @@index([cod_localidad])
   @@index([fecha_hora_visita])
+}
+
+
+model config_visitador{
+  cuil                   String   @id
+  asignacion_visita      Boolean  @default(false)
+  actualizacion_visita   Boolean  @default(false)
+  empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
 }
 
 model config_produccion {
