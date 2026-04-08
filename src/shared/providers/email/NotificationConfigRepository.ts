@@ -22,16 +22,21 @@ export class NotificationConfigRepository {
    */
   async getEmailsForRoleNotification<R extends keyof ConfigRolesFields>(
     rol: R, 
-    field: ConfigRolesFields[R]
+    field: ConfigRolesFields[R],
+    cuils?: string[]
   ): Promise<string[]> {
     
     // Filtro base para cualquier rol: Activo y con mail
-    const baseWhere = {
+    let baseWhere: any = {
       rol_actual: rol,
       activo: true,
       mail: { not: null },
       notificacion_email: true
     };
+
+    if (cuils && cuils.length > 0) {
+      baseWhere.cuil = { in: cuils };
+    }
 
     let emails: string[] = [];
     

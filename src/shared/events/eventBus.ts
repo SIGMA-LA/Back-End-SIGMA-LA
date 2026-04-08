@@ -7,6 +7,7 @@ export interface AppEvents {
   'orden_produccion.creada': (orden: orden_de_produccion) => void | Promise<void>;
   'orden_produccion.aprobada': (orden: orden_de_produccion) => void | Promise<void>;
   'obra.pagada_totalmente': (data: { cod_obra: number }) => void | Promise<void>;
+  'visita.asignada': (data: { visita: VisitaWithRelations, cuils: string[] }) => void | Promise<void>;
 }
 
 class TypedEventEmitter extends EventEmitter {

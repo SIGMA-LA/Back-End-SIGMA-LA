@@ -130,6 +130,10 @@ export class VisitaService {
 
     const visita = await this.visitaRepository.create(visitaData)
 
+    if (data.empleados_visita.length > 0) {
+      eventBus.emit('visita.asignada', { visita, cuils: data.empleados_visita })
+    }
+
     // Email notification: Try to find recipient (Obra -> Cliente -> Email or Fallback in text fields)
     let emailDestino: string | null = null;
 
@@ -325,7 +329,16 @@ export class VisitaService {
       updateData.localidad = cod_localidad === null ? { disconnect: true } : { connect: { cod_localidad } }
     }
 
-    return await this.visitaRepository.update(cod_visita, updateData)
+    const updatedVisita = await this.visitaRepository.update(cod_visita, updateData)
+
+    if (hasPersonnelChanged && empleados_visita) {
+      const newlyAssignedCuils = empleados_visita.filter(cuil => !existingVisita.empleado_visita.find(ev => ev.cuil === cuil))
+      if (newlyAssignedCuils.length > 0) {
+        eventBus.emit('visita.asignada', { visita: updatedVisita, cuils: newlyAssignedCuils })
+      }
+    }
+
+    return updatedVisita
   }
 
   /**

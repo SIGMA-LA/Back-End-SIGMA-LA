@@ -69,6 +69,32 @@ export function setupNotificationListeners() {
     }
   });
 
+  eventBus.on('visita.asignada', async ({ visita, cuils }) => {
+    try {
+      const emails = await notificationConfigRepository.getEmailsForRoleNotification('VISITADOR', 'asignacion_visita', cuils);
+      if (emails.length === 0) return;
+
+      const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
+      const direccion = visita.direccion_visita || visita.obra?.direccion || 'A coordinar';
+
+      await emailService.sendNotification(
+        emails,
+        `Asignación de Visita Técnica - ${visita.motivo_visita}`,
+        `Hola Visitador,<br><br>` +
+        `Le informamos que ha sido asignado a una nueva visita técnica en el sistema.<br><br>` +
+        `<b>Detalles de la operación:</b><br>` +
+        `- <b>Cliente:</b> ${clienteNombre}<br>` +
+        `- <b>Motivo:</b> ${visita.motivo_visita}<br>` +
+        `- <b>Dirección:</b> ${direccion}<br>` +
+        `- <b>Fecha Programada:</b> ${new Date(visita.fecha_hora_visita).toLocaleString()}<br>` +
+        `- <b>Observaciones:</b> ${visita.observaciones || 'Ninguna'}<br><br>` +
+        `<i>Este es un aviso automático generado por el sistema SIGMA-LA.</i>`
+      );
+    } catch (err) {
+      console.error('Error procesando evento visita.asignada:', err);
+    }
+  });
+
   eventBus.on('obra.pagada_totalmente', async ({ cod_obra }) => {
     try {
       const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'pago_completo_obra');
