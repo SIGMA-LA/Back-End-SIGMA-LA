@@ -14,7 +14,20 @@ export class OrdenProduccionController {
    * Creates a new production order.
    */
   create = catchAsync(async (req: Request, res: Response) => {
-    const nueva = await ordenProduccionService.create(req.body)
+    if (!req.file) {
+      throw new AppError('No se ha proporcionado el archivo de orden de producción', 400, 'FILE_REQUIRED')
+    }
+
+    // Al usar multer (multipart/form-data), los campos de req.body llegan como strings.
+    const { cod_obra, fecha_validacion } = req.body
+
+    const nueva = await ordenProduccionService.create({
+      cod_obra: Number(cod_obra),
+      url: req.file.path,          // Inyectado por multer-storage-cloudinary
+      public_id: req.file.filename, // Inyectado por multer-storage-cloudinary
+      fecha_validacion: fecha_validacion ? new Date(fecha_validacion) : null
+    })
+
     return sendSuccess(res, nueva, 'Production order created successfully', 201)
   })
 

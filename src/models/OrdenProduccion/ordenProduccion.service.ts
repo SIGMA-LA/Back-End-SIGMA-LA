@@ -152,9 +152,9 @@ export class OrdenProduccionService {
   async iniciarProduccion(cod_op: number): Promise<orden_de_produccion> {
     const orden = await this.findById(cod_op)
 
-    if (orden.estado !== 'VALIDADA') {
+    if (orden.estado !== 'APROBADA') {
       throw new ValidationError(
-        'Solo las órdenes "Validadas" pueden iniciar producción.',
+        'Solo las órdenes "Aprobadas" pueden iniciar producción.',
         'INVALID_STATE'
       )
     }
