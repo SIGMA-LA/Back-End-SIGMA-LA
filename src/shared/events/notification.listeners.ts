@@ -71,16 +71,20 @@ export function setupNotificationListeners() {
 
   eventBus.on('visita.asignada', async ({ visita, cuils }) => {
     try {
-      const emails = await notificationConfigRepository.getEmailsForRoleNotification('VISITADOR', 'asignacion_visita', cuils);
-      if (emails.length === 0) return;
+      // Notificar a Visitadores y personal de Planta asignados
+      const emailsVisitador = await notificationConfigRepository.getEmailsForRoleNotification('VISITADOR', 'asignacion_visita', cuils);
+      const emailsPlanta = await notificationConfigRepository.getEmailsForRoleNotification('PLANTA', 'asignacion_visita', cuils);
+      
+      const allEmails = [...emailsVisitador, ...emailsPlanta];
+      if (allEmails.length === 0) return;
 
       const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
       const direccion = visita.direccion_visita || visita.obra?.direccion || 'A coordinar';
 
       await emailService.sendNotification(
-        emails,
+        allEmails,
         `Asignación de Visita Técnica - ${visita.motivo_visita}`,
-        `Hola Visitador,<br><br>` +
+        `Hola,<br><br>` +
         `Le informamos que ha sido asignado a una nueva visita técnica en el sistema.<br><br>` +
         `<b>Detalles de la operación:</b><br>` +
         `- <b>Cliente:</b> ${clienteNombre}<br>` +
@@ -97,8 +101,11 @@ export function setupNotificationListeners() {
 
   eventBus.on('visita.actualizada', async ({ visita, cuils, tipo }) => {
     try {
-      const emails = await notificationConfigRepository.getEmailsForRoleNotification('VISITADOR', 'actualizacion_visita', cuils);
-      if (emails.length === 0) return;
+      const emailsVisitador = await notificationConfigRepository.getEmailsForRoleNotification('VISITADOR', 'actualizacion_visita', cuils);
+      const emailsPlanta = await notificationConfigRepository.getEmailsForRoleNotification('PLANTA', 'actualizacion_visita', cuils);
+      
+      const allEmails = [...emailsVisitador, ...emailsPlanta];
+      if (allEmails.length === 0) return;
 
       const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
       const direccion = visita.direccion_visita || visita.obra?.direccion || 'N/A';
@@ -132,14 +139,86 @@ export function setupNotificationListeners() {
       }
 
       await emailService.sendNotification(
-        emails,
+        allEmails,
         titulo,
-        `Hola Visitador,<br><br>` +
+        `Hola,<br><br>` +
         `${mensajeHtml}<br><br>` +
         `<i>Este es un aviso automático generado por el sistema SIGMA-LA.</i>`
       );
     } catch (err) {
       console.error('Error procesando evento visita.actualizada:', err);
+    }
+  });
+
+  eventBus.on('entrega.asignada', async ({ entrega, cuils }) => {
+    try {
+      const emails = await notificationConfigRepository.getEmailsForRoleNotification('PLANTA', 'asignacion_entrega', cuils);
+      if (emails.length === 0) return;
+
+      const clienteNombre = entrega.obra?.cliente?.nombre || 'Cliente';
+      const direccion = entrega.obra?.direccion || 'A coordinar';
+
+      await emailService.sendNotification(
+        emails,
+        `Asignación de Entrega - Obra #${entrega.cod_obra}`,
+        `Hola,<br><br>` +
+        `Le informamos que ha sido asignado a una nueva entrega en el sistema.<br><br>` +
+        `<b>Detalles de la operación:</b><br>` +
+        `- <b>Cliente:</b> ${clienteNombre}<br>` +
+        `- <b>Obra:</b> #${entrega.cod_obra}<br>` +
+        `- <b>Dirección:</b> ${direccion}<br>` +
+        `- <b>Fecha Entrega:</b> ${new Date(entrega.fecha_hora_entrega).toLocaleString()}<br>` +
+        `- <b>Detalle:</b> ${entrega.detalle}<br><br>` +
+        `<i>Este es un aviso automático generado por el sistema SIGMA-LA.</i>`
+      );
+    } catch (err) {
+      console.error('Error procesando evento entrega.asignada:', err);
+    }
+  });
+
+  eventBus.on('entrega.actualizada', async ({ entrega, cuils, tipo }) => {
+    try {
+      const emails = await notificationConfigRepository.getEmailsForRoleNotification('PLANTA', 'actualizacion_visita', cuils);
+      if (emails.length === 0) return;
+
+      const clienteNombre = entrega.obra?.cliente?.nombre || 'Cliente';
+      
+      let titulo = '';
+      let mensajeHtml = '';
+
+      switch (tipo) {
+        case 'CANCELADA':
+          titulo = `Entrega Cancelada - Obra #${entrega.cod_obra}`;
+          mensajeHtml = `Le informamos que la entrega programada para el <b>${new Date(entrega.fecha_hora_entrega).toLocaleString()}</b> ha sido <b>CANCELADA</b>.<br><br>` +
+                        `<b>Detalles:</b><br>` +
+                        `- <b>Obra:</b> #${entrega.cod_obra}<br>` +
+                        `- <b>Observaciones:</b> ${entrega.observaciones || 'Ninguna'}`;
+          break;
+        case 'HORARIO_MODIFICADO':
+          titulo = `Horario Modificado - Entrega - Obra #${entrega.cod_obra}`;
+          mensajeHtml = `Le informamos que los horarios de su entrega asignada han sido <b>MODIFICADOS</b>.<br><br>` +
+                        `<b>Nuevos Detalles:</b><br>` +
+                        `- <b>Nueva Fecha/Hora:</b> ${new Date(entrega.fecha_hora_entrega).toLocaleString()}<br>` +
+                        `- <b>Cliente:</b> ${clienteNombre}`;
+          break;
+        case 'DESASIGNADO':
+          titulo = `Desasignación de Entrega - Obra #${entrega.cod_obra}`;
+          mensajeHtml = `Le informamos que ha sido <b>REMOVIDO</b> de la asignación para la siguiente entrega.<br><br>` +
+                        `<b>Detalles de la entrega original:</b><br>` +
+                        `- <b>Fecha/Hora:</b> ${new Date(entrega.fecha_hora_entrega).toLocaleString()}<br>` +
+                        `- <b>Obra:</b> #${entrega.cod_obra}`;
+          break;
+      }
+
+      await emailService.sendNotification(
+        emails,
+        titulo,
+        `Hola,<br><br>` +
+        `${mensajeHtml}<br><br>` +
+        `<i>Este es un aviso automático generado por el sistema SIGMA-LA.</i>`
+      );
+    } catch (err) {
+      console.error('Error procesando evento entrega.actualizada:', err);
     }
   });
 

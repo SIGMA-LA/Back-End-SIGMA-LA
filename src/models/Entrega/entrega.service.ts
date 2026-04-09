@@ -6,6 +6,7 @@ import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 import { EmpleadoService } from '../Empleado/empleado.service.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { AppError } from '../../shared/errors/AppError.js'
+import { eventBus } from '../../shared/events/eventBus.js'
 
 /**
  * Servicio para manejar la lógica de negocio de entregas.
@@ -119,9 +120,9 @@ export class EntregaService {
       }),
     }
 
-    if (esFinal) {
-      return prisma.$transaction(async tx => {
-        const nuevaEntrega = await tx.entrega.create({ data: payload, include: {
+    const nuevaEntrega = esFinal
+      ? await prisma.$transaction(async tx => {
+        const result = await tx.entrega.create({ data: payload, include: {
           obra: { include: { cliente: true, localidad: true } },
           entrega_empleado: { include: { empleado: { select: { cuil: true, nombre: true, apellido: true } } } },
           uso_maquinaria: { include: { maquinaria: { select: { descripcion: true } } } },
@@ -129,11 +130,15 @@ export class EntregaService {
           ordenes_de_produccion: true,
         }}) as EntregaWithRelations
         await tx.obra.update({ where: { cod_obra }, data: { estado: 'ENTREGADA' } })
-        return nuevaEntrega
+        return result
       })
+      : await this.entregaRepository.create(payload)
+
+    if (cuilesEmpleados.length > 0) {
+      eventBus.emit('entrega.asignada', { entrega: nuevaEntrega, cuils: cuilesEmpleados })
     }
 
-    return this.entregaRepository.create(payload)
+    return nuevaEntrega
   }
 
   async findAll(search?: string, estado?: string): Promise<EntregaWithRelations[]> {
@@ -284,7 +289,28 @@ export class EntregaService {
       }
     }
 
-    return this.entregaRepository.update(cod_entrega, updateData)
+    const updatedEntrega = await this.entregaRepository.update(cod_entrega, updateData)
+
+    if (hasPersonnelChanged && empleados) {
+      const newlyAssignedCuils = empleados.filter(e => !existingEntrega.entrega_empleado.find(ee => ee.cuil === e.cuil)).map(e => e.cuil)
+      if (newlyAssignedCuils.length > 0) {
+        eventBus.emit('entrega.asignada', { entrega: updatedEntrega, cuils: newlyAssignedCuils })
+      }
+
+      const removedCuils = existingEntrega.entrega_empleado.filter(ee => !empleados.find(e => e.cuil === ee.cuil)).map(ee => ee.cuil)
+      if (removedCuils.length > 0) {
+        eventBus.emit('entrega.actualizada', { entrega: updatedEntrega, cuils: removedCuils, tipo: 'DESASIGNADO' })
+      }
+    }
+
+    if (hasDatesChanged) {
+      const remainingCuils = updatedEntrega.entrega_empleado.map(ee => ee.cuil)
+      if (remainingCuils.length > 0) {
+        eventBus.emit('entrega.actualizada', { entrega: updatedEntrega, cuils: remainingCuils, tipo: 'HORARIO_MODIFICADO' })
+      }
+    }
+
+    return updatedEntrega
   }
 
   async delete(cod_entrega: number): Promise<entrega> {
@@ -330,19 +356,27 @@ export class EntregaService {
 
   async cancelar(cod_entrega: number, motivo?: string): Promise<entrega> {
     await this.findById(cod_entrega) // Throws if not found
-    return (await prisma.$transaction(async tx => {
+    const canceledEntrega = await prisma.$transaction(async tx => {
       const updated = await tx.entrega.update({
         where: { cod_entrega },
         data: {
           estado: 'CANCELADO',
           observaciones: motivo ? `Entrega cancelada: ${motivo}` : 'Entrega cancelada',
           fecha_cancelacion: new Date()
-        }
-      })
+        },
+        include: { entrega_empleado: true }
+      }) as EntregaWithRelations
       await tx.uso_vehiculo_entrega.updateMany({ where: { cod_entrega }, data: { fecha_hora_fin_real: new Date() } })
       await tx.uso_maquinaria.updateMany({ where: { cod_entrega }, data: { fecha_hora_fin_real: new Date() } })
       return updated
-    }))
+    })
+
+    const assignedCuils = canceledEntrega.entrega_empleado?.map(ee => ee.cuil) || []
+    if (assignedCuils.length > 0) {
+      eventBus.emit('entrega.actualizada', { entrega: canceledEntrega, cuils: assignedCuils, tipo: 'CANCELADA' })
+    }
+
+    return canceledEntrega
   }
 }
 

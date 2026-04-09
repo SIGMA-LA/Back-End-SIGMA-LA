@@ -21,6 +21,7 @@ export interface EmpleadoPayload {
   config_coordinacion?: ConfigCoordinacionUpdate | null
   config_produccion?: ConfigProduccionUpdate | null
   config_visitador?: ConfigVisitadorUpdate | null
+  config_planta?: ConfigPlantaUpdate | null
 }
 
 export interface ConfigCoordinacionUpdate {
@@ -36,6 +37,12 @@ export interface ConfigProduccionUpdate {
 
 export interface ConfigVisitadorUpdate {
   asignacion_visita?: boolean
+  actualizacion_visita?: boolean
+}
+
+export interface ConfigPlantaUpdate {
+  asignacion_visita?: boolean
+  asignacion_entrega?: boolean
   actualizacion_visita?: boolean
 }
 
@@ -115,7 +122,8 @@ export class EmpleadoService {
       empleadoResult as unknown as EmpleadoPayload,
       empleadoResult.config_coordinacion,
       (empleadoResult as any).config_produccion,
-      (empleadoResult as any).config_visitador
+      (empleadoResult as any).config_visitador,
+      (empleadoResult as any).config_planta
     )
 
     const result: any = {
@@ -132,6 +140,7 @@ export class EmpleadoService {
     delete (result as any).config_coordinacion;
     delete (result as any).config_produccion;
     delete (result as any).config_visitador;
+    delete (result as any).config_planta;
     delete (result as any).notificacion_email;
     delete (result as any).notificacion_whatsapp;
 
@@ -141,7 +150,14 @@ export class EmpleadoService {
     }
   }
 
-  private getNotificationMetadata(rol: string, empleadoData: EmpleadoPayload, valuesCoord?: ConfigCoordinacionUpdate | null, valuesProd?: ConfigProduccionUpdate | null, valuesVisit?: ConfigVisitadorUpdate | null): NotificationMetadata {
+  private getNotificationMetadata(
+    rol: string,
+    empleadoData: EmpleadoPayload,
+    valuesCoord?: ConfigCoordinacionUpdate | null,
+    valuesProd?: ConfigProduccionUpdate | null,
+    valuesVisit?: ConfigVisitadorUpdate | null,
+    valuesPlanta?: ConfigPlantaUpdate | null
+  ): NotificationMetadata {
     const metadata: NotificationMetadata = {
       configuracion: {
         canales: [],
@@ -200,6 +216,25 @@ export class EmpleadoService {
       metadata.valores = {
         asignacion_visita: valuesVisit?.asignacion_visita || false,
         actualizacion_visita: valuesVisit?.actualizacion_visita || false,
+        email: empleadoData.notificacion_email || false,
+        whatsapp: empleadoData.notificacion_whatsapp || false
+      }
+    } else if (rol === 'PLANTA') {
+      metadata.configuracion.eventos = [
+        { id: 'asignacion_visita', label: 'Asignación a Visita' },
+        { id: 'asignacion_entrega', label: 'Asignación a Entrega' },
+        { id: 'actualizacion_visita', label: 'Actualización/Cancelación de Visita' }
+      ]
+
+      metadata.configuracion.canales = [
+        { id: 'email', label: 'Recibir por Email' },
+        { id: 'whatsapp', label: 'Recibir por WhatsApp' }
+      ]
+
+      metadata.valores = {
+        asignacion_visita: valuesPlanta?.asignacion_visita || false,
+        asignacion_entrega: valuesPlanta?.asignacion_entrega || false,
+        actualizacion_visita: valuesPlanta?.actualizacion_visita || false,
         email: empleadoData.notificacion_email || false,
         whatsapp: empleadoData.notificacion_whatsapp || false
       }
@@ -409,6 +444,13 @@ export class EmpleadoService {
       };
     } else if (rol === 'VISITADOR') {
       (updateContainer as Record<string, unknown>).config_visitador = {
+        upsert: {
+          create: eventos,
+          update: eventos,
+        },
+      };
+    } else if (rol === 'PLANTA') {
+      (updateContainer as Record<string, unknown>).config_planta = {
         upsert: {
           create: eventos,
           update: eventos,

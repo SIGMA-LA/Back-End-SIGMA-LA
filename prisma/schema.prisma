@@ -35,6 +35,7 @@ model empleado {
   config_visitador      config_visitador?
   config_coordinacion   config_coordinacion?
   config_produccion     config_produccion?
+  config_planta         config_planta?
   empleado_visita       empleado_visita[]
   entrega_empleado      entrega_empleado[]
 }
@@ -234,6 +235,14 @@ model visita {
   @@index([cod_obra])
   @@index([cod_localidad])
   @@index([fecha_hora_visita])
+}
+
+model config_planta{
+  cuil                   String   @id
+  asignacion_visita      Boolean  @default(false)
+  asignacion_entrega     Boolean  @default(false)
+  actualizacion_visita   Boolean  @default(false)
+  empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
 }
 
 

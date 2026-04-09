@@ -76,7 +76,6 @@ export class EmpleadoRepository {
     })
   }
 
-  // Obtener perfil del empleado por CUIL
   async findPerfil(cuil: string): Promise<EmpleadoPayload | null> {
     return await this.prisma.empleado.findUnique({
       where: { cuil: cuil },
@@ -109,8 +108,15 @@ export class EmpleadoRepository {
             actualizacion_visita: true,
           },
         },
+        config_planta: {
+          select: {
+            asignacion_visita: true,
+            asignacion_entrega: true,
+            actualizacion_visita: true,
+          },
+        },
       },
-    })
+    }) as any
   }
 
   // Crear nuevo empleado
