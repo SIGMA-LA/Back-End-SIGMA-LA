@@ -3,7 +3,6 @@ import { ClienteService } from './cliente.service.js'
 import { catchAsync } from '../../shared/utils/catchAsync.js'
 import { sendSuccess, sendPaginatedSuccess } from '../../shared/utils/apiResponse.js'
 import { parsePagination } from '../../shared/utils/parsePagination.js'
-import { AppError } from '../../shared/errors/AppError.js'
 
 const clienteService = new ClienteService()
 
