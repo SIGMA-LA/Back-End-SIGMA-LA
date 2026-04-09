@@ -220,5 +220,52 @@ export class PagoService {
   async findByObra(cod_obra: number): Promise<pago[]> {
     return await this.repository.findManyByObra(cod_obra)
   }
+
+  /**
+   * Retrieves billing statistics for the current and previous month.
+   */
+  async getFacturacionStats(): Promise<{ ingresosMes: number; ingresosMesPasado: number; porcentajeCrecimiento: number }> {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+
+    const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
+
+    const ingresosMesAggregate = await prisma.pago.aggregate({
+      where: {
+        fecha_pago: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+      _sum: { monto: true },
+    })
+    const ingresosMes = Number(ingresosMesAggregate._sum.monto || 0)
+
+    const ingresosMesPrevAggregate = await prisma.pago.aggregate({
+      where: {
+        fecha_pago: {
+          gte: startOfPrevMonth,
+          lte: endOfPrevMonth,
+        },
+      },
+      _sum: { monto: true },
+    })
+    const ingresosMesPasado = Number(ingresosMesPrevAggregate._sum.monto || 0)
+    
+    let porcentajeCrecimiento = 0
+    if (ingresosMesPasado > 0) {
+      porcentajeCrecimiento = ((ingresosMes - ingresosMesPasado) / ingresosMesPasado) * 100
+    } else if (ingresosMes > 0) {
+      porcentajeCrecimiento = 100
+    }
+
+    return {
+      ingresosMes,
+      ingresosMesPasado,
+      porcentajeCrecimiento: Math.round(porcentajeCrecimiento * 10) / 10,
+    }
+  }
 }
 

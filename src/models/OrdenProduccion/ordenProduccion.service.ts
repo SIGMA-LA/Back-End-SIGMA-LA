@@ -8,6 +8,18 @@ import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { eventBus } from '../../shared/events/eventBus.js'
 
+interface OrdenProduccionCreateInput {
+  cod_obra: number | string
+  url?: string | null
+  public_id?: string | null
+  fecha_validacion?: Date | string | null
+}
+
+interface UploadedOrdenFile {
+  path?: string
+  filename?: string
+}
+
 /**
  * Service to manage production orders (orden de producción).
  */
@@ -21,20 +33,30 @@ export class OrdenProduccionService {
   /**
    * Creates a new production order.
    */
-  async create(data: {
-    cod_obra: number
-    url: string
-    public_id: string
-    fecha_validacion?: Date | null
-  }): Promise<orden_de_produccion> {
+  async create(
+    data: OrdenProduccionCreateInput,
+    uploadedFile?: UploadedOrdenFile,
+  ): Promise<orden_de_produccion> {
+    const codObra = Number(data.cod_obra)
+    if (!Number.isInteger(codObra) || codObra <= 0) {
+      throw new ValidationError('Código de obra inválido', 'INVALID_ID')
+    }
+
+    const normalizedUrl = (uploadedFile?.path ?? data.url ?? '').trim()
+    if (!normalizedUrl) {
+      throw new ValidationError('No se ha subido ningún archivo', 'FILE_REQUIRED')
+    }
+
+    const fechaValidacion = this.parseFechaValidacion(data.fecha_validacion)
+
     const prismaData: Prisma.orden_de_produccionCreateInput = {
       obra: {
-        connect: { cod_obra: data.cod_obra },
+        connect: { cod_obra: codObra },
       },
       fecha_confeccion: new Date(),
-      fecha_validacion: data.fecha_validacion || null,
-      url: data.url,
-      public_id: data.public_id,
+      fecha_validacion: fechaValidacion,
+      url: normalizedUrl,
+      public_id: uploadedFile?.filename ?? data.public_id ?? null,
     }
 
     const nuevaOrden = await this.repository.create(prismaData)
@@ -43,6 +65,17 @@ export class OrdenProduccionService {
     eventBus.emit('orden_produccion.creada', nuevaOrden)
 
     return nuevaOrden
+  }
+
+  private parseFechaValidacion(value: Date | string | null | undefined): Date | null {
+    if (!value) return null
+
+    const parsedDate = value instanceof Date ? value : new Date(value)
+    if (Number.isNaN(parsedDate.getTime())) {
+      throw new ValidationError('Fecha de validación inválida', 'INVALID_DATE')
+    }
+
+    return parsedDate
   }
 
   /**
@@ -68,8 +101,8 @@ export class OrdenProduccionService {
   /**
    * Gets all validated production orders.
    */
-  async findValidadas(): Promise<orden_de_produccion[]> {
-    return await this.repository.findValidadas()
+  async findAprobadas(): Promise<orden_de_produccion[]> {
+    return await this.repository.findAprobadas()
   }
 
   /**
@@ -132,22 +165,11 @@ export class OrdenProduccionService {
       )
     }
 
-    const [ordenActualizada] = await prisma.$transaction([
-      prisma.orden_de_produccion.update({
-        where: { cod_op },
-        data: { estado: 'FINALIZADA' },
-      }),
-    ])
-
-    console.log(
-      `[NOTIFICATION] Production of Order #${orden.cod_op} has finished. Notifying Coordination.`,
-    )
-
-    return ordenActualizada
+    return await this.repository.update(cod_op, { estado: 'FINALIZADA' })
   }
 
   /**
-   * Marks a production order as starting production.
+   * Marks a production order as starting production and updates the associated obra.
    */
   async iniciarProduccion(cod_op: number): Promise<orden_de_produccion> {
     const orden = await this.findById(cod_op)
@@ -159,7 +181,26 @@ export class OrdenProduccionService {
       )
     }
 
-    return await this.repository.update(cod_op, { estado: 'EN PRODUCCION' })
+    const [ordenActualizada] = await prisma.$transaction([
+      prisma.orden_de_produccion.update({
+        where: { cod_op },
+        data: { estado: 'EN PRODUCCION' },
+        include: {
+          obra: {
+            include: {
+              cliente: true,
+              localidad: true,
+            },
+          },
+        },
+      }),
+      prisma.obra.update({
+        where: { cod_obra: orden.cod_obra },
+        data: { estado: 'EN PRODUCCION' },
+      }),
+    ])
+
+    return ordenActualizada
   }
 }
 

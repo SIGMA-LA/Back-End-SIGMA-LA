@@ -22,6 +22,11 @@ export class PagoController {
     return sendSuccess(res, nuevoPago, 'Payment registered successfully', 201)
   })
 
+  getFacturacionStats = catchAsync(async (req: Request, res: Response) => {
+    const stats = await pagoService.getFacturacionStats()
+    return sendSuccess(res, stats)
+  })
+
   /**
    * Gets all payments with optional filtering.
    */

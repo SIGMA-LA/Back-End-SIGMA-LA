@@ -450,7 +450,35 @@ export class VisitaService {
 
     return canceledVisita
   }
+
+  /**
+   * Obtiene estadísticas de visitas programadas y completadas para hoy.
+   */
+  async getProgresoDiario(): Promise<{ agendaHoyVisitas: number; completadosHoyVisitas: number }> {
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const todayEnd = new Date()
+    todayEnd.setHours(23, 59, 59, 999)
+
+    const agendaHoyVisitas = await prisma.visita.count({
+      where: {
+        fecha_hora_visita: { gte: todayStart, lte: todayEnd },
+        estado: { not: 'CANCELADA' },
+      },
+    })
+
+    const completadosHoyVisitas = await prisma.visita.count({
+      where: {
+        fecha_hora_visita: { gte: todayStart, lte: todayEnd },
+        estado: 'COMPLETADA',
+      },
+    })
+
+    return { agendaHoyVisitas, completadosHoyVisitas }
+  }
 }
+
 
 export const visitaService = new VisitaService()
 

@@ -10,6 +10,11 @@ const obraController = new ObraController()
 const obraRouter = Router()
 
 // ----------- FILTROS Y BÚSQUEDAS -----------
+// Stats endpoints (must be before /:id routes)
+obraRouter.get('/stats/admin', obraController.getAdminStats)
+obraRouter.get('/stats/ventas', obraController.getVentasStats)
+obraRouter.get('/stats/coordinacion', obraController.getCoordinacionStats)
+
 // Obtener todas las obras
 obraRouter.get('/', obraController.getAll)
 
@@ -45,6 +50,9 @@ obraRouter.patch('/:id/solicitar-stock', obraController.solicitarStock)
 
 // Confirmar recepción de stock
 obraRouter.patch('/:id/recibir-stock', obraController.recibirStock)
+
+// Finalizar producción de una obra
+obraRouter.patch('/:id/finalizar-produccion', obraController.finalizarProduccion)
 
 // ----------- NOTA DE FÁBRICA -----------
 
