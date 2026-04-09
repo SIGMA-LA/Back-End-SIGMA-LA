@@ -6,6 +6,7 @@ import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 import { EmpleadoService } from '../Empleado/empleado.service.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { AppError } from '../../shared/errors/AppError.js'
+import type { PaginationParams, PaginatedResponse } from '../../shared/types/pagination.js'
 
 /**
  * Servicio para manejar la lógica de negocio de entregas.
@@ -136,8 +137,26 @@ export class EntregaService {
     return this.entregaRepository.create(payload)
   }
 
-  async findAll(search?: string, estado?: string): Promise<EntregaWithRelations[]> {
-    return this.entregaRepository.findAll(search, estado)
+  async findAll(
+    search?: string, 
+    estado?: string, 
+    pagination?: PaginationParams
+  ): Promise<PaginatedResponse<EntregaWithRelations>> {
+    const { data, total } = await this.entregaRepository.findAll(search, estado, pagination)
+
+    if (!pagination) {
+       return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+    }
+
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1
+
+    return {
+      data,
+      total,
+      totalPages,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   async findById(cod_entrega: number): Promise<EntregaWithRelations> {
@@ -292,8 +311,34 @@ export class EntregaService {
     return this.entregaRepository.delete(cod_entrega)
   }
 
-  async getByEmpleadoEstado(cuilEmpleado: string, estado: string, search?: string, date?: string): Promise<entrega[]> {
-    return this.entregaRepository.getByEmpleadoEstado(cuilEmpleado, estado, search, date)
+  async getByEmpleadoEstado(
+    cuilEmpleado: string,
+    estado: string,
+    search?: string,
+    date?: string,
+    pagination?: PaginationParams
+  ): Promise<PaginatedResponse<EntregaWithRelations>> {
+    const { data, total } = await this.entregaRepository.getByEmpleadoEstado(
+      cuilEmpleado,
+      estado,
+      search,
+      date,
+      pagination
+    )
+
+    if (!pagination) {
+      return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+    }
+
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1
+
+    return {
+      data,
+      total,
+      totalPages,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   async agregarOrdenesDeProduccion(cod_entrega: number, cod_ops: number[]): Promise<entrega> {

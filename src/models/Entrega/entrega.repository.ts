@@ -1,6 +1,7 @@
 import { PrismaClient, entrega, Prisma } from '@prisma/client'
 
 import { prisma } from '../../shared/db/prismaClient.js'
+import type { PaginationParams } from '../../shared/types/pagination.js'
 
 const defaultInclude = {
   obra: {
@@ -57,7 +58,11 @@ export class EntregaRepository {
     return this.prisma.entrega.create({ data, include: defaultInclude })
   }
 
-  async findAll(search?: string, estado?: string): Promise<EntregaWithRelations[]> {
+  async findAll(
+    search?: string,
+    estado?: string,
+    paginationConfig?: PaginationParams
+  ): Promise<{ data: EntregaWithRelations[]; total: number }> {
     const whereClause: Prisma.entregaWhereInput = {}
 
     if (estado) {
@@ -87,11 +92,23 @@ export class EntregaRepository {
       ]
     }
 
-    return this.prisma.entrega.findMany({
-      where: whereClause,
-      orderBy: { fecha_hora_entrega: 'desc' },
-      include: defaultInclude,
-    })
+    const skip = paginationConfig
+      ? (paginationConfig.page - 1) * paginationConfig.pageSize
+      : undefined
+    const take = paginationConfig ? paginationConfig.pageSize : undefined
+
+    const [data, total] = await Promise.all([
+      this.prisma.entrega.findMany({
+        where: whereClause,
+        orderBy: { fecha_hora_entrega: 'desc' },
+        include: defaultInclude,
+        skip,
+        take,
+      }),
+      this.prisma.entrega.count({ where: whereClause })
+    ])
+
+    return { data: data as EntregaWithRelations[], total }
   }
 
   async getByEmpleadoEstado(
@@ -99,7 +116,8 @@ export class EntregaRepository {
     estado: string,
     search?: string,
     date?: string,
-  ): Promise<EntregaWithRelations[]> {
+    paginationConfig?: PaginationParams,
+  ): Promise<{ data: EntregaWithRelations[]; total: number }> {
     const whereClause: Prisma.entregaWhereInput = {
       estado: estado,
       entrega_empleado: {
@@ -142,11 +160,23 @@ export class EntregaRepository {
       ]
     }
 
-    return this.prisma.entrega.findMany({
-      where: whereClause,
-      include: defaultInclude,
-      orderBy: { fecha_hora_entrega: 'desc' },
-    })
+    const skip = paginationConfig
+      ? (paginationConfig.page - 1) * paginationConfig.pageSize
+      : undefined
+    const take = paginationConfig ? paginationConfig.pageSize : undefined
+
+    const [data, total] = await Promise.all([
+      this.prisma.entrega.findMany({
+        where: whereClause,
+        include: defaultInclude,
+        orderBy: { fecha_hora_entrega: 'desc' },
+        skip,
+        take,
+      }),
+      this.prisma.entrega.count({ where: whereClause }),
+    ])
+
+    return { data: data as EntregaWithRelations[], total }
   }
 
   async findById(cod_entrega: number): Promise<EntregaWithRelations | null> {

@@ -1,5 +1,6 @@
 import { PrismaClient, cliente, Prisma } from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
+import type { PaginationParams } from '../../shared/types/pagination.js'
 
 export interface ClienteDeleteDependencyCounts {
   obras: number
@@ -20,32 +21,41 @@ export class ClienteRepository {
     })
   }
 
-  async findAll(): Promise<cliente[]> {
-    return await this.prisma.cliente.findMany({
-      orderBy: { razon_social: 'asc' },
-    })
-  }
-
   async findById(cuil: string): Promise<cliente | null> {
     return await this.prisma.cliente.findUnique({
       where: { cuil: cuil },
     })
   }
 
-  async buscar(q: string, limit?: number, offset?: number): Promise<cliente[]> {
-    return await this.prisma.cliente.findMany({
-      where: {
-        OR: [
-          { razon_social: { contains: q, mode: 'insensitive' } },
-          { cuil: { contains: q, mode: 'insensitive' } },
-          { nombre: { contains: q, mode: 'insensitive' } },
-          { apellido: { contains: q, mode: 'insensitive' } },
-        ],
-      },
-      take: limit,
-      skip: offset,
-      orderBy: { razon_social: 'asc' },
-    })
+  async findAll(
+    search?: string,
+    paginationConfig?: PaginationParams
+  ): Promise<{ data: cliente[]; total: number }> {
+    const whereClause: Prisma.clienteWhereInput = search ? {
+      OR: [
+        { razon_social: { contains: search, mode: 'insensitive' } },
+        { cuil: { contains: search, mode: 'insensitive' } },
+        { nombre: { contains: search, mode: 'insensitive' } },
+        { apellido: { contains: search, mode: 'insensitive' } },
+      ],
+    } : {}
+
+    const skip = paginationConfig
+      ? (paginationConfig.page - 1) * paginationConfig.pageSize
+      : undefined
+    const take = paginationConfig ? paginationConfig.pageSize : undefined
+
+    const [data, total] = await Promise.all([
+      this.prisma.cliente.findMany({
+        where: whereClause,
+        orderBy: { razon_social: 'asc' },
+        skip,
+        take,
+      }),
+      this.prisma.cliente.count({ where: whereClause })
+    ])
+
+    return { data, total }
   }
 
   async update(

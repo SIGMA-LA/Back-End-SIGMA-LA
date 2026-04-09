@@ -95,4 +95,52 @@ describe('ObraService - Pruebas Unitarias', () => {
       )
     })
   })
+
+  describe('findAll() - Paginación', () => {
+    it('debería retornar PaginatedResponse con metadata correcta', async () => {
+      vi.spyOn(ObraRepository.prototype, 'findAll').mockResolvedValue({
+        data: [
+          { cod_obra: 1, direccion: 'Calle 1', estado: 'ACTIVA' },
+          { cod_obra: 2, direccion: 'Calle 2', estado: 'EN PRODUCCION' },
+        ] as unknown as Awaited<ReturnType<ObraRepository['findAll']>>['data'],
+        total: 50,
+      })
+
+      const result = await obraService.findAll({ page: 1, pageSize: 25 })
+
+      expect(result).toEqual({
+        data: expect.arrayContaining([
+          expect.objectContaining({ cod_obra: 1 }),
+          expect.objectContaining({ cod_obra: 2 }),
+        ]),
+        total: 50,
+        totalPages: 2,
+        page: 1,
+        pageSize: 25,
+      })
+    })
+
+    it('debería calcular totalPages correctamente con valores no exactos', async () => {
+      vi.spyOn(ObraRepository.prototype, 'findAll').mockResolvedValue({
+        data: [],
+        total: 51,
+      })
+
+      const result = await obraService.findAll({ page: 1, pageSize: 25 })
+
+      expect(result.totalPages).toBe(3) // ceil(51/25) = 3
+      expect(result.total).toBe(51)
+    })
+
+    it('debería pasar los parámetros de paginación al repositorio', async () => {
+      const findAllMock = vi.spyOn(ObraRepository.prototype, 'findAll').mockResolvedValue({
+        data: [],
+        total: 0,
+      })
+
+      await obraService.findAll({ page: 3, pageSize: 10 })
+
+      expect(findAllMock).toHaveBeenCalledWith({ page: 3, pageSize: 10 })
+    })
+  })
 })

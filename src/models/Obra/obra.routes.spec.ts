@@ -34,18 +34,39 @@ describe('Integration Tests - Obra Routes', () => {
       expect(response.status).toBe(401)
     })
 
-    it('debería devolver 200 y lista de obras', async () => {
-      vi.spyOn(ObraRepository.prototype, 'findAll').mockResolvedValue([
-        { cod_obra: 1, direccion: 'Calle Falsa 123', estado: 'ACTIVA' },
-        { cod_obra: 2, direccion: 'Av. Siempre Viva', estado: 'EN PRODUCCION' },
-      ] as unknown as Awaited<ReturnType<ObraRepository['findAll']>>)
+    it('debería devolver 200 y respuesta paginada con lista de obras', async () => {
+      vi.spyOn(ObraRepository.prototype, 'findAll').mockResolvedValue({
+        data: [
+          { cod_obra: 1, direccion: 'Calle Falsa 123', estado: 'ACTIVA' },
+          { cod_obra: 2, direccion: 'Av. Siempre Viva', estado: 'EN PRODUCCION' },
+        ] as unknown as Awaited<ReturnType<ObraRepository['findAll']>>['data'],
+        total: 2,
+      })
 
       const response = await request(app)
         .get('/api/obras')
         .set('Authorization', `Bearer ${token}`)
 
       expect(response.status).toBe(200)
-      expect(response.body.data).toHaveLength(2)
+      expect(response.body.data).toHaveProperty('data')
+      expect(response.body.data).toHaveProperty('total', 2)
+      expect(response.body.data).toHaveProperty('totalPages')
+      expect(response.body.data).toHaveProperty('page')
+      expect(response.body.data).toHaveProperty('pageSize')
+      expect(response.body.data.data).toHaveLength(2)
+    })
+
+    it('debería respetar los parámetros de paginación', async () => {
+      const findAllMock = vi.spyOn(ObraRepository.prototype, 'findAll').mockResolvedValue({
+        data: [],
+        total: 0,
+      })
+
+      await request(app)
+        .get('/api/obras?page=2&pageSize=10')
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(findAllMock).toHaveBeenCalledWith({ page: 2, pageSize: 10 })
     })
   })
 

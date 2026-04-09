@@ -1,5 +1,6 @@
 import { PrismaClient, visita, Prisma } from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
+import type { PaginationParams } from '../../shared/types/pagination.js'
 
 export type VisitaWithRelations = Prisma.visitaGetPayload<{
   include: {
@@ -30,15 +31,20 @@ export class VisitaRepository {
   }
 
   // Obtener todas las visitas
-  async findAll(estado?: string): Promise<VisitaWithRelations[]> {
+  async findAll(
+    estado?: string,
+    paginationConfig?: PaginationParams
+  ): Promise<{ data: VisitaWithRelations[]; total: number }> {
     const whereClause: Prisma.visitaWhereInput = estado
       ? { estado: { equals: estado, mode: 'insensitive' } }
       : {}
 
-    return await this.prisma.visita.findMany({
-      where: whereClause,
-      orderBy: { fecha_hora_visita: 'desc' },
-      include: {
+    const skip = paginationConfig
+      ? (paginationConfig.page - 1) * paginationConfig.pageSize
+      : undefined
+    const take = paginationConfig ? paginationConfig.pageSize : undefined
+
+    const includeOptions = {
         obra: {
           include: {
             cliente: true,
@@ -56,8 +62,20 @@ export class VisitaRepository {
             vehiculo: true,
           },
         },
-      },
-    }) as VisitaWithRelations[]
+      }
+
+    const [data, total] = await Promise.all([
+      this.prisma.visita.findMany({
+        where: whereClause,
+        orderBy: { fecha_hora_visita: 'desc' },
+        include: includeOptions,
+        take,
+        skip,
+      }),
+      this.prisma.visita.count({ where: whereClause }),
+    ])
+
+    return { data: data as VisitaWithRelations[], total }
   }
 
   // Obtener visita por cod_visita
@@ -211,10 +229,9 @@ export class VisitaRepository {
 
   async buscar(
     q: string,
-    limit?: number,
-    offset?: number,
+    paginationConfig?: PaginationParams,
     estado?: string,
-  ): Promise<VisitaWithRelations[]> {
+  ): Promise<{ data: VisitaWithRelations[]; total: number }> {
     const filters: Prisma.visitaWhereInput[] = [
       {
         OR: [
@@ -245,9 +262,12 @@ export class VisitaRepository {
       filters.push({ estado: { equals: estado, mode: 'insensitive' } })
     }
 
-    return await this.prisma.visita.findMany({
-      where: { AND: filters },
-      include: {
+    const skip = paginationConfig
+      ? (paginationConfig.page - 1) * paginationConfig.pageSize
+      : undefined
+    const take = paginationConfig ? paginationConfig.pageSize : undefined
+
+    const includeOptions = {
         obra: {
           include: {
             cliente: true,
@@ -265,11 +285,20 @@ export class VisitaRepository {
             vehiculo: true,
           },
         },
-      },
-      take: limit,
-      skip: offset,
-      orderBy: { fecha_hora_visita: 'desc' },
-    }) as VisitaWithRelations[]
+      }
+
+    const [data, total] = await Promise.all([
+      this.prisma.visita.findMany({
+        where: { AND: filters },
+        include: includeOptions,
+        take,
+        skip,
+        orderBy: { fecha_hora_visita: 'desc' },
+      }),
+      this.prisma.visita.count({ where: { AND: filters } })
+    ])
+
+    return { data: data as VisitaWithRelations[], total }
   }
 
   async findByEmpleadoAndEstado(
@@ -277,7 +306,8 @@ export class VisitaRepository {
     estado: string | string[],
     search?: string,
     date?: string,
-  ): Promise<VisitaWithRelations[]> {
+    paginationConfig?: PaginationParams,
+  ): Promise<{ data: VisitaWithRelations[]; total: number }> {
     const whereClause: Prisma.visitaWhereInput = {
       estado: Array.isArray(estado) ? { in: estado } : estado,
       empleado_visita: {
@@ -322,31 +352,43 @@ export class VisitaRepository {
       ]
     }
 
-    return await this.prisma.visita.findMany({
-      where: whereClause,
-      include: {
-        obra: {
-          include: {
-            cliente: true,
-            localidad: true,
+    const skip = paginationConfig
+      ? (paginationConfig.page - 1) * paginationConfig.pageSize
+      : undefined
+    const take = paginationConfig ? paginationConfig.pageSize : undefined
+
+    const [data, total] = await Promise.all([
+      this.prisma.visita.findMany({
+        where: whereClause,
+        include: {
+          obra: {
+            include: {
+              cliente: true,
+              localidad: true,
+            },
+          },
+          localidad: true,
+          empleado_visita: {
+            include: {
+              empleado: true,
+            },
+          },
+          uso_vehiculo_visita: {
+            include: {
+              vehiculo: true,
+            },
           },
         },
-        localidad: true,
-        empleado_visita: {
-          include: {
-            empleado: true,
-          },
+        orderBy: {
+          fecha_hora_visita: 'desc',
         },
-        uso_vehiculo_visita: {
-          include: {
-            vehiculo: true,
-          },
-        },
-      },
-      orderBy: {
-        fecha_hora_visita: 'desc',
-      },
-    }) as VisitaWithRelations[]
+        skip,
+        take,
+      }),
+      this.prisma.visita.count({ where: whereClause })
+    ])
+
+    return { data: data as VisitaWithRelations[], total }
   }
 
   // Obtener todas las visitas de un empleado
@@ -355,7 +397,8 @@ export class VisitaRepository {
     estados?: string[],
     search?: string,
     date?: string,
-  ): Promise<VisitaWithRelations[]> {
+    paginationConfig?: PaginationParams,
+  ): Promise<{ data: VisitaWithRelations[]; total: number }> {
     const whereClause: Prisma.visitaWhereInput = {
       empleado_visita: {
         some: {
@@ -402,31 +445,43 @@ export class VisitaRepository {
       ]
     }
 
-    return await this.prisma.visita.findMany({
-      where: whereClause,
-      include: {
-        obra: {
-          include: {
-            cliente: true,
-            localidad: true,
+    const skip = paginationConfig
+      ? (paginationConfig.page - 1) * paginationConfig.pageSize
+      : undefined
+    const take = paginationConfig ? paginationConfig.pageSize : undefined
+
+    const [data, total] = await Promise.all([
+      this.prisma.visita.findMany({
+        where: whereClause,
+        include: {
+          obra: {
+            include: {
+              cliente: true,
+              localidad: true,
+            },
+          },
+          empleado_visita: {
+            include: {
+              empleado: true,
+            },
+          },
+          localidad: true,
+          uso_vehiculo_visita: {
+            include: {
+              vehiculo: true,
+            },
           },
         },
-        empleado_visita: {
-          include: {
-            empleado: true,
-          },
+        orderBy: {
+          fecha_hora_visita: 'desc',
         },
-        localidad: true,
-        uso_vehiculo_visita: {
-          include: {
-            vehiculo: true,
-          },
-        },
-      },
-      orderBy: {
-        fecha_hora_visita: 'desc',
-      },
-    }) as VisitaWithRelations[]
+        skip,
+        take,
+      }),
+      this.prisma.visita.count({ where: whereClause })
+    ])
+
+    return { data: data as VisitaWithRelations[], total }
   }
 }
 
