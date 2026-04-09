@@ -8,6 +8,8 @@ const visitaRouter = Router()
 
 visitaRouter.get('/', visitaController.getAll)
 
+visitaRouter.get('/stats/progreso-diario', visitaController.getProgresoDiario)
+
 visitaRouter.post('/', visitaController.create)
 
 visitaRouter.get('/buscar', visitaController.buscar)

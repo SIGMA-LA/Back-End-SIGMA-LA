@@ -193,27 +193,28 @@ export class ObraRepository {
           none: {},
         },
       })
+      andConditions.push({
+        estado: {
+          notIn: ['PRODUCCION FINALIZADA', 'CANCELADA'],
+        },
+      })
     }
 
     if (filters.estado === 'EN_PRODUCCION') {
       andConditions.push({
         orden_de_produccion: {
-          some: {
-            estado: {
-              not: 'FINALIZADA',
-            },
-          },
+          some: {},
         },
       })
       andConditions.push({
         estado: {
-          notIn: ['FINALIZADA'],
+          notIn: ['PRODUCCION FINALIZADA', 'CANCELADA'],
         },
       })
     }
 
     if (filters.estado === 'FINALIZADA') {
-      andConditions.push({ estado: 'FINALIZADA' })
+      andConditions.push({ estado: 'PRODUCCION FINALIZADA' })
     }
 
     if (filters.fechaDesde || filters.fechaHasta) {

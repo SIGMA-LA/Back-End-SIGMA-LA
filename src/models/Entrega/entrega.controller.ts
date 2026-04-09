@@ -107,5 +107,11 @@ export class EntregaController {
     )
     return sendSuccess(res, entrega, 'Órdenes de producción quitadas exitosamente')
   })
+
+  // ----------- STATS -----------
+  getProgresoDiario = catchAsync(async (req: Request, res: Response) => {
+    const stats = await entregaService.getProgresoDiario()
+    return sendSuccess(res, stats)
+  })
 }
 

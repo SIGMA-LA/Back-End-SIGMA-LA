@@ -78,7 +78,7 @@ export class OrdenProduccionRepository {
     })
   }
 
-  async findValidadas(): Promise<orden_de_produccion[]> {
+  async findAprobadas(): Promise<orden_de_produccion[]> {
     return await this.prisma.orden_de_produccion.findMany({
       where: {
         estado: 'APROBADA',

@@ -7,7 +7,7 @@ const ordenProduccionRouter = Router()
 
 ordenProduccionRouter.get('/', ordenProduccionController.getAll)
 
-ordenProduccionRouter.get('/validadas', ordenProduccionController.getValidadas)
+ordenProduccionRouter.get('/Aprobadas', ordenProduccionController.getAprobadas)
 
 ordenProduccionRouter.get('/en-produccion', ordenProduccionController.getEnProduccion)
 

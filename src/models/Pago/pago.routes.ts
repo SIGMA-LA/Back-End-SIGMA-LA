@@ -11,6 +11,7 @@ const pagoController = new PagoController()
 const pagoRouter = Router()
 
 pagoRouter.get('/', pagoController.getAll)
+pagoRouter.get('/stats/facturacion', pagoController.getFacturacionStats)
 
 pagoRouter.post('/', validate({ body: createPagoSchema }), pagoController.create)
 

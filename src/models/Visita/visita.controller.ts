@@ -142,6 +142,12 @@ export class VisitaController {
     const visita = await visitaService.cancelar(Number(id), motivo)
     return sendSuccess(res, visita, 'Visit cancelled successfully')
   })
+
+  // ----------- STATS -----------
+  getProgresoDiario = catchAsync(async (req: Request, res: Response) => {
+    const stats = await visitaService.getProgresoDiario()
+    return sendSuccess(res, stats)
+  })
 }
 
 export const visitaController = new VisitaController()
