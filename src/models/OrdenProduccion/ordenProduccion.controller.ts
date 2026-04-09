@@ -14,7 +14,7 @@ export class OrdenProduccionController {
    * Creates a new production order.
    */
   create = catchAsync(async (req: Request, res: Response) => {
-    const nueva = await ordenProduccionService.create(req.body)
+    const nueva = await ordenProduccionService.create(req.body, req.file)
     return sendSuccess(res, nueva, 'Production order created successfully', 201)
   })
 
@@ -45,8 +45,8 @@ export class OrdenProduccionController {
   /**
    * Gets all validated production orders.
    */
-  getValidadas = catchAsync(async (req: Request, res: Response) => {
-    const ordenes = await ordenProduccionService.findValidadas()
+  getAprobadas = catchAsync(async (req: Request, res: Response) => {
+    const ordenes = await ordenProduccionService.findAprobadas()
     return sendSuccess(res, ordenes)
   })
 

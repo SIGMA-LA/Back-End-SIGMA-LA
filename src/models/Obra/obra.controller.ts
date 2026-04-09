@@ -296,5 +296,31 @@ export class ObraController {
     const obra = await obraService.recibirStock(id)
     return sendSuccess(res, obra, 'Stock received and obra now in production')
   })
-}
 
+  // ----------- STATS -----------
+  getAdminStats = catchAsync(async (req: Request, res: Response) => {
+    const stats = await obraService.getAdminStats()
+    return sendSuccess(res, stats)
+  })
+
+  getVentasStats = catchAsync(async (req: Request, res: Response) => {
+    const stats = await obraService.getVentasStats()
+    return sendSuccess(res, stats)
+  })
+
+  getCoordinacionStats = catchAsync(async (req: Request, res: Response) => {
+    const stats = await obraService.getCoordinacionStats()
+    return sendSuccess(res, stats)
+  })
+
+  /**
+   * Changes obra status to PRODUCCION FINALIZADA.
+   */
+  finalizarProduccion = catchAsync(async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id, 10)
+    if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
+
+    const obra = await obraService.finalizarProduccion(id)
+    return sendSuccess(res, obra, 'Obra production finalized successfully')
+  })
+}
