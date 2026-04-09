@@ -293,6 +293,23 @@ export class ObraController {
     return sendSuccess(res, obra, 'Stock received and obra now in production')
   })
 
+  // ----------- STATS -----------
+  getAdminStats = catchAsync(async (req: Request, res: Response) => {
+    const stats = await obraService.getAdminStats()
+    return sendSuccess(res, stats)
+  })
+
+  getVentasStats = catchAsync(async (req: Request, res: Response) => {
+    const stats = await obraService.getVentasStats()
+    return sendSuccess(res, stats)
+  })
+
+  getCoordinacionStats = catchAsync(async (req: Request, res: Response) => {
+    const stats = await obraService.getCoordinacionStats()
+    return sendSuccess(res, stats)
+  })
+}
+
 
   /**
    * Changes obra status to PRODUCCION FINALIZADA.

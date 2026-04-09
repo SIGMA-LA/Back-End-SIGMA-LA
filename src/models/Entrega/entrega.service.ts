@@ -344,5 +344,32 @@ export class EntregaService {
       return updated
     }))
   }
+
+  /**
+   * Obtiene estadísticas de entregas programadas y completadas para hoy.
+   */
+  async getProgresoDiario(): Promise<{ agendaHoyEntregas: number; completadosHoyEntregas: number }> {
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const todayEnd = new Date()
+    todayEnd.setHours(23, 59, 59, 999)
+
+    const agendaHoyEntregas = await prisma.entrega.count({
+      where: {
+        fecha_hora_entrega: { gte: todayStart, lte: todayEnd },
+        estado: { not: 'CANCELADO' },
+      },
+    })
+
+    const completadosHoyEntregas = await prisma.entrega.count({
+      where: {
+        fecha_hora_entrega: { gte: todayStart, lte: todayEnd },
+        estado: 'ENTREGADO',
+      },
+    })
+
+    return { agendaHoyEntregas, completadosHoyEntregas }
+  }
 }
 

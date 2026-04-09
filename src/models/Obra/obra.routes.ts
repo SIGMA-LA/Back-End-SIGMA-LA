@@ -10,6 +10,11 @@ const obraController = new ObraController()
 const obraRouter = Router()
 
 // ----------- FILTROS Y BÚSQUEDAS -----------
+// Stats endpoints (must be before /:id routes)
+obraRouter.get('/stats/admin', obraController.getAdminStats)
+obraRouter.get('/stats/ventas', obraController.getVentasStats)
+obraRouter.get('/stats/coordinacion', obraController.getCoordinacionStats)
+
 // Obtener todas las obras
 obraRouter.get('/', obraController.getAll)
 

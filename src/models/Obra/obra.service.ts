@@ -5,6 +5,7 @@ import {
 } from './obra.repository.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { prisma } from '../../shared/db/prismaClient.js'
 
 type ObraCreateInputExtended = Prisma.obraCreateInput & {
   cuil?: string
@@ -331,6 +332,96 @@ export class ObraService {
       throw new ValidationError('Esta obra no está esperando stock.', 'INVALID_STATE')
     }
     return await this.repository.update(id, { estado: 'EN PRODUCCION' })
+  }
+
+  /**
+   * Formats CUIL with hyphens (e.g., 20-12345678-9).
+   */
+  /**
+   * Obtiene la deuda total sumando presupuestos descontando pagos.
+   */
+  async getCuentasPorCobrar(): Promise<number> {
+    const obrasPendientes = await prisma.obra.findMany({
+      where: {
+        estado: { in: ['PAGADA PARCIALMENTE', 'EN ESPERA DE PAGO'] },
+      },
+      include: {
+        presupuesto: {
+          where: { fecha_aceptacion: { not: null } },
+        },
+        pago: true,
+      },
+    })
+
+    let cuentasPorCobrar = 0
+    for (const ob of obrasPendientes) {
+      const presupuestoAceptado = ob.presupuesto[ob.presupuesto.length - 1]
+      if (presupuestoAceptado) {
+        const totalPagado = ob.pago.reduce(
+          (sum: number, pago: { monto: number }) => sum + Number(pago.monto),
+          0,
+        )
+        const deuda = Number(presupuestoAceptado.valor) - totalPagado
+        if (deuda > 0) cuentasPorCobrar += deuda
+      }
+    }
+    return cuentasPorCobrar
+  }
+
+  /**
+   * Obtiene estadísticas de obras para el dashboard de Administrador.
+   */
+  async getAdminStats(): Promise<{ obrasActivas: number; nuevasObrasDelMes: number; cuentasPorCobrar: number }> {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+
+    const obrasActivas = await prisma.obra.count({
+      where: { estado: { notIn: ['ENTREGADA', 'CANCELADA'] } },
+    })
+
+    const nuevasObrasDelMes = await prisma.obra.count({
+      where: {
+        fecha_ini: { gte: startOfMonth, lte: endOfMonth },
+      },
+    })
+
+    const cuentasPorCobrar = await this.getCuentasPorCobrar()
+
+    return { obrasActivas, nuevasObrasDelMes, cuentasPorCobrar }
+  }
+
+  /**
+   * Obtiene estadísticas de obras para el dashboard de Ventas.
+   */
+  async getVentasStats(): Promise<{ totalPorCobrar: number; obrasGanadasMes: number; obrasFaltaStock: number }> {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+
+    const totalPorCobrar = await this.getCuentasPorCobrar()
+
+    const obrasGanadasMes = await prisma.obra.count({
+      where: {
+        fecha_ini: { gte: startOfMonth, lte: endOfMonth },
+      },
+    })
+
+    const obrasFaltaStock = await prisma.obra.count({
+      where: { estado: 'EN ESPERA DE STOCK' },
+    })
+
+    return { totalPorCobrar, obrasGanadasMes, obrasFaltaStock }
+  }
+
+  /**
+   * Obtiene estadísticas de obras para el dashboard de Coordinación.
+   */
+  async getCoordinacionStats(): Promise<{ listasParaEntregar: number }> {
+    const listasParaEntregar = await prisma.obra.count({
+      where: { estado: 'PRODUCCION FINALIZADA' },
+    })
+    return { listasParaEntregar }
   }
 
   /**
