@@ -1,7 +1,8 @@
 import { Request, Response } from 'express'
 import { visitaService } from './visita.service.js'
 import { catchAsync } from '../../shared/utils/catchAsync.js'
-import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { sendSuccess, sendPaginatedSuccess } from '../../shared/utils/apiResponse.js'
+import { parsePagination } from '../../shared/utils/parsePagination.js'
 import { AppError } from '../../shared/errors/AppError.js'
 
 /**
@@ -21,8 +22,9 @@ export class VisitaController {
    */
   getAll = catchAsync(async (req: Request, res: Response) => {
     const estado = req.query.estado as string | undefined
-    const visitas = await visitaService.findAll(estado)
-    return sendSuccess(res, visitas)
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await visitaService.findAll(estado, pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**
@@ -39,19 +41,15 @@ export class VisitaController {
    */
   buscar = catchAsync(async (req: Request, res: Response) => {
     const q = String(req.query.q ?? '').trim()
-    const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
-    const pageSize = Math.max(
-      1,
-      Math.min(100, parseInt(String(req.query.pageSize ?? '25'), 10)),
-    )
+    const pagination = parsePagination(req.query as Record<string, unknown>)
 
     if (!q) {
       throw new AppError('El parámetro de búsqueda "q" es requerido', 400, 'MISSING_PARAMS')
     }
 
     const estado = req.query.estado as string | undefined
-    const visitas = await visitaService.buscar(q, page, pageSize, estado)
-    return sendSuccess(res, visitas)
+    const result = await visitaService.buscar(q, pagination, estado)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**
@@ -78,11 +76,15 @@ export class VisitaController {
   getVisitasByEmpleadoAndEstado = catchAsync(async (req: Request, res: Response) => {
     const cuil = req.params.cuil
     const estado = req.params.estado
+    const pagination = parsePagination(req.query as Record<string, unknown>)
     const visitas = await visitaService.getVisitasByEmpleadoAndEstado(
       cuil,
       estado,
+      undefined,
+      undefined,
+      pagination
     )
-    return sendSuccess(res, visitas)
+    return sendPaginatedSuccess(res, visitas)
   })
 
   /**
@@ -99,14 +101,15 @@ export class VisitaController {
         ? estado
         : [estado]
       : undefined
-
+    const pagination = parsePagination(req.query as Record<string, unknown>)
     const visitas = await visitaService.getVisitasByEmpleado(
       cuil,
       estadosArray,
       search,
       date,
+      pagination
     )
-    return sendSuccess(res, visitas)
+    return sendPaginatedSuccess(res, visitas)
   })
 
   /**

@@ -2,7 +2,8 @@ import { ObraService } from './obra.service.js'
 import { Request, Response } from 'express'
 import type { NotasFabricaFilters } from './obra.repository.js'
 import { catchAsync } from '../../shared/utils/catchAsync.js'
-import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { sendSuccess, sendPaginatedSuccess } from '../../shared/utils/apiResponse.js'
+import { parsePagination } from '../../shared/utils/parsePagination.js'
 import { AppError } from '../../shared/errors/AppError.js'
 
 const obraService = new ObraService()
@@ -24,11 +25,12 @@ export class ObraController {
    */
   filtrar = catchAsync(async (req: Request, res: Response) => {
     const { estado, localidad } = req.query
-    const obras = await obraService.filtrar({
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await obraService.filtrar({
       estado: estado as string | undefined,
       cod_localidad: localidad ? Number(localidad) : undefined,
-    })
-    return sendSuccess(res, obras)
+    }, pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**
@@ -36,8 +38,9 @@ export class ObraController {
    */
   buscar = catchAsync(async (req: Request, res: Response) => {
     const q = req.query.q as string
-    const obras = await obraService.buscar(q)
-    return sendSuccess(res, obras)
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await obraService.buscar(q, pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**
@@ -65,8 +68,9 @@ export class ObraController {
    * Gets all obras.
    */
   getAll = catchAsync(async (req: Request, res: Response) => {
-    const obras = await obraService.findAll()
-    return sendSuccess(res, obras)
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await obraService.findAll(pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**

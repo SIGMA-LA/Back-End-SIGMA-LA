@@ -1,6 +1,7 @@
 import { Prisma, cliente } from '@prisma/client'
 import { ClienteRepository } from './cliente.repository.js'
 import { AppError } from '../../shared/errors/AppError.js'
+import type { PaginationParams, PaginatedResponse } from '../../shared/types/pagination.js'
 
 export interface ClienteDependencyDetails {
   obras: number
@@ -26,8 +27,25 @@ export class ClienteService {
     return await this.repository.create(data)
   }
 
-  async findAll(): Promise<cliente[]> {
-    return await this.repository.findAll()
+  async findAll(
+    search?: string,
+    pagination?: PaginationParams
+  ): Promise<PaginatedResponse<cliente>> {
+    const { data, total } = await this.repository.findAll(search, pagination)
+
+    if (!pagination) {
+       return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+    }
+
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1
+
+    return {
+      data,
+      total,
+      totalPages,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   async findById(cuil: string): Promise<cliente> {
@@ -36,12 +54,6 @@ export class ClienteService {
       throw new AppError('Cliente no encontrado', 404, 'CLIENTE_NOT_FOUND')
     }
     return cliente
-  }
-
-  async buscar(q: string, page = 1, pageSize = 25): Promise<cliente[]> {
-    const limit = Math.max(1, Math.min(100, pageSize))
-    const offset = (Math.max(1, page) - 1) * limit
-    return await this.repository.buscar(q, limit, offset)
   }
 
   async update(
