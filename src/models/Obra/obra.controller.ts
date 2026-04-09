@@ -308,8 +308,6 @@ export class ObraController {
     const stats = await obraService.getCoordinacionStats()
     return sendSuccess(res, stats)
   })
-}
-
 
   /**
    * Changes obra status to PRODUCCION FINALIZADA.
