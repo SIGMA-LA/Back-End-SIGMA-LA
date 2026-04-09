@@ -116,7 +116,7 @@ export class EmpleadoRepository {
           },
         },
       },
-    }) as any
+    }) as unknown as EmpleadoPayload | null
   }
 
   // Crear nuevo empleado

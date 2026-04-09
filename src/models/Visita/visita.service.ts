@@ -6,6 +6,8 @@ import { ValidationError } from '../../shared/errors/validationError.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { emailService } from '../../shared/providers/email/index.js'
 import { eventBus } from '../../shared/events/eventBus.js'
+import type { PaginationParams, PaginatedResponse } from '../../shared/types/pagination.js'
+import { prisma } from '../../shared/db/prismaClient.js'
 
 /**
  * Interface for creating a new Visita.
@@ -168,10 +170,27 @@ export class VisitaService {
   }
 
   /**
-   * Gets all visits, optionally filtered by status.
+   * Gets all visits, optionally filtered by status, with pagination
    */
-  async findAll(estado?: string): Promise<VisitaWithRelations[]> {
-    return await this.visitaRepository.findAll(estado)
+  async findAll(
+    estado?: string,
+    pagination?: PaginationParams
+  ): Promise<PaginatedResponse<VisitaWithRelations>> {
+    const { data, total } = await this.visitaRepository.findAll(estado, pagination)
+
+    if (!pagination) {
+      return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+    }
+
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1
+
+    return {
+      data,
+      total,
+      totalPages,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   /**
@@ -190,16 +209,20 @@ export class VisitaService {
    */
   async buscar(
     q: string,
-    page = 1,
-    pageSize = 25,
+    pagination: PaginationParams,
     estado?: string,
-  ): Promise<VisitaWithRelations[]> {
-    return await this.visitaRepository.buscar(
-      q,
-      pageSize,
-      (Math.max(1, page) - 1) * Math.max(1, Math.min(100, pageSize)),
-      estado,
-    )
+  ): Promise<PaginatedResponse<VisitaWithRelations>> {
+    const { data, total } = await this.visitaRepository.buscar(q, pagination, estado)
+
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1
+
+    return {
+      data,
+      total,
+      totalPages,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   /**
@@ -383,14 +406,23 @@ export class VisitaService {
     estado: string[] | string,
     search?: string,
     date?: string,
-  ): Promise<VisitaWithRelations[]> {
+    pagination?: PaginationParams,
+  ): Promise<PaginatedResponse<VisitaWithRelations>> {
     const estadosArray = Array.isArray(estado) ? estado : [estado]
-    return await this.visitaRepository.findByEmpleadoAndEstado(
+    const { data, total } = await this.visitaRepository.findByEmpleadoAndEstado(
       cuil,
       estadosArray,
       search,
       date,
+      pagination,
     )
+
+    if (!pagination) {
+      return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+    }
+
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1
+    return { data, total, totalPages, page: pagination.page, pageSize: pagination.pageSize }
   }
 
   /**
@@ -401,13 +433,22 @@ export class VisitaService {
     estados?: string[],
     search?: string,
     date?: string,
-  ): Promise<VisitaWithRelations[]> {
-    return await this.visitaRepository.findByEmpleado(
+    pagination?: PaginationParams,
+  ): Promise<PaginatedResponse<VisitaWithRelations>> {
+    const { data, total } = await this.visitaRepository.findByEmpleado(
       cuil,
       estados,
       search,
       date,
+      pagination,
     )
+
+    if (!pagination) {
+      return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+    }
+
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1
+    return { data, total, totalPages, page: pagination.page, pageSize: pagination.pageSize }
   }
 
   /**

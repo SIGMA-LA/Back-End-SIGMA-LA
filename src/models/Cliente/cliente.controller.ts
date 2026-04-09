@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { ClienteService } from './cliente.service.js'
 import { catchAsync } from '../../shared/utils/catchAsync.js'
-import { sendSuccess } from '../../shared/utils/apiResponse.js'
-import { AppError } from '../../shared/errors/AppError.js'
+import { sendSuccess, sendPaginatedSuccess } from '../../shared/utils/apiResponse.js'
+import { parsePagination } from '../../shared/utils/parsePagination.js'
 
 const clienteService = new ClienteService()
 
@@ -16,30 +16,17 @@ export class ClienteController {
   })
 
   getAll = catchAsync(async (req: Request, res: Response) => {
-    const clientes = await clienteService.findAll()
-    return sendSuccess(res, clientes)
+    const q = req.query.q as string | undefined
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+
+    const result = await clienteService.findAll(q, pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   getOne = catchAsync(async (req: Request, res: Response) => {
     const cuil = req.params.cuil
     const cliente = await clienteService.findById(cuil)
     return sendSuccess(res, cliente)
-  })
-
-  buscar = catchAsync(async (req: Request, res: Response) => {
-    const q = String(req.query.q ?? '').trim()
-    const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10))
-    const pageSize = Math.max(
-      1,
-      Math.min(100, parseInt(String(req.query.pageSize ?? '25'), 10)),
-    )
-
-    if (!q) {
-      throw new AppError('Parámetro "q" es requerido', 400, 'QUERY_PARAM_REQUIRED')
-    }
-
-    const clientes = await clienteService.buscar(q, page, pageSize)
-    return sendSuccess(res, clientes)
   })
 
   update = catchAsync(async (req: Request, res: Response) => {

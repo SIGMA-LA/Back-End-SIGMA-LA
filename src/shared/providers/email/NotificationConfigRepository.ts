@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 import { prisma } from '../../db/prismaClient.js'
 
 export type ConfigRolesFields = {
@@ -10,11 +10,25 @@ export type ConfigRolesFields = {
   // ADMINISTRACION: 'pago_recibido' | 'nueva_obra'; 
 };
 
+/** Shape returned by config_X.findMany when selecting empleado.mail */
+interface ConfigWithEmpleadoMail {
+  empleado: {
+    mail: string | null
+  }
+}
+
+/** Extended Prisma client that exposes the config tables not yet in the generated types */
+type PrismaClientExtended = PrismaClient & {
+  config_produccion: { findMany(args: object): Promise<ConfigWithEmpleadoMail[]> }
+  config_visitador:  { findMany(args: object): Promise<ConfigWithEmpleadoMail[]> }
+  config_planta:     { findMany(args: object): Promise<ConfigWithEmpleadoMail[]> }
+}
+
 export class NotificationConfigRepository {
-  private prisma: PrismaClient
+  private prisma: PrismaClientExtended
   
   constructor() {
-    this.prisma = prisma
+    this.prisma = prisma as unknown as PrismaClientExtended
   }
 
   /**
@@ -28,16 +42,13 @@ export class NotificationConfigRepository {
   ): Promise<string[]> {
     
     // Filtro base para cualquier rol: Activo y con mail
-    let baseWhere: any = {
+    const baseWhere: Prisma.empleadoWhereInput = {
       rol_actual: rol,
       activo: true,
       mail: { not: null },
-      notificacion_email: true
+      notificacion_email: true,
+      ...(cuils && cuils.length > 0 ? { cuil: { in: cuils } } : {})
     };
-
-    if (cuils && cuils.length > 0) {
-      baseWhere.cuil = { in: cuils };
-    }
 
     let emails: string[] = [];
     
@@ -54,36 +65,36 @@ export class NotificationConfigRepository {
     }
 
     if (rol === 'PRODUCCION') {
-      const configs = await (this.prisma as any).config_produccion.findMany({
+      const configs = await this.prisma.config_produccion.findMany({
         where: {
           [field as string]: true,
           empleado: baseWhere
         },
         select: { empleado: { select: { mail: true } } }
       });
-      emails = configs.map((c: any) => c.empleado.mail).filter((m: any): m is string => !!m);
+      emails = configs.map((c: ConfigWithEmpleadoMail) => c.empleado.mail).filter((m): m is string => !!m);
     }
 
     if (rol === 'VISITADOR') {
-      const configs = await (this.prisma as any).config_visitador.findMany({
+      const configs = await this.prisma.config_visitador.findMany({
         where: {
           [field as string]: true,
           empleado: baseWhere
         },
         select: { empleado: { select: { mail: true } } }
       });
-      emails = configs.map((c: any) => c.empleado.mail).filter((m: any): m is string => !!m);
+      emails = configs.map((c: ConfigWithEmpleadoMail) => c.empleado.mail).filter((m): m is string => !!m);
     }
 
     if (rol === 'PLANTA') {
-      const configs = await (this.prisma as any).config_planta.findMany({
+      const configs = await this.prisma.config_planta.findMany({
         where: {
           [field as string]: true,
           empleado: baseWhere
         },
         select: { empleado: { select: { mail: true } } }
       });
-      emails = configs.map((c: any) => c.empleado.mail).filter((m: any): m is string => !!m);
+      emails = configs.map((c: ConfigWithEmpleadoMail) => c.empleado.mail).filter((m): m is string => !!m);
     }
 
     /* 

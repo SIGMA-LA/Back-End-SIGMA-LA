@@ -38,17 +38,20 @@ describe('Integration Tests - Cliente Routes', () => {
     })
 
     it('debería devolver 200 y lista de clientes con token válido', async () => {
-      vi.spyOn(ClienteRepository.prototype, 'findAll').mockResolvedValue([
-        { cuil: '20111111112', razon_social: 'Empresa A' } as unknown as cliente,
-        { cuil: '20222222223', razon_social: 'Empresa B' } as unknown as cliente,
-      ])
+      vi.spyOn(ClienteRepository.prototype, 'findAll').mockResolvedValue({
+        data: [
+          { cuil: '20111111112', razon_social: 'Empresa A' } as unknown as cliente,
+          { cuil: '20222222223', razon_social: 'Empresa B' } as unknown as cliente,
+        ],
+        total: 2,
+      })
 
       const response = await request(app)
         .get('/api/clientes')
         .set('Authorization', `Bearer ${token}`)
 
       expect(response.status).toBe(200)
-      expect(response.body.data).toHaveLength(2)
+      expect(response.body.data.data).toHaveLength(2)
     })
   })
 

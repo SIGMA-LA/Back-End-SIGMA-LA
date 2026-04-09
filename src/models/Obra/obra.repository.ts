@@ -1,5 +1,6 @@
 import { PrismaClient, obra, Prisma } from '@prisma/client'
 import { prisma } from '../../shared/db/prismaClient.js'
+import type { PaginationParams } from '../../shared/types/pagination.js'
 
 export type NotasFabricaEstado =
   | 'SIN_ORDEN'
@@ -24,32 +25,54 @@ export class ObraRepository {
 
   // ----------- FILTROS Y BÚSQUEDAS -----------
 
-  async findAll() {
-    return await this.prisma.obra.findMany({
-      orderBy: { cod_obra: 'desc' },
-      include: {
-        cliente: true,
-        arquitecto: true,
-        localidad: {
-          include: {
-            provincia: true,
+  async findAll(pagination: PaginationParams): Promise<{ data: obra[]; total: number }> {
+    const skip = (pagination.page - 1) * pagination.pageSize
+    const take = pagination.pageSize
+
+    const [data, total] = await Promise.all([
+      this.prisma.obra.findMany({
+        orderBy: { cod_obra: 'desc' },
+        include: {
+          cliente: true,
+          arquitecto: true,
+          localidad: {
+            include: {
+              provincia: true,
+            },
           },
+          presupuesto: true,
+          pago: true,
         },
-        presupuesto: true,
-        pago: true,
-      },
-    })
+        skip,
+        take,
+      }),
+      this.prisma.obra.count(),
+    ])
+
+    return { data, total }
   }
   /** Filtra obras por estado, localidad o ambos */
-  async filtrar({
-    estado,
-    cod_localidad,
-  }: {
-    estado?: string
-    cod_localidad?: number
-  }) {
-    if (!estado && !cod_localidad) {
-      return this.prisma.obra.findMany({
+  async filtrar(
+    {
+      estado,
+      cod_localidad,
+    }: {
+      estado?: string
+      cod_localidad?: number
+    },
+    pagination: PaginationParams,
+  ): Promise<{ data: obra[]; total: number }> {
+    const skip = (pagination.page - 1) * pagination.pageSize
+    const take = pagination.pageSize
+
+    const where: Prisma.obraWhereInput = {
+      ...(estado && { estado }),
+      ...(cod_localidad && { cod_localidad }),
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.obra.findMany({
+        where,
         include: {
           cliente: true,
           arquitecto: true,
@@ -60,49 +83,49 @@ export class ObraRepository {
           },
         },
         orderBy: { fecha_ini: 'desc' },
-      })
-    }
-    return this.prisma.obra.findMany({
-      where: {
-        ...(estado && { estado }),
-        ...(cod_localidad && { cod_localidad }),
-      },
-      include: {
-        cliente: true,
-        arquitecto: true,
-        localidad: {
-          include: {
-            provincia: true,
-          },
-        },
-      },
-      orderBy: { fecha_ini: 'desc' },
-    })
+        skip,
+        take,
+      }),
+      this.prisma.obra.count({ where }),
+    ])
+
+    return { data, total }
   }
 
   /** Busca obras por texto (dirección, cliente, etc.) */
-  async buscar(q: string) {
-    return this.prisma.obra.findMany({
-      where: {
-        OR: [
-          { direccion: { contains: q, mode: 'insensitive' } },
-          { cliente: { razon_social: { contains: q, mode: 'insensitive' } } },
-          { cliente: { nombre: { contains: q, mode: 'insensitive' } } },
-          { cliente: { apellido: { contains: q, mode: 'insensitive' } } },
-        ],
-      },
-      include: {
-        cliente: true,
-        arquitecto: true,
-        localidad: {
-          include: {
-            provincia: true,
+  async buscar(q: string, pagination: PaginationParams): Promise<{ data: obra[]; total: number }> {
+    const skip = (pagination.page - 1) * pagination.pageSize
+    const take = pagination.pageSize
+
+    const where: Prisma.obraWhereInput = {
+      OR: [
+        { direccion: { contains: q, mode: 'insensitive' } },
+        { cliente: { razon_social: { contains: q, mode: 'insensitive' } } },
+        { cliente: { nombre: { contains: q, mode: 'insensitive' } } },
+        { cliente: { apellido: { contains: q, mode: 'insensitive' } } },
+      ],
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.obra.findMany({
+        where,
+        include: {
+          cliente: true,
+          arquitecto: true,
+          localidad: {
+            include: {
+              provincia: true,
+            },
           },
         },
-      },
-      orderBy: { cod_obra: 'desc' },
-      take: 10,
-    })
+        orderBy: { cod_obra: 'desc' },
+        skip,
+        take,
+      }),
+      this.prisma.obra.count({ where }),
+    ])
+
+    return { data, total }
   }
 
   /** Obtiene obras de un cliente específico */

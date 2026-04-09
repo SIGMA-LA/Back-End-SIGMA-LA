@@ -120,13 +120,13 @@ export class EmpleadoService {
     const notificacionesMetadata = this.getNotificationMetadata(
       empleadoResult.rol_actual,
       empleadoResult as unknown as EmpleadoPayload,
-      empleadoResult.config_coordinacion,
-      (empleadoResult as any).config_produccion,
-      (empleadoResult as any).config_visitador,
-      (empleadoResult as any).config_planta
+      (empleadoResult as unknown as { config_coordinacion?: ConfigCoordinacionUpdate | null }).config_coordinacion,
+      (empleadoResult as unknown as { config_produccion?: ConfigProduccionUpdate | null }).config_produccion,
+      (empleadoResult as unknown as { config_visitador?: ConfigVisitadorUpdate | null }).config_visitador,
+      (empleadoResult as unknown as { config_planta?: ConfigPlantaUpdate | null }).config_planta
     )
 
-    const result: any = {
+    const result: EmpleadoPayload & { notificaciones: NotificationMetadata } = {
       cuil: empleadoResult.cuil,
       nombre: empleadoResult.nombre,
       apellido: empleadoResult.apellido,
@@ -134,20 +134,10 @@ export class EmpleadoService {
       area_trabajo: empleadoResult.area_trabajo,
       mail: empleadoResult.mail,
       activo: empleadoResult.activo,
-    }
-
-    // Ocultar los campos de la DB que ya están mapeados en 'notificaciones' para evitar redundancia
-    delete (result as any).config_coordinacion;
-    delete (result as any).config_produccion;
-    delete (result as any).config_visitador;
-    delete (result as any).config_planta;
-    delete (result as any).notificacion_email;
-    delete (result as any).notificacion_whatsapp;
-
-    return {
-      ...result,
       notificaciones: notificacionesMetadata
     }
+
+    return result
   }
 
   private getNotificationMetadata(

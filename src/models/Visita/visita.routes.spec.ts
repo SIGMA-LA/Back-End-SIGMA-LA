@@ -42,17 +42,20 @@ describe('Integration Tests - Visita Routes', () => {
     })
 
     it('debería devolver 200 y la lista de visitas', async () => {
-      vi.spyOn(VisitaRepository.prototype, 'findAll').mockResolvedValue([
-        { cod_visita: 1, motivo_visita: 'Presupuesto', estado: 'PROGRAMADA' } as unknown as VisitaWithRelations,
-        { cod_visita: 2, motivo_visita: 'Medición', estado: 'COMPLETADA' } as unknown as VisitaWithRelations,
-      ])
+      vi.spyOn(VisitaRepository.prototype, 'findAll').mockResolvedValue({
+        data: [
+          { cod_visita: 1, motivo_visita: 'Presupuesto', estado: 'PROGRAMADA' } as unknown as VisitaWithRelations,
+          { cod_visita: 2, motivo_visita: 'Medición', estado: 'COMPLETADA' } as unknown as VisitaWithRelations,
+        ],
+        total: 2,
+      })
 
       const response = await request(app)
         .get('/api/visitas')
         .set('Authorization', `Bearer ${token}`)
 
       expect(response.status).toBe(200)
-      expect(response.body.data).toHaveLength(2)
+      expect(response.body.data.data).toHaveLength(2)
     })
   })
 

@@ -2,7 +2,8 @@ import { ObraService } from './obra.service.js'
 import { Request, Response } from 'express'
 import type { NotasFabricaFilters } from './obra.repository.js'
 import { catchAsync } from '../../shared/utils/catchAsync.js'
-import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { sendSuccess, sendPaginatedSuccess } from '../../shared/utils/apiResponse.js'
+import { parsePagination } from '../../shared/utils/parsePagination.js'
 import { AppError } from '../../shared/errors/AppError.js'
 
 const obraService = new ObraService()
@@ -24,11 +25,12 @@ export class ObraController {
    */
   filtrar = catchAsync(async (req: Request, res: Response) => {
     const { estado, localidad } = req.query
-    const obras = await obraService.filtrar({
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await obraService.filtrar({
       estado: estado as string | undefined,
       cod_localidad: localidad ? Number(localidad) : undefined,
-    })
-    return sendSuccess(res, obras)
+    }, pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**
@@ -36,8 +38,9 @@ export class ObraController {
    */
   buscar = catchAsync(async (req: Request, res: Response) => {
     const q = req.query.q as string
-    const obras = await obraService.buscar(q)
-    return sendSuccess(res, obras)
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await obraService.buscar(q, pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**
@@ -65,8 +68,9 @@ export class ObraController {
    * Gets all obras.
    */
   getAll = catchAsync(async (req: Request, res: Response) => {
-    const obras = await obraService.findAll()
-    return sendSuccess(res, obras)
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await obraService.findAll(pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**
@@ -75,7 +79,7 @@ export class ObraController {
   getOne = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     const obra = await obraService.findById(id)
     return sendSuccess(res, obra)
   })
@@ -211,7 +215,7 @@ export class ObraController {
   update = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     const obra = await obraService.update(id, req.body)
     return sendSuccess(res, obra, 'Obra updated successfully')
   })
@@ -222,7 +226,7 @@ export class ObraController {
   bajaLogica = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     const obra = await obraService.bajaLogica(id)
     return sendSuccess(res, obra, 'Obra cancelled successfully')
   })
@@ -233,7 +237,7 @@ export class ObraController {
   remove = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     await obraService.remove(id)
     return res.status(204).send()
   })
@@ -277,7 +281,7 @@ export class ObraController {
   solicitarStock = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     const obra = await obraService.solicitarStock(id)
     return sendSuccess(res, obra, 'Stock requested successfully')
   })
@@ -288,7 +292,7 @@ export class ObraController {
   recibirStock = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     const obra = await obraService.recibirStock(id)
     return sendSuccess(res, obra, 'Stock received and obra now in production')
   })

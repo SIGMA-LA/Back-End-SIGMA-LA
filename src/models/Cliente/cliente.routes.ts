@@ -13,12 +13,7 @@ const clienteRouter = Router()
  */
 clienteRouter.get('/', clienteController.getAll)
 
-/**
- * @route   GET /api/clientes/buscar
- * @desc    Buscar clientes con filtros
- * @access  Privado (requiere autenticación)
- */
-clienteRouter.get('/buscar', clienteController.buscar)
+
 
 /**
  * @route   POST /api/clientes

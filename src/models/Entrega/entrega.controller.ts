@@ -1,7 +1,8 @@
 import { Request, Response } from 'express'
 import { EntregaService } from './entrega.service.js'
 import { catchAsync } from '../../shared/utils/catchAsync.js'
-import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { sendSuccess, sendPaginatedSuccess } from '../../shared/utils/apiResponse.js'
+import { parsePagination } from '../../shared/utils/parsePagination.js'
 import { AppError } from '../../shared/errors/AppError.js'
 
 const entregaService = new EntregaService()
@@ -18,8 +19,10 @@ export class EntregaController {
   getAll = catchAsync(async (req: Request, res: Response) => {
     const search = req.query.q as string | undefined
     const estado = req.query.estado as string | undefined
-    const entregas = await entregaService.findAll(search, estado)
-    return sendSuccess(res, entregas)
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    
+    const result = await entregaService.findAll(search, estado, pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   getOne = catchAsync(async (req: Request, res: Response) => {
@@ -52,13 +55,15 @@ export class EntregaController {
   getEntregasByEmpleadoEstado = catchAsync(async (req: Request, res: Response) => {
     const { cuil_empleado, estado } = req.params
     const { search, date } = req.query as { search?: string; date?: string }
-    const entregas = await entregaService.getByEmpleadoEstado(
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await entregaService.getByEmpleadoEstado(
       cuil_empleado,
       estado,
       search,
       date,
+      pagination
     )
-    return sendSuccess(res, entregas)
+    return sendPaginatedSuccess(res, result)
   })
 
   finalizarEntrega = catchAsync(async (req: Request, res: Response) => {

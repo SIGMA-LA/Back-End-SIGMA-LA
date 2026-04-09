@@ -1,4 +1,5 @@
 import { Response } from 'express'
+import type { PaginatedResponse } from '../types/pagination.js'
 
 /**
  * Common success response format.
@@ -31,6 +32,22 @@ export const sendSuccess = <T>(
     status: 'success',
     message,
     data,
+  })
+}
+
+/**
+ * Standardized paginated success sender.
+ * Wraps PaginatedResponse inside the standard { status, data } envelope.
+ */
+export const sendPaginatedSuccess = <T>(
+  res: Response,
+  paginatedData: PaginatedResponse<T>,
+  message?: string,
+): Response<ApiResponse<PaginatedResponse<T>>> => {
+  return res.status(200).json({
+    status: 'success',
+    message,
+    data: paginatedData,
   })
 }
 

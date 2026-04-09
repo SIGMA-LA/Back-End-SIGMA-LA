@@ -7,6 +7,7 @@ import { EmpleadoService } from '../Empleado/empleado.service.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { eventBus } from '../../shared/events/eventBus.js'
+import type { PaginationParams, PaginatedResponse } from '../../shared/types/pagination.js'
 
 /**
  * Servicio para manejar la lógica de negocio de entregas.
@@ -122,13 +123,15 @@ export class EntregaService {
 
     const nuevaEntrega = esFinal
       ? await prisma.$transaction(async tx => {
-        const result = await tx.entrega.create({ data: payload, include: {
-          obra: { include: { cliente: true, localidad: true } },
-          entrega_empleado: { include: { empleado: { select: { cuil: true, nombre: true, apellido: true } } } },
-          uso_maquinaria: { include: { maquinaria: { select: { descripcion: true } } } },
-          uso_vehiculo_entrega: { include: { vehiculo: { select: { patente: true, tipo_vehiculo: true } } } },
-          ordenes_de_produccion: true,
-        }}) as EntregaWithRelations
+        const result = await tx.entrega.create({
+          data: payload, include: {
+            obra: { include: { cliente: true, localidad: true } },
+            entrega_empleado: { include: { empleado: { select: { cuil: true, nombre: true, apellido: true } } } },
+            uso_maquinaria: { include: { maquinaria: { select: { descripcion: true } } } },
+            uso_vehiculo_entrega: { include: { vehiculo: { select: { patente: true, tipo_vehiculo: true } } } },
+            ordenes_de_produccion: true,
+          }
+        }) as EntregaWithRelations
         await tx.obra.update({ where: { cod_obra }, data: { estado: 'ENTREGADA' } })
         return result
       })
@@ -141,8 +144,26 @@ export class EntregaService {
     return nuevaEntrega
   }
 
-  async findAll(search?: string, estado?: string): Promise<EntregaWithRelations[]> {
-    return this.entregaRepository.findAll(search, estado)
+  async findAll(
+    search?: string,
+    estado?: string,
+    pagination?: PaginationParams
+  ): Promise<PaginatedResponse<EntregaWithRelations>> {
+    const { data, total } = await this.entregaRepository.findAll(search, estado, pagination)
+
+    if (!pagination) {
+      return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+    }
+
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1
+
+    return {
+      data,
+      total,
+      totalPages,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   async findById(cod_entrega: number): Promise<EntregaWithRelations> {
@@ -177,7 +198,7 @@ export class EntregaService {
     const newFechaSalida = fecha_salida_estimada ? new Date(fecha_salida_estimada) : curFechaSalida
     const newFechaRetorno = fecha_regreso_estimado ? new Date(fecha_regreso_estimado) : curFechaRetorno
 
-    const hasDatesChanged = 
+    const hasDatesChanged =
       newFechaEntrega.getTime() !== new Date(existingEntrega.fecha_hora_entrega).getTime() ||
       newFechaSalida.getTime() !== curFechaSalida.getTime() ||
       newFechaRetorno.getTime() !== curFechaRetorno.getTime()
@@ -318,8 +339,34 @@ export class EntregaService {
     return this.entregaRepository.delete(cod_entrega)
   }
 
-  async getByEmpleadoEstado(cuilEmpleado: string, estado: string, search?: string, date?: string): Promise<entrega[]> {
-    return this.entregaRepository.getByEmpleadoEstado(cuilEmpleado, estado, search, date)
+  async getByEmpleadoEstado(
+    cuilEmpleado: string,
+    estado: string,
+    search?: string,
+    date?: string,
+    pagination?: PaginationParams
+  ): Promise<PaginatedResponse<EntregaWithRelations>> {
+    const { data, total } = await this.entregaRepository.getByEmpleadoEstado(
+      cuilEmpleado,
+      estado,
+      search,
+      date,
+      pagination
+    )
+
+    if (!pagination) {
+      return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+    }
+
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1
+
+    return {
+      data,
+      total,
+      totalPages,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   async agregarOrdenesDeProduccion(cod_entrega: number, cod_ops: number[]): Promise<entrega> {

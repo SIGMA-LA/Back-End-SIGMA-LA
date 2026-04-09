@@ -16,7 +16,7 @@ export interface AppEvents {
 
 class TypedEventEmitter extends EventEmitter {
   on<K extends keyof AppEvents>(eventName: K, listener: AppEvents[K]): this {
-    return super.on(eventName, listener as any);
+    return super.on(eventName, listener as unknown as (...args: unknown[]) => void);
   }
 
   emit<K extends keyof AppEvents>(eventName: K, ...args: Parameters<AppEvents[K]>): boolean {

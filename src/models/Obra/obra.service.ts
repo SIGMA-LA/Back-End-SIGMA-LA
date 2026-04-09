@@ -5,6 +5,7 @@ import {
 } from './obra.repository.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import type { PaginationParams, PaginatedResponse } from '../../shared/types/pagination.js'
 import { prisma } from '../../shared/db/prismaClient.js'
 
 type ObraCreateInputExtended = Prisma.obraCreateInput & {
@@ -41,16 +42,33 @@ export class ObraService {
   /**
    * Filters obras by status, location, or both.
    */
-  async filtrar(filtros: { estado?: string; cod_localidad?: number }): Promise<obra[]> {
-    return this.repository.filtrar(filtros)
+  async filtrar(
+    filtros: { estado?: string; cod_localidad?: number },
+    pagination: PaginationParams,
+  ): Promise<PaginatedResponse<obra>> {
+    const { data, total } = await this.repository.filtrar(filtros, pagination)
+    return {
+      data,
+      total,
+      totalPages: Math.ceil(total / pagination.pageSize),
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   /**
    * Searches obras by text (address, client, etc.).
    */
-  async buscar(q: string): Promise<obra[]> {
-    if (!q) return this.findAll()
-    return this.repository.buscar(q)
+  async buscar(q: string, pagination: PaginationParams): Promise<PaginatedResponse<obra>> {
+    if (!q) return this.findAll(pagination)
+    const { data, total } = await this.repository.buscar(q, pagination)
+    return {
+      data,
+      total,
+      totalPages: Math.ceil(total / pagination.pageSize),
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   /**
@@ -61,10 +79,17 @@ export class ObraService {
   }
 
   /**
-   * Gets all obras.
+   * Gets all obras (paginated).
    */
-  async findAll(): Promise<obra[]> {
-    return this.repository.findAll()
+  async findAll(pagination: PaginationParams): Promise<PaginatedResponse<obra>> {
+    const { data, total } = await this.repository.findAll(pagination)
+    return {
+      data,
+      total,
+      totalPages: Math.ceil(total / pagination.pageSize),
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   /**
@@ -343,7 +368,15 @@ export class ObraService {
   async getCuentasPorCobrar(): Promise<number> {
     const obrasPendientes = await prisma.obra.findMany({
       where: {
-        estado: { in: ['PAGADA PARCIALMENTE', 'EN ESPERA DE PAGO'] },
+        estado: { 
+          in: [
+            'PAGADA PARCIALMENTE', 
+            'EN ESPERA DE PAGO',
+            'EN ESPERA DE STOCK',
+            'EN PRODUCCION',
+            'PRODUCCION FINALIZADA'
+          ] 
+        },
       },
       include: {
         presupuesto: {

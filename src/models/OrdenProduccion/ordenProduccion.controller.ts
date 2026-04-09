@@ -14,7 +14,6 @@ export class OrdenProduccionController {
    * Creates a new production order.
    */
   create = catchAsync(async (req: Request, res: Response) => {
-<<<<<<< HEAD
     if (!req.file) {
       throw new AppError('No se ha proporcionado el archivo de orden de producción', 400, 'FILE_REQUIRED')
     }
@@ -29,9 +28,6 @@ export class OrdenProduccionController {
       fecha_validacion: fecha_validacion ? new Date(fecha_validacion) : null
     })
 
-=======
-    const nueva = await ordenProduccionService.create(req.body, req.file)
->>>>>>> develop
     return sendSuccess(res, nueva, 'Production order created successfully', 201)
   })
 
