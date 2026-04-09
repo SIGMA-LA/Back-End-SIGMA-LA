@@ -6,6 +6,7 @@ import { ValidationError } from '../../shared/errors/validationError.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { emailService } from '../../shared/providers/email/index.js'
 import { notificationConfigRepository } from '../../shared/providers/email/NotificationConfigRepository.js'
+import { prisma } from '../../shared/db/prismaClient.js'
 
 /**
  * Interface for creating a new Visita.
@@ -445,7 +446,35 @@ export class VisitaService {
 
     return await this.visitaRepository.update(cod_visita, updateData)
   }
+
+  /**
+   * Obtiene estadísticas de visitas programadas y completadas para hoy.
+   */
+  async getProgresoDiario(): Promise<{ agendaHoyVisitas: number; completadosHoyVisitas: number }> {
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const todayEnd = new Date()
+    todayEnd.setHours(23, 59, 59, 999)
+
+    const agendaHoyVisitas = await prisma.visita.count({
+      where: {
+        fecha_hora_visita: { gte: todayStart, lte: todayEnd },
+        estado: { not: 'CANCELADA' },
+      },
+    })
+
+    const completadosHoyVisitas = await prisma.visita.count({
+      where: {
+        fecha_hora_visita: { gte: todayStart, lte: todayEnd },
+        estado: 'COMPLETADA',
+      },
+    })
+
+    return { agendaHoyVisitas, completadosHoyVisitas }
+  }
 }
+
 
 export const visitaService = new VisitaService()
 

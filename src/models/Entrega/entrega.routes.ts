@@ -7,6 +7,8 @@ const entregaRouter = Router()
 
 entregaRouter.get('/', entregaController.getAll)
 
+entregaRouter.get('/stats/progreso-diario', entregaController.getProgresoDiario)
+
 entregaRouter.get('/:cuil_empleado/:estado', entregaController.getEntregasByEmpleadoEstado)
 
 entregaRouter.post('/', entregaController.create)
