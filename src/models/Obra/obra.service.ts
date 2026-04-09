@@ -342,5 +342,21 @@ export class ObraService {
     }
     return cuil
   }
+
+  /**
+   * Finalizes production of an obra by changing its status to PRODUCCION FINALIZADA.
+   */
+  async finalizarProduccion(id: number): Promise<obra> {
+    const obra = await this.findById(id)
+    if (obra.estado !== 'EN PRODUCCION') {
+      throw new ValidationError(
+        'Solo se pueden finalizar obras que están "En Producción".',
+        'INVALID_STATE'
+      )
+    }
+    return await this.repository.update(id, { estado: 'PRODUCCION FINALIZADA' })
+  }
 }
+
+
 

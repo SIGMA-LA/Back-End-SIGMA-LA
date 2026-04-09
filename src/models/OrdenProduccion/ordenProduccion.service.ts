@@ -152,22 +152,11 @@ export class OrdenProduccionService {
       )
     }
 
-    const [ordenActualizada] = await prisma.$transaction([
-      prisma.orden_de_produccion.update({
-        where: { cod_op },
-        data: { estado: 'FINALIZADA' },
-      }),
-    ])
-
-    console.log(
-      `[NOTIFICATION] Production of Order #${orden.cod_op} has finished. Notifying Coordination.`,
-    )
-
-    return ordenActualizada
+    return await this.repository.update(cod_op, { estado: 'FINALIZADA' })
   }
 
   /**
-   * Marks a production order as starting production.
+   * Marks a production order as starting production and updates the associated obra.
    */
   async iniciarProduccion(cod_op: number): Promise<orden_de_produccion> {
     const orden = await this.findById(cod_op)
@@ -179,7 +168,26 @@ export class OrdenProduccionService {
       )
     }
 
-    return await this.repository.update(cod_op, { estado: 'EN PRODUCCION' })
+    const [ordenActualizada] = await prisma.$transaction([
+      prisma.orden_de_produccion.update({
+        where: { cod_op },
+        data: { estado: 'EN PRODUCCION' },
+        include: {
+          obra: {
+            include: {
+              cliente: true,
+              localidad: true,
+            },
+          },
+        },
+      }),
+      prisma.obra.update({
+        where: { cod_obra: orden.cod_obra },
+        data: { estado: 'EN PRODUCCION' },
+      }),
+    ])
+
+    return ordenActualizada
   }
 }
 
