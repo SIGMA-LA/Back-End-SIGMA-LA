@@ -51,6 +51,9 @@ obraRouter.patch('/:id/solicitar-stock', obraController.solicitarStock)
 // Confirmar recepción de stock
 obraRouter.patch('/:id/recibir-stock', obraController.recibirStock)
 
+// Finalizar producción de una obra
+obraRouter.patch('/:id/finalizar-produccion', obraController.finalizarProduccion)
+
 // ----------- NOTA DE FÁBRICA -----------
 
 // Subir nota de fábrica a una obra
