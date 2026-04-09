@@ -95,6 +95,54 @@ export function setupNotificationListeners() {
     }
   });
 
+  eventBus.on('visita.actualizada', async ({ visita, cuils, tipo }) => {
+    try {
+      const emails = await notificationConfigRepository.getEmailsForRoleNotification('VISITADOR', 'actualizacion_visita', cuils);
+      if (emails.length === 0) return;
+
+      const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
+      const direccion = visita.direccion_visita || visita.obra?.direccion || 'N/A';
+      
+      let titulo = '';
+      let mensajeHtml = '';
+
+      switch (tipo) {
+        case 'CANCELADA':
+          titulo = `Visita Técnica Cancelada - ${visita.motivo_visita}`;
+          mensajeHtml = `Le informamos que la visita técnica programada para el <b>${new Date(visita.fecha_hora_visita).toLocaleString()}</b> ha sido <b>CANCELADA</b>.<br><br>` +
+                        `<b>Detalles:</b><br>` +
+                        `- <b>Cliente:</b> ${clienteNombre}<br>` +
+                        `- <b>Observaciones:</b> ${visita.observaciones || 'Ninguna'}`;
+          break;
+        case 'HORARIO_MODIFICADO':
+          titulo = `Horario Modificado - Visita Técnica - ${visita.motivo_visita}`;
+          mensajeHtml = `Le informamos que los horarios de su visita técnica asignada han sido <b>MODIFICADOS</b>.<br><br>` +
+                        `<b>Nuevos Detalles:</b><br>` +
+                        `- <b>Nueva Fecha/Hora:</b> ${new Date(visita.fecha_hora_visita).toLocaleString()}<br>` +
+                        `- <b>Cliente:</b> ${clienteNombre}<br>` +
+                        `- <b>Dirección:</b> ${direccion}`;
+          break;
+        case 'DESASIGNADO':
+          titulo = `Desasignación de Visita Técnica - ${visita.motivo_visita}`;
+          mensajeHtml = `Le informamos que ha sido <b>REMOVIDO</b> de la asignación para la siguiente visita técnica.<br><br>` +
+                        `<b>Detalles de la visita original:</b><br>` +
+                        `- <b>Fecha/Hora:</b> ${new Date(visita.fecha_hora_visita).toLocaleString()}<br>` +
+                        `- <b>Cliente:</b> ${clienteNombre}`;
+          break;
+      }
+
+      await emailService.sendNotification(
+        emails,
+        titulo,
+        `Hola Visitador,<br><br>` +
+        `${mensajeHtml}<br><br>` +
+        `<i>Este es un aviso automático generado por el sistema SIGMA-LA.</i>`
+      );
+    } catch (err) {
+      console.error('Error procesando evento visita.actualizada:', err);
+    }
+  });
+
   eventBus.on('obra.pagada_totalmente', async ({ cod_obra }) => {
     try {
       const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'pago_completo_obra');

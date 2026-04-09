@@ -8,6 +8,7 @@ export interface AppEvents {
   'orden_produccion.aprobada': (orden: orden_de_produccion) => void | Promise<void>;
   'obra.pagada_totalmente': (data: { cod_obra: number }) => void | Promise<void>;
   'visita.asignada': (data: { visita: VisitaWithRelations, cuils: string[] }) => void | Promise<void>;
+  'visita.actualizada': (data: { visita: VisitaWithRelations, cuils: string[], tipo: 'CANCELADA' | 'HORARIO_MODIFICADO' | 'DESASIGNADO' }) => void | Promise<void>;
 }
 
 class TypedEventEmitter extends EventEmitter {

@@ -336,6 +336,18 @@ export class VisitaService {
       if (newlyAssignedCuils.length > 0) {
         eventBus.emit('visita.asignada', { visita: updatedVisita, cuils: newlyAssignedCuils })
       }
+
+      const removedCuils = existingVisita.empleado_visita.filter(ev => !empleados_visita.includes(ev.cuil)).map(ev => ev.cuil)
+      if (removedCuils.length > 0) {
+        eventBus.emit('visita.actualizada', { visita: updatedVisita, cuils: removedCuils, tipo: 'DESASIGNADO' })
+      }
+    }
+
+    if (hasDatesChanged) {
+      const remainingCuils = updatedVisita.empleado_visita.map(ev => ev.cuil)
+      if (remainingCuils.length > 0) {
+        eventBus.emit('visita.actualizada', { visita: updatedVisita, cuils: remainingCuils, tipo: 'HORARIO_MODIFICADO' })
+      }
     }
 
     return updatedVisita
@@ -429,7 +441,14 @@ export class VisitaService {
       ...(motivo && { observaciones: `Visita cancelada: ${motivo}` })
     }
 
-    return await this.visitaRepository.update(cod_visita, updateData)
+    const canceledVisita = await this.visitaRepository.update(cod_visita, updateData)
+
+    const assignedCuils = canceledVisita.empleado_visita?.map(ev => ev.cuil) || []
+    if (assignedCuils.length > 0) {
+      eventBus.emit('visita.actualizada', { visita: canceledVisita, cuils: assignedCuils, tipo: 'CANCELADA' })
+    }
+
+    return canceledVisita
   }
 }
 
