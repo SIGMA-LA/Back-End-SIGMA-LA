@@ -79,7 +79,7 @@ export class ObraController {
   getOne = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     const obra = await obraService.findById(id)
     return sendSuccess(res, obra)
   })
@@ -215,7 +215,7 @@ export class ObraController {
   update = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     const obra = await obraService.update(id, req.body)
     return sendSuccess(res, obra, 'Obra updated successfully')
   })
@@ -226,7 +226,7 @@ export class ObraController {
   bajaLogica = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     const obra = await obraService.bajaLogica(id)
     return sendSuccess(res, obra, 'Obra cancelled successfully')
   })
@@ -237,7 +237,7 @@ export class ObraController {
   remove = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     await obraService.remove(id)
     return res.status(204).send()
   })
@@ -281,7 +281,7 @@ export class ObraController {
   solicitarStock = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     const obra = await obraService.solicitarStock(id)
     return sendSuccess(res, obra, 'Stock requested successfully')
   })
@@ -292,7 +292,7 @@ export class ObraController {
   recibirStock = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
-    
+
     const obra = await obraService.recibirStock(id)
     return sendSuccess(res, obra, 'Stock received and obra now in production')
   })

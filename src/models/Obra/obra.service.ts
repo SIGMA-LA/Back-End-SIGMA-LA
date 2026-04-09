@@ -368,7 +368,15 @@ export class ObraService {
   async getCuentasPorCobrar(): Promise<number> {
     const obrasPendientes = await prisma.obra.findMany({
       where: {
-        estado: { in: ['PAGADA PARCIALMENTE', 'EN ESPERA DE PAGO'] },
+        estado: { 
+          in: [
+            'PAGADA PARCIALMENTE', 
+            'EN ESPERA DE PAGO',
+            'EN ESPERA DE STOCK',
+            'EN PRODUCCION',
+            'PRODUCCION FINALIZADA'
+          ] 
+        },
       },
       include: {
         presupuesto: {
