@@ -11,35 +11,56 @@ export const ROLES = [
 ] as const
 
 export type UserRole = (typeof ROLES)[number]
+const ADMIN_ROLE: UserRole = 'ADMIN'
 
 export const PERMISSIONS = {
   obra: {
-    statsAdmin: ['ADMIN'],
-    statsVentas: ['ADMIN', 'VENTAS'],
-    statsCoordinacion: ['ADMIN', 'COORDINACION'],
-    verParaEntrega: ['ADMIN', 'COORDINACION'],
-    verParaPedidoStock: ['ADMIN', 'COORDINACION'],
-    verNotasFabrica: ['ADMIN', 'COORDINACION', 'PRODUCCION'],
-    verConPresupuestoAceptado: ['ADMIN', 'VENTAS'],
-    solicitarStock: ['ADMIN', 'COORDINACION'],
-    recibirStock: ['ADMIN', 'PRODUCCION'],
-    finalizarProduccion: ['ADMIN', 'PRODUCCION'],
-    gestionarNotaFabrica: ['ADMIN', 'COORDINACION', 'PRODUCCION'],
-    crear: ['ADMIN', 'VENTAS'],
-    actualizar: ['ADMIN', 'VENTAS'],
-    eliminar: ['ADMIN'],
+    statsAdmin: [],
+    statsVentas: ['VENTAS'],
+    statsCoordinacion: ['COORDINACION'],
+    verParaEntrega: ['COORDINACION'],
+    verParaPedidoStock: ['COORDINACION'],
+    verNotasFabrica: ['COORDINACION', 'PRODUCCION'],
+    verConPresupuestoAceptado: ['VENTAS'],
+    solicitarStock: ['COORDINACION'],
+    recibirStock: ['PRODUCCION'],
+    finalizarProduccion: ['PRODUCCION'],
+    gestionarNotaFabrica: ['COORDINACION', 'PRODUCCION'],
+    crear: ['VENTAS'],
+    actualizar: ['VENTAS'],
+    eliminar: ['VENTAS'],
   },
   empleado: {
-    crear: ['ADMIN'],
-    actualizar: ['ADMIN'],
-    eliminar: ['ADMIN'],
+    crear: [],
+    actualizar: [],
+    eliminar: [],
   },
   pago: {
-    crear: ['ADMIN', 'VENTAS'],
-    actualizar: ['ADMIN', 'VENTAS'],
-    eliminar: ['ADMIN', 'VENTAS'],
-    obtener: ['ADMIN', 'VENTAS']
-  }
+    crear: ['VENTAS'],
+    actualizar: ['VENTAS'],
+    eliminar: ['VENTAS'],
+    obtener: ['VENTAS'],
+  },
+  vehiculo: {
+    crear: ['COORDINACION'],
+    actualizar: ['COORDINACION'],
+    eliminar: ['COORDINACION'],
+    obtener: ['COORDINACION'],
+  },
+  visita: {
+    crear: ['COORDINACION'],
+    actualizar: ['COORDINACION'],
+    eliminar: ['COORDINACION'],
+    cancelar: ['COORDINACION', 'VISITADOR', 'PLANTA'],
+  },
+  entrega: {
+    crear: ['COORDINACION'],
+    actualizar: ['COORDINACION'],
+    eliminar: ['COORDINACION'],
+    finalizar: ['COORDINACION'],
+    cancelar: ['COORDINACION', 'VISITADOR', 'PLANTA'],
+    gestionarOrdenes: ['COORDINACION'],
+  },
 } as const satisfies Record<string, Record<string, readonly UserRole[]>>
 
 export type PermissionResource = keyof typeof PERMISSIONS
@@ -54,9 +75,11 @@ export function authorizeRoles(roles: readonly string[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
     const userRole = normalizeRole(req.user?.rol_actual)
     const normalizedRoles = roles.map(role => normalizeRole(role))
+    // Asegura que ADMIN siempre tenga acceso a todos los endpoints, incluso si no se especifica explícitamente
+    const allowedRoles = Array.from(new Set([ADMIN_ROLE, ...normalizedRoles]))
 
-    if (!req.user || !userRole || !normalizedRoles.includes(userRole)) {
-      const requiredRoles = normalizedRoles.join(', ')
+    if (!req.user || !userRole || !allowedRoles.includes(userRole)) {
+      const requiredRoles = allowedRoles.join(', ')
       throw new AppError(
         `No autorizado para ${buildEndpointLabel(req)}. Roles permitidos: [${requiredRoles}]`,
         403,
