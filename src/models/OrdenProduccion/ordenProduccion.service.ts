@@ -6,6 +6,7 @@ import {
 import { prisma } from '../../shared/db/prismaClient.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { eventBus } from '../../shared/events/eventBus.js'
 
 interface OrdenProduccionCreateInput {
   cod_obra: number | string
@@ -58,7 +59,12 @@ export class OrdenProduccionService {
       public_id: uploadedFile?.filename ?? data.public_id ?? null,
     }
 
-    return await this.repository.create(prismaData)
+    const nuevaOrden = await this.repository.create(prismaData)
+
+    // Desacoplado: Emitir evento para que el sistema de notificaciones reaccione
+    eventBus.emit('orden_produccion.creada', nuevaOrden)
+
+    return nuevaOrden
   }
 
   private parseFechaValidacion(value: Date | string | null | undefined): Date | null {
@@ -113,8 +119,15 @@ export class OrdenProduccionService {
     cod_op: number,
     data: Prisma.orden_de_produccionUpdateInput,
   ): Promise<orden_de_produccion> {
-    await this.findById(cod_op) // Ensure existence
-    return await this.repository.update(cod_op, data)
+    const orden = await this.findById(cod_op) // Ensure existence
+    const nuevaOrden = await this.repository.update(cod_op, data)
+
+    // Emitir evento si la orden de producción acaba de ser aprobada
+    if (orden.estado !== 'APROBADA' && nuevaOrden.estado === 'APROBADA') {
+      eventBus.emit('orden_produccion.aprobada', nuevaOrden)
+    }
+
+    return nuevaOrden
   }
 
   /**

@@ -10,6 +10,10 @@ import authRouter from './models/Auth/auth.routes.js'
 import { authenticateJWT } from './models/Auth/auth.middleware.js'
 import { errorHandler } from './shared/middlewares/errorHandler.js'
 import healthRouter from './shared/routes/health.routes.js'
+import { setupNotificationListeners } from './shared/events/notification.listeners.js'
+
+// Inicializar listeners de eventos (Pub/Sub)
+setupNotificationListeners()
 
 const app = express()
 const PORT = env.PORT

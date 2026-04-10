@@ -19,11 +19,31 @@ export interface EmpleadoPayload {
   notificacion_email?: boolean
   notificacion_whatsapp?: boolean
   config_coordinacion?: ConfigCoordinacionUpdate | null
+  config_produccion?: ConfigProduccionUpdate | null
+  config_visitador?: ConfigVisitadorUpdate | null
+  config_planta?: ConfigPlantaUpdate | null
 }
 
 export interface ConfigCoordinacionUpdate {
   visita_completada?: boolean
   nueva_orden_produccion?: boolean
+  cambio_estado?: boolean
+  pago_completo_obra?: boolean
+}
+
+export interface ConfigProduccionUpdate {
+  orden_aprobada?: boolean
+}
+
+export interface ConfigVisitadorUpdate {
+  asignacion_visita?: boolean
+  actualizacion_visita?: boolean
+}
+
+export interface ConfigPlantaUpdate {
+  asignacion_visita?: boolean
+  asignacion_entrega?: boolean
+  actualizacion_visita?: boolean
 }
 
 export interface NotificationMetadata {
@@ -100,7 +120,10 @@ export class EmpleadoService {
     const notificacionesMetadata = this.getNotificationMetadata(
       empleadoResult.rol_actual,
       empleadoResult as unknown as EmpleadoPayload,
-      empleadoResult.config_coordinacion
+      (empleadoResult as unknown as { config_coordinacion?: ConfigCoordinacionUpdate | null }).config_coordinacion,
+      (empleadoResult as unknown as { config_produccion?: ConfigProduccionUpdate | null }).config_produccion,
+      (empleadoResult as unknown as { config_visitador?: ConfigVisitadorUpdate | null }).config_visitador,
+      (empleadoResult as unknown as { config_planta?: ConfigPlantaUpdate | null }).config_planta
     )
 
     const result: EmpleadoPayload & { notificaciones: NotificationMetadata } = {
@@ -109,15 +132,22 @@ export class EmpleadoService {
       apellido: empleadoResult.apellido,
       rol_actual: empleadoResult.rol_actual,
       area_trabajo: empleadoResult.area_trabajo,
-      activo: empleadoResult.activo,
       mail: empleadoResult.mail,
+      activo: empleadoResult.activo,
       notificaciones: notificacionesMetadata
     }
 
     return result
   }
 
-  private getNotificationMetadata(rol: string, empleadoData: EmpleadoPayload, values?: ConfigCoordinacionUpdate | null): NotificationMetadata {
+  private getNotificationMetadata(
+    rol: string,
+    empleadoData: EmpleadoPayload,
+    valuesCoord?: ConfigCoordinacionUpdate | null,
+    valuesProd?: ConfigProduccionUpdate | null,
+    valuesVisit?: ConfigVisitadorUpdate | null,
+    valuesPlanta?: ConfigPlantaUpdate | null
+  ): NotificationMetadata {
     const metadata: NotificationMetadata = {
       configuracion: {
         canales: [],
@@ -129,7 +159,9 @@ export class EmpleadoService {
     if (rol === 'COORDINACION') {
       metadata.configuracion.eventos = [
         { id: 'visita_completada', label: 'Visita Técnica Completada' },
-        { id: 'nueva_orden_produccion', label: 'Nueva Orden de Producción' }
+        { id: 'nueva_orden_produccion', label: 'Nueva Orden de Producción' },
+        { id: 'cambio_estado', label: 'Cambios de estado en las obras' },
+        { id: 'pago_completo_obra', label: 'Pago completo de la obra' }
       ]
 
       metadata.configuracion.canales = [
@@ -138,8 +170,61 @@ export class EmpleadoService {
       ]
 
       metadata.valores = {
-        visita_completada: values?.visita_completada || false,
-        nueva_orden_produccion: values?.nueva_orden_produccion || false,
+        visita_completada: valuesCoord?.visita_completada || false,
+        nueva_orden_produccion: valuesCoord?.nueva_orden_produccion || false,
+        cambio_estado: valuesCoord?.cambio_estado || false,
+        pago_completo_obra: valuesCoord?.pago_completo_obra || false,
+        email: empleadoData.notificacion_email || false,
+        whatsapp: empleadoData.notificacion_whatsapp || false
+      }
+    } else if (rol === 'PRODUCCION') {
+      metadata.configuracion.eventos = [
+        { id: 'orden_aprobada', label: 'Notificación de Orden Aprobada' }
+      ]
+
+      metadata.configuracion.canales = [
+        { id: 'email', label: 'Recibir por Email' },
+        { id: 'whatsapp', label: 'Recibir por WhatsApp' }
+      ]
+
+      metadata.valores = {
+        orden_aprobada: valuesProd?.orden_aprobada || false,
+        email: empleadoData.notificacion_email || false,
+        whatsapp: empleadoData.notificacion_whatsapp || false
+      }
+    } else if (rol === 'VISITADOR') {
+      metadata.configuracion.eventos = [
+        { id: 'asignacion_visita', label: 'Notificación de Asignación de Visita' },
+        { id: 'actualizacion_visita', label: 'Notificación de Actualización de Visita' }
+      ]
+
+      metadata.configuracion.canales = [
+        { id: 'email', label: 'Recibir por Email' },
+        { id: 'whatsapp', label: 'Recibir por WhatsApp' }
+      ]
+
+      metadata.valores = {
+        asignacion_visita: valuesVisit?.asignacion_visita || false,
+        actualizacion_visita: valuesVisit?.actualizacion_visita || false,
+        email: empleadoData.notificacion_email || false,
+        whatsapp: empleadoData.notificacion_whatsapp || false
+      }
+    } else if (rol === 'PLANTA') {
+      metadata.configuracion.eventos = [
+        { id: 'asignacion_visita', label: 'Asignación a Visita' },
+        { id: 'asignacion_entrega', label: 'Asignación a Entrega' },
+        { id: 'actualizacion_visita', label: 'Actualización/Cancelación de Visita' }
+      ]
+
+      metadata.configuracion.canales = [
+        { id: 'email', label: 'Recibir por Email' },
+        { id: 'whatsapp', label: 'Recibir por WhatsApp' }
+      ]
+
+      metadata.valores = {
+        asignacion_visita: valuesPlanta?.asignacion_visita || false,
+        asignacion_entrega: valuesPlanta?.asignacion_entrega || false,
+        actualizacion_visita: valuesPlanta?.actualizacion_visita || false,
         email: empleadoData.notificacion_email || false,
         whatsapp: empleadoData.notificacion_whatsapp || false
       }
@@ -324,7 +409,7 @@ export class EmpleadoService {
     await this.findByCuil(cuil) // Throws if not found
 
     const { email, whatsapp, ...eventos } = notifications;
-    
+
     // We use a structured object that matches what the repository expects (Prisma.empleadoUpdateInput)
     // but we use a type cast to the base Prisma input type to satisfy the compiler if needed,
     // while ensuring we only use valid fields from our schema.
@@ -335,6 +420,27 @@ export class EmpleadoService {
 
     if (rol === 'COORDINACION') {
       (updateContainer as Record<string, unknown>).config_coordinacion = {
+        upsert: {
+          create: eventos,
+          update: eventos,
+        },
+      };
+    } else if (rol === 'PRODUCCION') {
+      (updateContainer as Record<string, unknown>).config_produccion = {
+        upsert: {
+          create: eventos,
+          update: eventos,
+        },
+      };
+    } else if (rol === 'VISITADOR') {
+      (updateContainer as Record<string, unknown>).config_visitador = {
+        upsert: {
+          create: eventos,
+          update: eventos,
+        },
+      };
+    } else if (rol === 'PLANTA') {
+      (updateContainer as Record<string, unknown>).config_planta = {
         upsert: {
           create: eventos,
           update: eventos,

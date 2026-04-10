@@ -5,7 +5,7 @@ import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { emailService } from '../../shared/providers/email/index.js'
-import { notificationConfigRepository } from '../../shared/providers/email/NotificationConfigRepository.js'
+import { eventBus } from '../../shared/events/eventBus.js'
 import type { PaginationParams, PaginatedResponse } from '../../shared/types/pagination.js'
 import { prisma } from '../../shared/db/prismaClient.js'
 
@@ -132,6 +132,10 @@ export class VisitaService {
 
     const visita = await this.visitaRepository.create(visitaData)
 
+    if (data.empleados_visita.length > 0) {
+      eventBus.emit('visita.asignada', { visita, cuils: data.empleados_visita })
+    }
+
     // Email notification: Try to find recipient (Obra -> Cliente -> Email or Fallback in text fields)
     let emailDestino: string | null = null;
 
@@ -169,13 +173,13 @@ export class VisitaService {
    * Gets all visits, optionally filtered by status, with pagination
    */
   async findAll(
-    estado?: string, 
+    estado?: string,
     pagination?: PaginationParams
   ): Promise<PaginatedResponse<VisitaWithRelations>> {
     const { data, total } = await this.visitaRepository.findAll(estado, pagination)
-    
+
     if (!pagination) {
-       return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+      return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
     }
 
     const totalPages = Math.ceil(total / pagination.pageSize) || 1
@@ -348,7 +352,28 @@ export class VisitaService {
       updateData.localidad = cod_localidad === null ? { disconnect: true } : { connect: { cod_localidad } }
     }
 
-    return await this.visitaRepository.update(cod_visita, updateData)
+    const updatedVisita = await this.visitaRepository.update(cod_visita, updateData)
+
+    if (hasPersonnelChanged && empleados_visita) {
+      const newlyAssignedCuils = empleados_visita.filter(cuil => !existingVisita.empleado_visita.find(ev => ev.cuil === cuil))
+      if (newlyAssignedCuils.length > 0) {
+        eventBus.emit('visita.asignada', { visita: updatedVisita, cuils: newlyAssignedCuils })
+      }
+
+      const removedCuils = existingVisita.empleado_visita.filter(ev => !empleados_visita.includes(ev.cuil)).map(ev => ev.cuil)
+      if (removedCuils.length > 0) {
+        eventBus.emit('visita.actualizada', { visita: updatedVisita, cuils: removedCuils, tipo: 'DESASIGNADO' })
+      }
+    }
+
+    if (hasDatesChanged) {
+      const remainingCuils = updatedVisita.empleado_visita.map(ev => ev.cuil)
+      if (remainingCuils.length > 0) {
+        eventBus.emit('visita.actualizada', { visita: updatedVisita, cuils: remainingCuils, tipo: 'HORARIO_MODIFICADO' })
+      }
+    }
+
+    return updatedVisita
   }
 
   /**
@@ -419,7 +444,7 @@ export class VisitaService {
     )
 
     if (!pagination) {
-       return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+      return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
     }
 
     const totalPages = Math.ceil(total / pagination.pageSize) || 1
@@ -439,37 +464,10 @@ export class VisitaService {
 
     const visitaCompletada = await this.visitaRepository.update(cod_visita, updateData)
 
-    // Notify coordination according to their preferences
-    this.notificarFinalizacionACoordinacion(visitaCompletada)
-      .catch(err => console.error('Error sending coordination notifications:', err));
+    // Notify coordination using events
+    eventBus.emit('visita.finalizada', visitaCompletada)
 
     return visitaCompletada
-  }
-
-  /**
-   * Internal method to notify coordination about finished visits.
-   */
-  private async notificarFinalizacionACoordinacion(visita: VisitaWithRelations) {
-    // 1. Get emails of coordinators with 'visita_completada' option enabled
-    const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'visita_completada')
-    
-    if (emails.length === 0) return;
-
-    const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
-    
-    // 2. Send email to all interested parties
-    await emailService.sendNotification(
-      emails,
-      `Aviso Interno: Visita Técnica Finalizada - ${visita.motivo_visita}`,
-      `Hola equipo de Coordinación,<br><br>` +
-      `Les informamos que se ha marcado como FINALIZADA una visita técnica en el sistema.<br><br>` +
-      `<b>Detalles de la operación:</b><br>` +
-      `- <b>Cliente:</b> ${clienteNombre}<br>` +
-      `- <b>Motivo:</b> ${visita.motivo_visita}<br>` +
-      `- <b>Fecha:</b> ${visita.fecha_hora_visita.toLocaleString()}<br>` +
-      `- <b>Observaciones finales:</b> ${visita.observaciones || 'Sin observaciones'}<br><br>` +
-      `<i>Este es un aviso automático generado por el sistema SIGMA-LA para el personal de Coordinación. Por favor no responder a este correo.</i>`
-    );
   }
 
   /**
@@ -484,7 +482,14 @@ export class VisitaService {
       ...(motivo && { observaciones: `Visita cancelada: ${motivo}` })
     }
 
-    return await this.visitaRepository.update(cod_visita, updateData)
+    const canceledVisita = await this.visitaRepository.update(cod_visita, updateData)
+
+    const assignedCuils = canceledVisita.empleado_visita?.map(ev => ev.cuil) || []
+    if (assignedCuils.length > 0) {
+      eventBus.emit('visita.actualizada', { visita: canceledVisita, cuils: assignedCuils, tipo: 'CANCELADA' })
+    }
+
+    return canceledVisita
   }
 
   /**

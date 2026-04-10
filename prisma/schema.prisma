@@ -32,7 +32,10 @@ model empleado {
   mail                  String?              @db.VarChar(100)
   notificacion_email    Boolean              @default(false)
   notificacion_whatsapp Boolean              @default(false)
+  config_visitador      config_visitador?
   config_coordinacion   config_coordinacion?
+  config_produccion     config_produccion?
+  config_planta         config_planta?
   empleado_visita       empleado_visita[]
   entrega_empleado      entrega_empleado[]
 }
@@ -234,9 +237,34 @@ model visita {
   @@index([fecha_hora_visita])
 }
 
+model config_planta{
+  cuil                   String   @id
+  asignacion_visita      Boolean  @default(false)
+  asignacion_entrega     Boolean  @default(false)
+  actualizacion_visita   Boolean  @default(false)
+  empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
+}
+
+
+model config_visitador{
+  cuil                   String   @id
+  asignacion_visita      Boolean  @default(false)
+  actualizacion_visita   Boolean  @default(false)
+  empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
+}
+
+model config_produccion {
+  cuil                   String   @id
+  orden_aprobada      Boolean  @default(false)
+  empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
+}
+
+
 model config_coordinacion {
   cuil                   String   @id
   visita_completada      Boolean  @default(false)
   nueva_orden_produccion Boolean  @default(false)
+  cambio_estado          Boolean  @default(false)
+  pago_completo_obra     Boolean  @default(false)
   empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
 }

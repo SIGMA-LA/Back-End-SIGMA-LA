@@ -3,6 +3,7 @@ import { PagoRepository } from './pago.repository.js'
 import { prisma } from '../../shared/db/prismaClient.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { eventBus } from '../../shared/events/eventBus.js'
 
 /**
  * Service to manage payment (pago) operations.
@@ -34,7 +35,7 @@ export class PagoService {
       )
     }
 
-    const pagoCreado = await prisma.$transaction(async tx => {
+    const resultado = await prisma.$transaction(async tx => {
       const obra = await tx.obra.findUnique({
         where: { cod_obra },
         include: { pago: true, presupuesto: true },
@@ -113,10 +114,14 @@ export class PagoService {
         })
       }
 
-      return nuevoPago
+      return { pago: nuevoPago, esPagoFinal }
     })
 
-    return pagoCreado
+    if (resultado.esPagoFinal) {
+      eventBus.emit('obra.pagada_totalmente', { cod_obra })
+    }
+
+    return resultado.pago
   }
 
   /**
