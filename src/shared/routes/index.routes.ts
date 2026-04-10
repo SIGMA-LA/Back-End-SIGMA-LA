@@ -51,14 +51,6 @@ router.use('/api/localidades', localidadRouter)
 router.use('/api/maquinarias', maquinariaRouter)
 router.use('/api/parametros', parametroRouter)
 router.use('/api/obras', obraRouter)
-// Endpoint específico para obras con presupuesto aceptado
-router.get('/api/obras-con-presupuesto', (req, res, next) => {
-  import('../../models/Obra/obra.controller.js').then(({ ObraController }) => {
-    const controller = new ObraController()
-    controller.getObrasConPresupuestoAceptado(req, res, next)
-  }).catch(next) // Handle dynamic import errors
-})
-
 router.use('/api/ordenes-produccion', ordenProduccionRouter)
 router.use('/api/entregas', entregaRouter)
 router.use('/api/uso-vehiculo-visitas', usoVehiculoVisitaRouter)

@@ -88,6 +88,31 @@ export const PERMISSIONS = {
     actualizar: ['COORDINACION'],
     eliminar: ['COORDINACION'],
   },
+  entregaEmpleado: {
+    crear: ['COORDINACION'],
+    actualizar: ['COORDINACION'],
+    eliminar: ['COORDINACION'],
+  },
+  visitaEmpleado: {
+    crear: ['COORDINACION'],
+    actualizar: ['COORDINACION'],
+    eliminar: ['COORDINACION'],
+  },
+  usoVehiculoEntrega: {
+    crear: ['COORDINACION'],
+    actualizar: ['COORDINACION'],
+    eliminar: ['COORDINACION'],
+  },
+  usoVehiculoVisita: {
+    crear: ['COORDINACION'],
+    actualizar: ['COORDINACION'],
+    eliminar: ['COORDINACION'],
+  },
+  usoMaquinaria: {
+    crear: ['COORDINACION'],
+    actualizar: ['COORDINACION'],
+    eliminar: ['COORDINACION'],
+  },
 } as const satisfies Record<string, Record<string, readonly UserRole[]>>
 
 export type PermissionResource = keyof typeof PERMISSIONS

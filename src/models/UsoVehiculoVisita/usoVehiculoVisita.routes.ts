@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { UsoVehiculoVisitaController } from './usoVehiculoVisita.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
+import { authorize } from '../../shared/middlewares/authorizationRoles.js'
 import {
   createUsoVehiculoVisitaSchema,
   updateUsoVehiculoVisitaSchema,
@@ -14,6 +15,7 @@ usoVehiculoVisitaRouter.get('/', usoVehiculoVisitaController.getAll)
 usoVehiculoVisitaRouter.post(
   '/',
   validate({ body: createUsoVehiculoVisitaSchema }),
+  authorize('usoVehiculoVisita', 'crear'),
   usoVehiculoVisitaController.create,
 )
 
@@ -24,10 +26,11 @@ usoVehiculoVisitaRouter.put(
   validate({
     body: updateUsoVehiculoVisitaSchema,
   }),
+  authorize('usoVehiculoVisita', 'actualizar'),
   usoVehiculoVisitaController.update,
 )
 
-usoVehiculoVisitaRouter.delete('/:cod_visita/:patente', usoVehiculoVisitaController.remove)
+usoVehiculoVisitaRouter.delete('/:cod_visita/:patente', authorize('usoVehiculoVisita', 'eliminar'), usoVehiculoVisitaController.remove)
 
 
 export default usoVehiculoVisitaRouter
