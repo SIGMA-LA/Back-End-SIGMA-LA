@@ -21,10 +21,12 @@ function makeTestToken(rol = 'ADMIN') {
 
 describe('Integration Tests - Obra Routes', () => {
   let token: string
+  let nonAdminToken: string
 
   beforeEach(() => {
     vi.clearAllMocks()
     token = makeTestToken()
+    nonAdminToken = makeTestToken('VISITADOR')
   })
 
   // ─── GET /api/obras ────────────────────────────────────────────
@@ -85,6 +87,18 @@ describe('Integration Tests - Obra Routes', () => {
         .send({ direccion: 'Calle Falsa 123', cuil_cliente: '20111111112' })
 
       expect(response.status).toBe(201)
+    })
+  })
+
+  // ─── PUT /api/obras/:id ───────────────────────────────────────
+  describe('PUT /api/obras/:id', () => {
+    it('debería devolver 403 si el token no tiene rol autorizado', async () => {
+      const response = await request(app)
+        .put('/api/obras/1')
+        .set('Authorization', `Bearer ${nonAdminToken}`)
+        .send({ estado: 'CANCELADA' })
+
+      expect(response.status).toBe(403)
     })
   })
 

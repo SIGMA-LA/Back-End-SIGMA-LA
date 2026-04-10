@@ -9,7 +9,7 @@ import { empleado } from '@prisma/client'
  * Tests de Integración - Empleado Routes
  *
  * IMPORTANTE:
- * - POST, PUT, DELETE /api/empleados requieren `authorizeRoles(['ADMIN'])` además del JWT.
+ * - POST, PUT, DELETE /api/empleados requieren authorize('empleado', '<accion>') además del JWT.
  * - POST /api/empleados usa `validate({ body: createEmpleadoSchema })` de sigma-la-schemas.
  * - DELETE /api/empleados/:cuil usa `validate({ params: cuilParamsSchema })`.
  *   Los CUILs deben tener exactamente 11 dígitos numéricos para pasar validación.

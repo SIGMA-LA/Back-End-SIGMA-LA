@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { OrdenProduccionController } from './ordenProduccion.controller.js'
-import { upload } from '../../shared/middlewares/upload.middleware.js'
+import { upload } from '../../shared/middlewares/upload.js'
 
 const ordenProduccionController = new OrdenProduccionController()
 const ordenProduccionRouter = Router()

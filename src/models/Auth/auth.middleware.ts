@@ -32,18 +32,3 @@ export function authenticateJWT(
     throw new AppError('Token inválido', 403, 'INVALID_TOKEN')
   }
 }
-
-/**
- * Middleware para autorización por rol.
- * Permite acceso solo si el usuario tiene el rol requerido.
- * @param {string[]} roles - Roles permitidos
- * @returns {Function} Middleware de autorización
- */
-export function authorizeRoles(roles: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user || !roles.includes(req.user.rol_actual ?? '')) {
-      throw new AppError('No autorizado', 403, 'FORBIDDEN')
-    }
-    next()
-  }
-}

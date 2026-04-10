@@ -6,7 +6,7 @@ import {
   updateEmpleadoSchema,
   cuilParamsSchema,
 } from 'sigma-la-schemas'
-import { authorizeRoles } from '../Auth/auth.middleware.js'
+import { authorize } from '../../shared/middlewares/authorizationRoles.js'
 
 const empleadoController = new EmpleadoController()
 const empleadoRouter = Router()
@@ -67,7 +67,7 @@ empleadoRouter.get('/disponibles-entrega', empleadoController.getDisponiblesPara
  */
 empleadoRouter.post(
   '/',
-  authorizeRoles(['ADMIN']),
+  authorize('empleado', 'crear'),
   validate({ body: createEmpleadoSchema }),
   empleadoController.create,
 )
@@ -90,7 +90,7 @@ empleadoRouter.get(
  */
 empleadoRouter.put(
   '/:cuil',
-  authorizeRoles(['ADMIN']),
+  authorize('empleado', 'actualizar'),
   validate({
     params: cuilParamsSchema,
     body: updateEmpleadoSchema,
@@ -105,7 +105,7 @@ empleadoRouter.put(
  */
 empleadoRouter.delete(
   '/:cuil',
-  authorizeRoles(['ADMIN']),
+  authorize('empleado', 'eliminar'),
   validate({ params: cuilParamsSchema }),
   empleadoController.remove,
 )

@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express'
-import { upload } from '../../shared/middlewares/upload.middleware.js'
+import { upload } from '../../shared/middlewares/upload.js'
 
 const routeMid = Router()
 
