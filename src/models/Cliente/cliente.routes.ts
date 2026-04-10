@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { ClienteController } from './cliente.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
+import { authorize } from '../../shared/middlewares/authorizationRoles.js'
 import { updateClienteSchema, cuilParamsSchema } from 'sigma-la-schemas'
 
 const clienteController = new ClienteController()
@@ -11,7 +12,7 @@ const clienteRouter = Router()
  * @desc    Obtener todos los clientes
  * @access  Privado (requiere autenticación)
  */
-clienteRouter.get('/', clienteController.getAll)
+clienteRouter.get('/', authorize('cliente', 'obtener'), clienteController.getAll)
 
 
 
@@ -20,7 +21,7 @@ clienteRouter.get('/', clienteController.getAll)
  * @desc    Crear nuevo cliente
  * @access  Privado (requiere autenticación)
  */
-clienteRouter.post('/', clienteController.create)
+clienteRouter.post('/', authorize('cliente', 'crear'), clienteController.create)
 
 /**
  * @route   GET /api/clientes/:cuil
@@ -30,6 +31,7 @@ clienteRouter.post('/', clienteController.create)
 clienteRouter.get(
   '/:cuil',
   validate({ params: cuilParamsSchema }),
+  authorize('cliente', 'obtener'),
   clienteController.getOne,
 )
 
@@ -44,6 +46,7 @@ clienteRouter.put(
     params: cuilParamsSchema,
     body: updateClienteSchema,
   }),
+  authorize('cliente', 'actualizar'),
   clienteController.update,
 )
 
@@ -55,6 +58,7 @@ clienteRouter.put(
 clienteRouter.delete(
   '/:cuil',
   validate({ params: cuilParamsSchema }),
+  authorize('cliente', 'eliminar'),
   clienteController.remove,
 )
 

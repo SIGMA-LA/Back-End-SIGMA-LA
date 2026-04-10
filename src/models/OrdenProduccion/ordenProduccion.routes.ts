@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { OrdenProduccionController } from './ordenProduccion.controller.js'
 import { upload } from '../../shared/middlewares/upload.js'
+import { authorize } from '../../shared/middlewares/authorizationRoles.js'
 
 const ordenProduccionController = new OrdenProduccionController()
 const ordenProduccionRouter = Router()
@@ -11,21 +12,21 @@ ordenProduccionRouter.get('/Aprobadas', ordenProduccionController.getAprobadas)
 
 ordenProduccionRouter.get('/en-produccion', ordenProduccionController.getEnProduccion)
 
-ordenProduccionRouter.post('/', upload.single('file'), ordenProduccionController.create)
+ordenProduccionRouter.post('/', upload.single('file'), authorize('OP', 'crear'), ordenProduccionController.create)
 
 ordenProduccionRouter.get('/obra/:cod_obra/finalizada', ordenProduccionController.getByObraAndFinalizada)
 
 ordenProduccionRouter.get('/obra/:cod_obra', ordenProduccionController.getByObra)
 
-ordenProduccionRouter.post('/:cod_op/iniciar', ordenProduccionController.iniciarProduccion)
+ordenProduccionRouter.post('/:cod_op/iniciar', authorize('OP', 'crear'), ordenProduccionController.iniciarProduccion)
 
-ordenProduccionRouter.post('/:cod_op/finalizar', ordenProduccionController.finalizarProduccion)
+ordenProduccionRouter.post('/:cod_op/finalizar', authorize('OP', 'actualizar'), ordenProduccionController.finalizarProduccion)
 
 ordenProduccionRouter.get('/:cod_op', ordenProduccionController.getOne)
 
-ordenProduccionRouter.put('/:cod_op', ordenProduccionController.update)
+ordenProduccionRouter.put('/:cod_op', authorize('OP', 'actualizar'), ordenProduccionController.update)
 
-ordenProduccionRouter.delete('/:cod_op', ordenProduccionController.remove)
+ordenProduccionRouter.delete('/:cod_op', authorize('OP', 'eliminar'), ordenProduccionController.remove)
 
 
 export default ordenProduccionRouter

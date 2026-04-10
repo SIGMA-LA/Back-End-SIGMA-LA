@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { MaquinariaController } from './maquinaria.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
+import { authorize } from '../../shared/middlewares/authorizationRoles.js'
 import {
   createMaquinariaSchema,
   updateMaquinariaSchema,
@@ -20,6 +21,7 @@ maquinariaRouter.get('/disponibilidad', maquinariaController.getDisponibilidadPo
 maquinariaRouter.post(
   '/',
   validate({ body: createMaquinariaSchema }),
+  authorize('maquinaria', 'crear'),
   maquinariaController.create,
 )
 
@@ -35,6 +37,7 @@ maquinariaRouter.put(
     params: idParamsSchema,
     body: updateMaquinariaSchema,
   }),
+  authorize('maquinaria', 'actualizar'),
   maquinariaController.update,
 )
 
@@ -42,12 +45,15 @@ maquinariaRouter.put(
 maquinariaRouter.patch(
   '/:id/estado',
   validate({ params: idParamsSchema }),
+  authorize('maquinaria', 'actualizar'),
+
   maquinariaController.updateEstado,
 )
 
 maquinariaRouter.delete(
   '/:id',
   validate({ params: idParamsSchema }),
+  authorize('maquinaria', 'eliminar'),
   maquinariaController.remove,
 )
 

@@ -12,13 +12,14 @@ const pagoController = new PagoController()
 const pagoRouter = Router()
 
 pagoRouter.get('/', authorize('pago', 'obtener'), pagoController.getAll)
-pagoRouter.get('/stats/facturacion', pagoController.getFacturacionStats)
+
+pagoRouter.get('/stats/facturacion', authorize('pago', 'facturacion'), pagoController.getFacturacionStats)
 
 pagoRouter.post('/', validate({ body: createPagoSchema }), authorize('pago', 'crear'), pagoController.create)
 
-pagoRouter.post('/obra/:cod_obra', pagoController.createForObra)
+pagoRouter.post('/obra/:cod_obra', authorize('pago', 'crear'), pagoController.createForObra)
 
-pagoRouter.get('/obra/:cod_obra', pagoController.getByObra)
+pagoRouter.get('/obra/:cod_obra', authorize('pago', 'obtener'), pagoController.getByObra)
 
 pagoRouter.get('/:id', validate({ params: idParamsSchema }), authorize('pago', 'obtener'), pagoController.getOne)
 

@@ -40,6 +40,7 @@ export const PERMISSIONS = {
     actualizar: ['VENTAS'],
     eliminar: ['VENTAS'],
     obtener: ['VENTAS'],
+    facturacion: [],
   },
   vehiculo: {
     crear: ['COORDINACION'],
@@ -52,6 +53,7 @@ export const PERMISSIONS = {
     actualizar: ['COORDINACION'],
     eliminar: ['COORDINACION'],
     cancelar: ['COORDINACION', 'VISITADOR', 'PLANTA'],
+    finalizar: ['COORDINACION', 'VISITADOR'],
   },
   entrega: {
     crear: ['COORDINACION'],
@@ -60,6 +62,31 @@ export const PERMISSIONS = {
     finalizar: ['COORDINACION'],
     cancelar: ['COORDINACION', 'VISITADOR', 'PLANTA'],
     gestionarOrdenes: ['COORDINACION'],
+  },
+  OP: {
+    crear: ['PRODUCCION'],
+    actualizar: ['PRODUCCION'],
+    eliminar: ['PRODUCCION'],
+  },
+  parametro: {
+    actualizar: ['COORDINACION'],
+  },
+  cliente : {
+    crear: ['VENTAS'],
+    actualizar: ['VENTAS'],
+    eliminar: ['VENTAS'],
+    obtener: ['VENTAS', 'COORDINACION'],
+  },
+  presupuesto: {
+    crear: ['VENTAS'],
+    actualizar: ['VENTAS'],
+    eliminar: ['VENTAS'],
+    obtener: ['VENTAS', 'COORDINACION'],
+  },
+  maquinaria: {
+    crear: ['COORDINACION'],
+    actualizar: ['COORDINACION'],
+    eliminar: ['COORDINACION'],
   },
 } as const satisfies Record<string, Record<string, readonly UserRole[]>>
 
