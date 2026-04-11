@@ -83,11 +83,15 @@ export const validate = (schemas: SchemaType) => {
     // Si hay errores, retornar respuesta de error
     if (errors.length > 0) {
       console.error('[VALIDATION_ERROR]', JSON.stringify(errors, null, 2))
+      const sanitizedErrors = errors.map((e) => ({
+        location: e.location,
+        issues: e.issues.map(({ path, message }) => ({ path, message })),
+      }))
       res.status(400).json({
         status: 'fail',
-        message: 'Validation failed',
+        message: 'Los datos ingresados no son válidos',
         errorCode: 'VALIDATION_ERROR',
-        details: errors,
+        details: sanitizedErrors,
       })
       return
     }
