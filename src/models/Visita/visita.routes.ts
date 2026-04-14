@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { VisitaController } from './visita.controller.js'
 import { idParamsSchema } from 'sigma-la-schemas'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
+import { authorize } from '../../shared/middlewares/authorizationRoles.js'
 
 const visitaController = new VisitaController()
 const visitaRouter = Router()
@@ -10,7 +11,7 @@ visitaRouter.get('/', visitaController.getAll)
 
 visitaRouter.get('/stats/progreso-diario', visitaController.getProgresoDiario)
 
-visitaRouter.post('/', visitaController.create)
+visitaRouter.post('/', authorize('visita', 'crear'), visitaController.create)
 
 visitaRouter.get('/buscar', visitaController.buscar)
 
@@ -29,11 +30,12 @@ visitaRouter.get('/:id', validate({ params: idParamsSchema }), visitaController.
  * TODO: Corregir los esquemas en 'sigma-la-schemas' para usar un formato de fecha
  * más flexible o una expresión regular antes de reactivar este middleware.
  */
-visitaRouter.put('/:id', visitaController.update)
+visitaRouter.put('/:id', authorize('visita', 'actualizar'), visitaController.update)
 
 visitaRouter.delete(
   '/:id',
   validate({ params: idParamsSchema }),
+  authorize('visita', 'eliminar'),
   visitaController.remove,
 )
 
@@ -45,9 +47,9 @@ visitaRouter.get('/empleado/:cuil', visitaController.getVisitasByEmpleado)
 // GET /api/visitas/obra/:cod_obra - Visitas asociadas a una obra
 visitaRouter.get('/obra/:cod_obra', visitaController.getVisitasByObra)
 
-visitaRouter.patch('/:id/finalizar', visitaController.finalizarVisita)
+visitaRouter.patch('/:id/finalizar', authorize('visita', 'finalizar'), visitaController.finalizarVisita)
 
-visitaRouter.patch('/:id/cancelar', visitaController.cancelarVisita)
+visitaRouter.patch('/:id/cancelar', authorize('visita', 'cancelar'), visitaController.cancelarVisita)
 
 
 export default visitaRouter

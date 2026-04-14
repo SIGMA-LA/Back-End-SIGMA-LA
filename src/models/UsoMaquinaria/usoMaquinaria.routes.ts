@@ -6,6 +6,7 @@ import {
   idParamsSchema,
 } from 'sigma-la-schemas'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
+import { authorize } from '../../shared/middlewares/authorizationRoles.js'
 
 const controller = new UsoMaquinariaController()
 const usoMaquinariaRouter = Router()
@@ -15,6 +16,7 @@ usoMaquinariaRouter.get('/', controller.getAll)
 usoMaquinariaRouter.post(
   '/',
   validate({ body: createUsoMaquinariaSchema }),
+  authorize('usoMaquinaria', 'crear'),
   controller.create,
 )
 
@@ -30,12 +32,14 @@ usoMaquinariaRouter.put(
     params: idParamsSchema,
     body: updateUsoMaquinariaSchema,
   }),
+  authorize('usoMaquinaria', 'actualizar'),
   controller.update,
 )
 
 usoMaquinariaRouter.delete(
   '/:cod_maquina/:cod_entrega',
   validate({ params: idParamsSchema }),
+  authorize('usoMaquinaria', 'eliminar'),
   controller.remove,
 )
 

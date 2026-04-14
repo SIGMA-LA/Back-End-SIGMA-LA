@@ -15,6 +15,7 @@ export class PagoRepository {
   async createOne(data: Prisma.pagoCreateInput): Promise<pago> {
     return await this.prisma.pago.create({ data })
   }
+  
   async findAll() {
     return await this.prisma.pago.findMany({
       orderBy: { fecha_pago: 'desc' },
