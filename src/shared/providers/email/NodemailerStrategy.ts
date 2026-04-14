@@ -23,6 +23,7 @@ export class NodemailerStrategy implements IEmailStrategy {
         to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
         subject: options.subject,
         html: options.body,
+        attachments: options.attachments,
       });
 
       console.log('Mensaje enviado (Nodemailer): %s', info.messageId);
