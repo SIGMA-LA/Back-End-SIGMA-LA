@@ -11,9 +11,13 @@ import { authenticateJWT } from './models/Auth/auth.middleware.js'
 import { errorHandler } from './shared/middlewares/errorHandler.js'
 import healthRouter from './shared/routes/health.routes.js'
 import { setupNotificationListeners } from './shared/events/notification.listeners.js'
+import { setupJobs } from './shared/jobs/index.js'
 
 // Inicializar listeners de eventos (Pub/Sub)
 setupNotificationListeners()
+
+// Inicializar cron jobs
+setupJobs()
 
 const app = express()
 const PORT = env.PORT
