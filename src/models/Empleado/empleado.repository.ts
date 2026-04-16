@@ -31,7 +31,11 @@ export class EmpleadoRepository {
       include: {
         entrega_empleado: {
           include: {
-            entrega: true,
+            entrega: {
+              include: {
+                uso_vehiculo_entrega: true,
+              },
+            },
           },
           where: {
             entrega: {
@@ -42,7 +46,11 @@ export class EmpleadoRepository {
         },
         empleado_visita: {
           include: {
-            visita: true,
+            visita: {
+              include: {
+                uso_vehiculo_visita: true,
+              },
+            },
           },
           where: {
             visita: {

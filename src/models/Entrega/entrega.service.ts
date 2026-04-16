@@ -184,10 +184,21 @@ export class EntregaService {
     fecha_salida_estimada?: string
     fecha_regreso_estimado?: string
     cod_ops?: number[]
+    entrega_empleado?: unknown
   }): Promise<EntregaWithRelations> {
     const existingEntrega = await this.findById(cod_entrega) // Throws if not found
 
-    const { fecha_hora_entrega, fecha_salida_estimada, fecha_regreso_estimado, vehiculos, maquinarias, empleados, cod_ops, ...simpleFields } = data
+    const { 
+      fecha_hora_entrega, 
+      fecha_salida_estimada, 
+      fecha_regreso_estimado, 
+      vehiculos, 
+      maquinarias, 
+      empleados, 
+      cod_ops, 
+      entrega_empleado: _ignored, // Evitar que arrays planos de relaciones ensucien el spread
+      ...simpleFields 
+    } = data
 
     // 1. Detección de cambios en fechas
     const newFechaEntrega = fecha_hora_entrega ? new Date(fecha_hora_entrega) : new Date(existingEntrega.fecha_hora_entrega)

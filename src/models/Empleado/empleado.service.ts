@@ -1,7 +1,7 @@
 import { EmpleadoRepository } from './empleado.repository.js'
 import bcrypt from 'bcryptjs'
 import { ValidationError } from '../../shared/errors/validationError.js'
-import { type empleado, Prisma } from '@prisma/client'
+import { type empleado, type entrega, type visita, type uso_vehiculo_entrega, type uso_vehiculo_visita, Prisma } from '@prisma/client'
 import { AppError } from '../../shared/errors/AppError.js'
 
 /**
@@ -52,6 +52,14 @@ export interface NotificationMetadata {
     eventos: { id: string; label: string }[]
   }
   valores: Record<string, boolean>
+}
+
+interface EntregaConUso extends entrega {
+  uso_vehiculo_entrega?: uso_vehiculo_entrega[]
+}
+
+interface VisitaConUso extends visita {
+  uso_vehiculo_visita?: uso_vehiculo_visita[]
 }
 
 export class EmpleadoService {
@@ -272,17 +280,22 @@ export class EmpleadoService {
       let hayConflicto = false
 
       for (const ee of emp.entrega_empleado) {
-        const entrega = ee.entrega
+        const entrega = ee.entrega as EntregaConUso
         if (!entrega) continue
         if (excludeCodEntrega && entrega.cod_entrega === excludeCodEntrega)
           continue
 
-        const ini = new Date(entrega.fecha_hora_entrega)
-        const dias =
-          entrega.dias_viaticos && entrega.dias_viaticos > 0
-            ? entrega.dias_viaticos
-            : 1
-        const fin = new Date(ini.getTime() + dias * 24 * 60 * 60 * 1000)
+        const vUsage = entrega.uso_vehiculo_entrega?.[0]
+        let ini = new Date(entrega.fecha_hora_entrega)
+        let fin: Date
+
+        if (vUsage) {
+          ini = new Date(vUsage.fecha_hora_ini_uso)
+          fin = new Date(vUsage.fecha_hora_ini_est || vUsage.fecha_hora_fin_real || entrega.fecha_hora_entrega)
+        } else {
+          const dias = entrega.dias_viaticos && entrega.dias_viaticos > 0 ? entrega.dias_viaticos : 1
+          fin = new Date(ini.getTime() + dias * 24 * 60 * 60 * 1000)
+        }
 
         if (ini < fechaFin && fechaInicio < fin) {
           hayConflicto = true
@@ -292,17 +305,22 @@ export class EmpleadoService {
 
       if (!hayConflicto) {
         for (const ev of emp.empleado_visita) {
-          const visita = ev.visita
+          const visita = ev.visita as VisitaConUso
           if (!visita) continue
           if (excludeCodVisita && visita.cod_visita === excludeCodVisita)
             continue
 
-          const ini = new Date(visita.fecha_hora_visita)
-          const dias =
-            visita.dias_viatico && visita.dias_viatico > 0
-              ? visita.dias_viatico
-              : 1
-          const fin = new Date(ini.getTime() + dias * 24 * 60 * 60 * 1000)
+          const vUsage = visita.uso_vehiculo_visita?.[0]
+          let ini = new Date(visita.fecha_hora_visita)
+          let fin: Date
+
+          if (vUsage) {
+            ini = new Date(vUsage.fecha_hora_ini_uso)
+            fin = new Date(vUsage.fecha_hora_fin_est || vUsage.fecha_hora_fin_real || visita.fecha_hora_visita)
+          } else {
+            const dias = visita.dias_viatico && visita.dias_viatico > 0 ? visita.dias_viatico : 1
+            fin = new Date(ini.getTime() + dias * 24 * 60 * 60 * 1000)
+          }
 
           if (ini < fechaFin && fechaInicio < fin) {
             hayConflicto = true
