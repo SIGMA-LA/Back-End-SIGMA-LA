@@ -6,6 +6,7 @@ export type ConfigRolesFields = {
   PRODUCCION: 'orden_aprobada';
   VISITADOR: 'asignacion_visita' | 'actualizacion_visita';
   PLANTA: 'asignacion_visita' | 'asignacion_entrega' | 'actualizacion_visita';
+  VENTAS: 'obra_produccion' | 'obra_pedido_stock' | 'obra_produccion_final' | 'obra_entregada';
   // Agregar otros roles y sus campos de notificación aquí en el futuro
   // ADMINISTRACION: 'pago_recibido' | 'nueva_obra'; 
 };
@@ -22,6 +23,7 @@ type PrismaClientExtended = PrismaClient & {
   config_produccion: { findMany(args: object): Promise<ConfigWithEmpleadoMail[]> }
   config_visitador:  { findMany(args: object): Promise<ConfigWithEmpleadoMail[]> }
   config_planta:     { findMany(args: object): Promise<ConfigWithEmpleadoMail[]> }
+  config_ventas:     { findMany(args: object): Promise<ConfigWithEmpleadoMail[]> }
 }
 
 export class NotificationConfigRepository {
@@ -88,6 +90,17 @@ export class NotificationConfigRepository {
 
     if (rol === 'PLANTA') {
       const configs = await this.prisma.config_planta.findMany({
+        where: {
+          [field as string]: true,
+          empleado: baseWhere
+        },
+        select: { empleado: { select: { mail: true } } }
+      });
+      emails = configs.map((c: ConfigWithEmpleadoMail) => c.empleado.mail).filter((m): m is string => !!m);
+    }
+
+    if (rol === 'VENTAS') {
+      const configs = await this.prisma.config_ventas.findMany({
         where: {
           [field as string]: true,
           empleado: baseWhere

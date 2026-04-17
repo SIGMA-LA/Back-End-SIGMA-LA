@@ -121,7 +121,7 @@ export class EntregaService {
       }),
     }
 
-    const nuevaEntrega = esFinal
+    const nuevaEntregaWrapper = esFinal
       ? await prisma.$transaction(async tx => {
         const result = await tx.entrega.create({
           data: payload, include: {
@@ -133,9 +133,17 @@ export class EntregaService {
           }
         }) as EntregaWithRelations
         await tx.obra.update({ where: { cod_obra }, data: { estado: 'ENTREGADA' } })
-        return result
+        // Nota: El evento se emitirá fuera de la transacción para no bloquear/fallar la txn si el event bus tiene un error
+        return { result, changedObra: true }
       })
-      : await this.entregaRepository.create(payload)
+      : { result: await this.entregaRepository.create(payload), changedObra: false }
+
+    const nuevaEntrega = nuevaEntregaWrapper.result
+    const changedObra = nuevaEntregaWrapper.changedObra
+
+    if (changedObra) {
+      eventBus.emit('obra.cambio_estado', { cod_obra, nuevo_estado: 'ENTREGADA' })
+    }
 
     if (cuilesEmpleados.length > 0) {
       eventBus.emit('entrega.asignada', { entrega: nuevaEntrega, cuils: cuilesEmpleados })

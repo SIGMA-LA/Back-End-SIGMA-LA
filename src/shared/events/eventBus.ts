@@ -8,6 +8,7 @@ export interface AppEvents {
   'orden_produccion.creada': (orden: orden_de_produccion) => void | Promise<void>;
   'orden_produccion.aprobada': (orden: orden_de_produccion) => void | Promise<void>;
   'obra.pagada_totalmente': (data: { cod_obra: number }) => void | Promise<void>;
+  'obra.cambio_estado': (data: { cod_obra: number, nuevo_estado: string }) => void | Promise<void>;
   'visita.asignada': (data: { visita: VisitaWithRelations, cuils: string[] }) => void | Promise<void>;
   'visita.actualizada': (data: { visita: VisitaWithRelations, cuils: string[], tipo: 'CANCELADA' | 'HORARIO_MODIFICADO' | 'DESASIGNADO' }) => void | Promise<void>;
   'entrega.asignada': (data: { entrega: EntregaWithRelations, cuils: string[] }) => void | Promise<void>;

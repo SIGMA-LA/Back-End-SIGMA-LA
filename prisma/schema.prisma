@@ -32,6 +32,7 @@ model empleado {
   mail                  String?              @db.VarChar(100)
   notificacion_email    Boolean              @default(false)
   notificacion_whatsapp Boolean              @default(false)
+  config_ventas         config_ventas?
   config_coordinacion   config_coordinacion?
   config_planta         config_planta?
   config_produccion     config_produccion?
@@ -264,5 +265,14 @@ model config_coordinacion {
   nueva_orden_produccion Boolean  @default(false)
   cambio_estado          Boolean  @default(false)
   pago_completo_obra     Boolean  @default(false)
+  empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
+}
+
+model config_ventas {
+  cuil                   String   @id
+  obra_produccion        Boolean  @default(false)
+  obra_pedido_stock      Boolean  @default(false)
+  obra_produccion_final  Boolean  @default(false)
+  obra_entregada         Boolean  @default(false)
   empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
 }

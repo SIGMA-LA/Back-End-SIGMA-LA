@@ -7,6 +7,7 @@ import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import type { PaginationParams, PaginatedResponse } from '../../shared/types/pagination.js'
 import { prisma } from '../../shared/db/prismaClient.js'
+import { eventBus } from '../../shared/events/eventBus.js'
 
 type ObraCreateInputExtended = Prisma.obraCreateInput & {
   cuil?: string
@@ -345,7 +346,9 @@ export class ObraService {
         'INVALID_STATE'
       )
     }
-    return await this.repository.update(id, { estado: 'EN ESPERA DE STOCK' })
+    const updated = await this.repository.update(id, { estado: 'EN ESPERA DE STOCK' })
+    eventBus.emit('obra.cambio_estado', { cod_obra: id, nuevo_estado: updated.estado })
+    return updated
   }
 
   /**
@@ -356,7 +359,9 @@ export class ObraService {
     if (obra.estado !== 'EN ESPERA DE STOCK') {
       throw new ValidationError('Esta obra no está esperando stock.', 'INVALID_STATE')
     }
-    return await this.repository.update(id, { estado: 'EN PRODUCCION' })
+    const updated = await this.repository.update(id, { estado: 'EN PRODUCCION' })
+    eventBus.emit('obra.cambio_estado', { cod_obra: id, nuevo_estado: updated.estado })
+    return updated
   }
 
   /**
@@ -368,14 +373,14 @@ export class ObraService {
   async getCuentasPorCobrar(): Promise<number> {
     const obrasPendientes = await prisma.obra.findMany({
       where: {
-        estado: { 
+        estado: {
           in: [
-            'PAGADA PARCIALMENTE', 
+            'PAGADA PARCIALMENTE',
             'EN ESPERA DE PAGO',
             'EN ESPERA DE STOCK',
             'EN PRODUCCION',
             'PRODUCCION FINALIZADA'
-          ] 
+          ]
         },
       },
       include: {
@@ -478,7 +483,9 @@ export class ObraService {
         'INVALID_STATE'
       )
     }
-    return await this.repository.update(id, { estado: 'PRODUCCION FINALIZADA' })
+    const updated = await this.repository.update(id, { estado: 'PRODUCCION FINALIZADA' })
+    eventBus.emit('obra.cambio_estado', { cod_obra: id, nuevo_estado: updated.estado })
+    return updated
   }
 }
 
