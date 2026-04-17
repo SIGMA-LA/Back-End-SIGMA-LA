@@ -35,6 +35,7 @@ model empleado {
   config_coordinacion   config_coordinacion?
   config_planta         config_planta?
   config_produccion     config_produccion?
+  config_ventas         config_ventas?
   config_visitador      config_visitador?
   empleado_visita       empleado_visita[]
   entrega_empleado      entrega_empleado[]
@@ -265,4 +266,13 @@ model config_coordinacion {
   cambio_estado          Boolean  @default(false)
   pago_completo_obra     Boolean  @default(false)
   empleado               empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
+}
+
+model config_ventas {
+  cuil                  String   @id
+  obra_produccion       Boolean  @default(false)
+  obra_pedido_stock     Boolean  @default(false)
+  obra_produccion_final Boolean  @default(false)
+  obra_entregada        Boolean  @default(false)
+  empleado              empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
 }
