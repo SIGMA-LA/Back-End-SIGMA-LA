@@ -123,6 +123,14 @@ export class EmpleadoRepository {
             actualizacion_visita: true,
           },
         },
+        config_ventas: {
+          select: {
+            obra_produccion: true,
+            obra_pedido_stock: true,
+            obra_produccion_final: true,
+            obra_entregada: true,
+          },
+        },
       },
     }) as unknown as EmpleadoPayload | null
   }

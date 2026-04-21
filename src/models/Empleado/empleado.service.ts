@@ -22,6 +22,7 @@ export interface EmpleadoPayload {
   config_produccion?: ConfigProduccionUpdate | null
   config_visitador?: ConfigVisitadorUpdate | null
   config_planta?: ConfigPlantaUpdate | null
+  config_ventas?: ConfigVentasUpdate | null
 }
 
 export interface ConfigCoordinacionUpdate {
@@ -44,6 +45,13 @@ export interface ConfigPlantaUpdate {
   asignacion_visita?: boolean
   asignacion_entrega?: boolean
   actualizacion_visita?: boolean
+}
+
+export interface ConfigVentasUpdate {
+  obra_produccion?: boolean
+  obra_pedido_stock?: boolean
+  obra_produccion_final?: boolean
+  obra_entregada?: boolean
 }
 
 export interface NotificationMetadata {
@@ -131,7 +139,8 @@ export class EmpleadoService {
       (empleadoResult as unknown as { config_coordinacion?: ConfigCoordinacionUpdate | null }).config_coordinacion,
       (empleadoResult as unknown as { config_produccion?: ConfigProduccionUpdate | null }).config_produccion,
       (empleadoResult as unknown as { config_visitador?: ConfigVisitadorUpdate | null }).config_visitador,
-      (empleadoResult as unknown as { config_planta?: ConfigPlantaUpdate | null }).config_planta
+      (empleadoResult as unknown as { config_planta?: ConfigPlantaUpdate | null }).config_planta,
+      (empleadoResult as unknown as { config_ventas?: ConfigVentasUpdate | null }).config_ventas
     )
 
     const result: EmpleadoPayload & { notificaciones: NotificationMetadata } = {
@@ -154,7 +163,8 @@ export class EmpleadoService {
     valuesCoord?: ConfigCoordinacionUpdate | null,
     valuesProd?: ConfigProduccionUpdate | null,
     valuesVisit?: ConfigVisitadorUpdate | null,
-    valuesPlanta?: ConfigPlantaUpdate | null
+    valuesPlanta?: ConfigPlantaUpdate | null,
+    valuesVentas?: ConfigVentasUpdate | null
   ): NotificationMetadata {
     const metadata: NotificationMetadata = {
       configuracion: {
@@ -233,6 +243,27 @@ export class EmpleadoService {
         asignacion_visita: valuesPlanta?.asignacion_visita || false,
         asignacion_entrega: valuesPlanta?.asignacion_entrega || false,
         actualizacion_visita: valuesPlanta?.actualizacion_visita || false,
+        email: empleadoData.notificacion_email || false,
+        whatsapp: empleadoData.notificacion_whatsapp || false
+      }
+    } else if (rol === 'VENTAS') {
+      metadata.configuracion.eventos = [
+        { id: 'obra_produccion', label: 'Obra enviada a producción' },
+        { id: 'obra_pedido_stock', label: 'Obra como pedido de stock' },
+        { id: 'obra_produccion_final', label: 'Obra con producción terminada' },
+        { id: 'obra_entregada', label: 'Obra entregada' }
+      ]
+
+      metadata.configuracion.canales = [
+        { id: 'email', label: 'Recibir por Email' },
+        { id: 'whatsapp', label: 'Recibir por WhatsApp' }
+      ]
+
+      metadata.valores = {
+        obra_produccion: valuesVentas?.obra_produccion || false,
+        obra_pedido_stock: valuesVentas?.obra_pedido_stock || false,
+        obra_produccion_final: valuesVentas?.obra_produccion_final || false,
+        obra_entregada: valuesVentas?.obra_entregada || false,
         email: empleadoData.notificacion_email || false,
         whatsapp: empleadoData.notificacion_whatsapp || false
       }
@@ -459,6 +490,13 @@ export class EmpleadoService {
       };
     } else if (rol === 'PLANTA') {
       (updateContainer as Record<string, unknown>).config_planta = {
+        upsert: {
+          create: eventos,
+          update: eventos,
+        },
+      };
+    } else if (rol === 'VENTAS') {
+      (updateContainer as Record<string, unknown>).config_ventas = {
         upsert: {
           create: eventos,
           update: eventos,

@@ -1,6 +1,6 @@
 import { eventBus } from './eventBus.js';
 import { emailService } from '../providers/email/index.js';
-import { notificationConfigRepository } from '../providers/email/NotificationConfigRepository.js';
+import { notificationConfigRepository, type ConfigRolesFields } from '../providers/email/NotificationConfigRepository.js';
 
 export function setupNotificationListeners() {
   eventBus.on('visita.finalizada', async (visita) => {
@@ -239,6 +239,62 @@ export function setupNotificationListeners() {
       );
     } catch (err) {
       console.error('Error procesando evento obra.pagada_totalmente:', err);
+    }
+  });
+
+  eventBus.on('obra.cambio_estado', async ({ cod_obra, nuevo_estado }) => {
+    try {
+      // 1. Notificar a COORDINACION (si tienen activo "cambio_estado")
+      const emailsCoordinacion = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'cambio_estado');
+      if (emailsCoordinacion.length > 0) {
+        await emailService.sendNotification(
+          emailsCoordinacion,
+          `Aviso Interno: Cambio de Estado - Obra #${cod_obra}`,
+          `Hola equipo de Coordinación,<br><br>` +
+          `Les informamos que la obra ha cambiado de estado en el sistema.<br><br>` +
+          `<b>Detalles:</b><br>` +
+          `- <b>Cód. Obra ASOC:</b> #${cod_obra}<br>` +
+          `- <b>Nuevo Estado:</b> <b>${nuevo_estado}</b><br><br>` +
+          `<i>Este es un aviso automático generado por el sistema SIGMA-LA.</i>`
+        );
+      }
+
+      // 2. Notificar a VENTAS según el nuevo estado
+      let campoVentas: ConfigRolesFields['VENTAS'] | null = null;
+      
+      switch (nuevo_estado) {
+        case 'EN PRODUCCION':
+          campoVentas = 'obra_produccion';
+          break;
+        case 'EN ESPERA DE STOCK':
+          campoVentas = 'obra_pedido_stock';
+          break;
+        case 'PRODUCCION FINALIZADA':
+          campoVentas = 'obra_produccion_final';
+          break;
+        case 'ENTREGADA':
+          campoVentas = 'obra_entregada';
+          break;
+      }
+
+      if (campoVentas) {
+        const emailsVentas = await notificationConfigRepository.getEmailsForRoleNotification('VENTAS', campoVentas);
+        if (emailsVentas.length > 0) {
+          await emailService.sendNotification(
+            emailsVentas,
+            `Aviso Interno: Estado de Obra Actualizado - Obra #${cod_obra}`,
+            `Hola equipo de Ventas,<br><br>` +
+            `Les informamos que una obra de su interés ha avanzado de estado.<br><br>` +
+            `<b>Detalles de la obra:</b><br>` +
+            `- <b>Cód. Obra ASOC:</b> #${cod_obra}<br>` +
+            `- <b>Nuevo Estado:</b> <b>${nuevo_estado}</b><br><br>` +
+            `<i>Este es un aviso automático generado por el sistema SIGMA-LA. Por favor revisar el módulo de obras para más detalles.</i>`
+          );
+        }
+      }
+
+    } catch (err) {
+      console.error('Error procesando evento obra.cambio_estado:', err);
     }
   });
 }
