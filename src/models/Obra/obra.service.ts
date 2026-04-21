@@ -164,24 +164,47 @@ export class ObraService {
       ...rest
     } = data
 
-    // Handle budgeting data from multiple potential keys and cast dates
+    /**
+     * Normalizes a date value (string 'YYYY-MM-DD' or Date) to a Date object.
+     * Appends 'T00:00:00.000Z' to bare date strings to satisfy Prisma's
+     * ISO-8601 DateTime requirement (Prisma rejects 'YYYY-MM-DD' alone).
+     */
+    const toDate = (value: string | Date | undefined | null): Date | null => {
+      if (!value) return null
+      if (value instanceof Date) return value
+      // If it's already a full ISO string, parse directly
+      if (value.includes('T')) return new Date(value)
+      // Bare date string: append UTC midnight time
+      return new Date(`${value}T00:00:00.000Z`)
+    }
+
+    // Handle budgeting data from multiple potential keys and cast dates.
+    // The frontend sends { presupuesto: { create: [...] } } (Prisma-shaped),
+    // which lands in `rest`. We intercept it here, parse dates, and rebuild it.
     let parsedPresupuestosCreate = undefined
+
+    const rawPresupuestoCreate = (rest as Record<string, unknown>).presupuesto as
+      | { create?: { valor: number; fecha_emision?: string | Date; fecha_aceptacion?: string | Date; nro_presupuesto?: number }[] }
+      | undefined
+
     if (presupuestos && Array.isArray(presupuestos)) {
-      parsedPresupuestosCreate = presupuestos.map(
-        (p: {
-          valor: number
-          fecha_emision?: string | Date
-          fecha_aceptacion?: string | Date
-        }) => ({
-          valor: p.valor,
-          fecha_emision: p.fecha_emision
-            ? new Date(p.fecha_emision + 'T00:00:00.000Z')
-            : new Date(),
-          fecha_aceptacion: p.fecha_aceptacion
-            ? new Date(p.fecha_aceptacion + 'T00:00:00.000Z')
-            : null,
-        }),
-      )
+      // Legacy path: array sent as top-level `presupuestos`
+      parsedPresupuestosCreate = presupuestos.map((p) => ({
+        valor: p.valor,
+        fecha_emision: toDate(p.fecha_emision) ?? new Date(),
+        fecha_aceptacion: toDate(p.fecha_aceptacion),
+      }))
+      // Remove from rest to avoid Prisma conflict
+      delete (rest as Record<string, unknown>).presupuesto
+    } else if (rawPresupuestoCreate?.create && Array.isArray(rawPresupuestoCreate.create)) {
+      // Primary path: { presupuesto: { create: [...] } } sent by the frontend action
+      parsedPresupuestosCreate = rawPresupuestoCreate.create.map((p) => ({
+        valor: p.valor,
+        fecha_emision: toDate(p.fecha_emision) ?? new Date(),
+        fecha_aceptacion: toDate(p.fecha_aceptacion),
+      }))
+      // Remove from rest so we can rebuild it with parsed dates below
+      delete (rest as Record<string, unknown>).presupuesto
     }
 
     const prismaData: Prisma.obraCreateInput = {
