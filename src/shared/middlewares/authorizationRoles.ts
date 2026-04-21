@@ -65,7 +65,7 @@ export const PERMISSIONS = {
   },
   OP: {
     crear: ['PRODUCCION'],
-    actualizar: ['PRODUCCION'],
+    actualizar: ['PRODUCCION', 'COORDINACION'],
     eliminar: ['PRODUCCION'],
   },
   parametro: {
