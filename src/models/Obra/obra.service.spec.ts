@@ -94,6 +94,44 @@ describe('ObraService - Pruebas Unitarias', () => {
         })
       )
     })
+
+    it('debería transformar fechas YYYY-MM-DD en presupuesto.create al crear obra', async () => {
+      const createMock = vi.spyOn(ObraRepository.prototype, 'create').mockResolvedValue({} as unknown as Awaited<ReturnType<ObraRepository['create']>>)
+
+      await obraService.create({
+        direccion: 'Rosario 120',
+        fecha_ini: '2026-04-30' as unknown as Date,
+        estado: 'EN ESPERA DE PAGO',
+        cliente: {
+          create: undefined,
+          connectOrCreate: undefined,
+          connect: undefined,
+        },
+        localidad: {
+          create: undefined,
+          connectOrCreate: undefined,
+          connect: undefined,
+        },
+        presupuesto: {
+          create: [
+            {
+              valor: 10,
+              fecha_emision: '2026-04-20',
+              fecha_aceptacion: '2026-04-20',
+            },
+          ],
+        },
+      } as any)
+
+      const createArg = createMock.mock.calls[0]?.[0] as any
+      expect(createArg.presupuesto.create).toEqual([
+        expect.objectContaining({
+          valor: 10,
+          fecha_emision: new Date('2026-04-20T00:00:00.000Z'),
+          fecha_aceptacion: new Date('2026-04-20T00:00:00.000Z'),
+        }),
+      ])
+    })
   })
 
   describe('findAll() - Paginación', () => {

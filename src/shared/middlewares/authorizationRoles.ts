@@ -25,7 +25,7 @@ export const PERMISSIONS = {
     solicitarStock: ['COORDINACION'],
     recibirStock: ['PRODUCCION'],
     finalizarProduccion: ['PRODUCCION'],
-    gestionarNotaFabrica: ['COORDINACION', 'PRODUCCION'],
+    gestionarNotaFabrica: ['COORDINACION', 'PRODUCCION', 'VENTAS'],
     crear: ['VENTAS'],
     actualizar: ['VENTAS'],
     eliminar: ['VENTAS'],
@@ -65,7 +65,7 @@ export const PERMISSIONS = {
   },
   OP: {
     crear: ['PRODUCCION'],
-    actualizar: ['PRODUCCION'],
+    actualizar: ['PRODUCCION', 'COORDINACION'],
     eliminar: ['PRODUCCION'],
   },
   parametro: {
