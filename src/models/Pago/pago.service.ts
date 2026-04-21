@@ -114,8 +114,20 @@ export class PagoService {
         })
       }
 
-      return { pago: nuevoPago, esPagoFinal }
+      return { 
+        pago: nuevoPago, 
+        esPagoFinal, 
+        estadoCambiado: obra.estado !== nuevoEstadoObra, 
+        nuevoEstado: nuevoEstadoObra 
+      }
     })
+
+    if (resultado.estadoCambiado) {
+      eventBus.emit('obra.cambio_estado', { 
+        cod_obra, 
+        nuevo_estado: resultado.nuevoEstado 
+      })
+    }
 
     if (resultado.esPagoFinal) {
       eventBus.emit('obra.pagada_totalmente', { cod_obra })

@@ -200,6 +200,11 @@ export class OrdenProduccionService {
       }),
     ])
 
+    eventBus.emit('obra.cambio_estado', {
+      cod_obra: orden.cod_obra,
+      nuevo_estado: 'EN PRODUCCION'
+    })
+
     return ordenActualizada
   }
 }

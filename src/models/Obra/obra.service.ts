@@ -292,7 +292,9 @@ export class ObraService {
    */
   async bajaLogica(id: number): Promise<obra> {
     await this.findById(id)
-    return (await this.repository.bajaLogica(id)) as obra
+    const result = (await this.repository.bajaLogica(id)) as obra
+    eventBus.emit('obra.cambio_estado', { cod_obra: id, nuevo_estado: 'CANCELADA' })
+    return result
   }
 
   /**
