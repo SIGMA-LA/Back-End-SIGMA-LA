@@ -185,13 +185,14 @@ export class OrdenProduccionService {
           data: { estado: 'PRODUCCION FINALIZADA' },
         })
         // Emitir el evento fuera de la transacción para no bloquearla
-        // Se almacena la intención y se emite después
-        ordenActualizada.cod_obra && setTimeout(() => {
-          eventBus.emit('obra.cambio_estado', {
-            cod_obra: orden.cod_obra,
-            nuevo_estado: 'PRODUCCION FINALIZADA',
-          })
-        }, 0)
+        if (ordenActualizada.cod_obra) {
+          setTimeout(() => {
+            eventBus.emit('obra.cambio_estado', {
+              cod_obra: orden.cod_obra,
+              nuevo_estado: 'PRODUCCION FINALIZADA',
+            })
+          }, 0)
+        }
       }
 
       return ordenActualizada

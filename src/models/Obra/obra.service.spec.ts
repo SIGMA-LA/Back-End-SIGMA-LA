@@ -121,10 +121,12 @@ describe('ObraService - Pruebas Unitarias', () => {
             },
           ],
         },
-      } as any)
+      } as unknown as Parameters<ObraService['create']>[0])
 
-      const createArg = createMock.mock.calls[0]?.[0] as any
-      expect(createArg.presupuesto.create).toEqual([
+      const createArg = createMock.mock.calls[0]?.[0]
+      expect(createArg).toBeDefined()
+      expect(createArg!.presupuesto).toBeDefined()
+      expect(createArg!.presupuesto!.create).toEqual([
         expect.objectContaining({
           valor: 10,
           fecha_emision: new Date('2026-04-20T00:00:00.000Z'),
