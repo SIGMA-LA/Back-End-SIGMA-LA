@@ -121,29 +121,8 @@ export class EntregaService {
       }),
     }
 
-    const nuevaEntregaWrapper = esFinal
-      ? await prisma.$transaction(async tx => {
-        const result = await tx.entrega.create({
-          data: payload, include: {
-            obra: { include: { cliente: true, localidad: true } },
-            entrega_empleado: { include: { empleado: { select: { cuil: true, nombre: true, apellido: true } } } },
-            uso_maquinaria: { include: { maquinaria: { select: { descripcion: true } } } },
-            uso_vehiculo_entrega: { include: { vehiculo: { select: { patente: true, tipo_vehiculo: true } } } },
-            ordenes_de_produccion: true,
-          }
-        }) as EntregaWithRelations
-        await tx.obra.update({ where: { cod_obra }, data: { estado: 'ENTREGADA' } })
-        // Nota: El evento se emitirá fuera de la transacción para no bloquear/fallar la txn si el event bus tiene un error
-        return { result, changedObra: true }
-      })
-      : { result: await this.entregaRepository.create(payload), changedObra: false }
+    const nuevaEntrega = await this.entregaRepository.create(payload)
 
-    const nuevaEntrega = nuevaEntregaWrapper.result
-    const changedObra = nuevaEntregaWrapper.changedObra
-
-    if (changedObra) {
-      eventBus.emit('obra.cambio_estado', { cod_obra, nuevo_estado: 'ENTREGADA' })
-    }
 
     if (cuilesEmpleados.length > 0) {
       eventBus.emit('entrega.asignada', { entrega: nuevaEntrega, cuils: cuilesEmpleados })
@@ -406,8 +385,8 @@ export class EntregaService {
     const entregaActual = await prisma.entrega.findUnique({ where: { cod_entrega }, select: { esFinal: true, cod_obra: true } })
     if (!entregaActual) throw new AppError(`Entrega no encontrada (ID: ${cod_entrega})`, 404, 'ENTREGA_NOT_FOUND')
 
-    return (await prisma.$transaction(async tx => {
-      const updated = await tx.entrega.update({
+    const updated = await prisma.$transaction(async tx => {
+      const result = await tx.entrega.update({
         where: { cod_entrega },
         data: { estado: 'ENTREGADO', observaciones: observaciones || 'Entrega completada exitosamente' }
       })
@@ -416,8 +395,14 @@ export class EntregaService {
       if (entregaActual.esFinal) {
         await tx.obra.update({ where: { cod_obra: entregaActual.cod_obra }, data: { estado: 'ENTREGADA' } })
       }
-      return updated
-    }))
+      return result
+    })
+
+    if (entregaActual.esFinal) {
+      eventBus.emit('obra.cambio_estado', { cod_obra: entregaActual.cod_obra, nuevo_estado: 'ENTREGADA' })
+    }
+
+    return updated
   }
 
   async cancelar(cod_entrega: number, motivo?: string): Promise<entrega> {

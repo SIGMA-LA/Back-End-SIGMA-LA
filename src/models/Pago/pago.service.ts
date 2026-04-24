@@ -103,7 +103,10 @@ export class PagoService {
 
       if (esPagoFinal) {
         nuevoEstadoObra = 'PAGADA TOTALMENTE'
-      } else if (nuevoTotalPagado > 0) {
+      } else if (
+        nuevoTotalPagado > 0 &&
+        (obra.estado === 'EN ESPERA DE PAGO' || obra.estado === 'ACTIVA')
+      ) {
         nuevoEstadoObra = 'PAGADA PARCIALMENTE'
       }
 
