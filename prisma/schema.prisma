@@ -112,6 +112,7 @@ model obra {
   nota_fabrica_pid     String?                @db.VarChar(255)
   cod_localidad        Int
   cuil_arquitecto      String?                @db.VarChar(50)
+  esGrande             Boolean                @default(true)
   entrega              entrega[]
   entrega_empleado     entrega_empleado[]
   localidad            localidad              @relation(fields: [cod_localidad], references: [cod_localidad], onDelete: NoAction, onUpdate: NoAction)
@@ -119,6 +120,7 @@ model obra {
   cliente              cliente                @relation("ObraCliente", fields: [cuil], references: [cuil], onDelete: NoAction, onUpdate: NoAction)
   orden_de_produccion  orden_de_produccion[]
   pago                 pago[]
+  pedido_stock         pedido_stock?
   presupuesto          presupuesto[]
   uso_maquinaria       uso_maquinaria[]
   uso_vehiculo_entrega uso_vehiculo_entrega[]
@@ -275,4 +277,21 @@ model config_ventas {
   obra_produccion_final Boolean  @default(false)
   obra_entregada        Boolean  @default(false)
   empleado              empleado @relation(fields: [cuil], references: [cuil], onDelete: Cascade)
+}
+
+model pedido_stock {
+  id          String            @id
+  obraId      Int               @unique
+  descripcion String
+  estado      EstadoPedidoStock
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime
+  obra        obra              @relation(fields: [obraId], references: [cod_obra], onDelete: Cascade)
+}
+
+enum EstadoPedidoStock {
+  PENDIENTE
+  APROBADO
+  PEDIDO
+  RECIBIDO
 }
