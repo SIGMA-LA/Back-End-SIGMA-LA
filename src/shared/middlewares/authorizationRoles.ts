@@ -20,7 +20,7 @@ export const PERMISSIONS = {
     statsCoordinacion: ['COORDINACION'],
     verParaEntrega: ['COORDINACION'],
     verParaPedidoStock: ['COORDINACION'],
-    verNotasFabrica: ['COORDINACION', 'PRODUCCION'],
+    verNotasFabrica: ['COORDINACION', 'PRODUCCION', 'VENTAS', 'VISITADOR'],
     verConPresupuestoAceptado: ['VENTAS'],
     solicitarStock: ['COORDINACION'],
     recibirStock: ['PRODUCCION'],
