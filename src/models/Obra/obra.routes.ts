@@ -49,8 +49,9 @@ obraRouter.get('/con-presupuesto-aceptado', authorize('obra', 'verConPresupuesto
 // Solicitar stock para una obra
 obraRouter.patch('/:id/solicitar-stock', authorize('obra', 'solicitarStock'), obraController.solicitarStock)
 
-// Confirmar recepción de stock
-obraRouter.patch('/:id/recibir-stock', authorize('obra', 'recibirStock'), obraController.recibirStock)
+// Confirmar recepción de stock (Ahora lo maneja PedidoStock)
+// Iniciar producción manualmente
+obraRouter.patch('/:id/iniciar-produccion', authorize('obra', 'iniciarProduccion'), obraController.iniciarProduccion)
 
 // Finalizar producción de una obra
 obraRouter.patch('/:id/finalizar-produccion', authorize('obra', 'finalizarProduccion'), obraController.finalizarProduccion)

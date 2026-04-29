@@ -377,12 +377,12 @@ export class ObraService {
   }
 
   /**
-   * Changes obra status to EN PRODUCCION.
+   * Changes obra status to EN PRODUCCION manually by Production worker.
    */
-  async recibirStock(id: number): Promise<obra> {
+  async iniciarProduccion(id: number): Promise<obra> {
     const obra = await this.findById(id)
-    if (obra.estado !== 'EN ESPERA DE STOCK') {
-      throw new ValidationError('Esta obra no está esperando stock.', 'INVALID_STATE')
+    if (obra.estado !== 'PAGADA PARCIALMENTE') {
+      throw new ValidationError('Esta obra no está lista para iniciar producción (Debe estar pagada parcialmente y tener stock).', 'INVALID_STATE')
     }
     const updated = await this.repository.update(id, { estado: 'EN PRODUCCION' })
     eventBus.emit('obra.cambio_estado', { cod_obra: id, nuevo_estado: updated.estado })

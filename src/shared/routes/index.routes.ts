@@ -43,6 +43,7 @@ import visitaEmpleadoRouter from '../../models/VisitaEmpleado/visitaEmpleado.rou
 
 import routeMid from '../../models/midlewareTest/mid.routes.js'
 import provinciaRouter from '../../models/Provincia/provincia.routes.js'
+import pedidoStockRouter from '../../models/PedidoStock/pedidoStock.routes.js'
 
 router.use('/api/empleados', empleadoRouter)
 router.use('/api/vehiculos', vehiculoRouter)
@@ -63,6 +64,7 @@ router.use('/api/visitas', visitaRouter)
 router.use('/api/entrega-empleado', entregaEmpleadoRouter)
 router.use('/api/empleado-visita', visitaEmpleadoRouter)
 router.use('/api/provincias', provinciaRouter)
+router.use('/api/pedido-stock', pedidoStockRouter)
 
 router.use((req, res) => {
   res.status(404).json({

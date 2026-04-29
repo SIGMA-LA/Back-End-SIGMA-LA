@@ -23,7 +23,7 @@ export const PERMISSIONS = {
     verNotasFabrica: ['COORDINACION', 'PRODUCCION', 'VENTAS', 'VISITADOR'],
     verConPresupuestoAceptado: ['VENTAS'],
     solicitarStock: ['COORDINACION'],
-    recibirStock: ['PRODUCCION'],
+    iniciarProduccion: ['PRODUCCION'],
     finalizarProduccion: ['PRODUCCION', 'COORDINACION'],
     gestionarNotaFabrica: ['COORDINACION', 'PRODUCCION', 'VENTAS'],
     crear: ['VENTAS'],
@@ -112,6 +112,11 @@ export const PERMISSIONS = {
     crear: ['COORDINACION'],
     actualizar: ['COORDINACION'],
     eliminar: ['COORDINACION'],
+  },
+  pedidoStock: {
+    crear: ['PRODUCCION', 'COORDINACION'],
+    actualizarEstado: ['COORDINACION'],
+    obtener: ['COORDINACION', 'PRODUCCION'],
   },
 } as const satisfies Record<string, Record<string, readonly UserRole[]>>
 
