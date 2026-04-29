@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { ClienteController } from './cliente.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
 import { authorize } from '../../shared/middlewares/authorizationRoles.js'
-import { updateClienteSchema, cuilParamsSchema } from 'sigma-la-schemas'
+import { updateClienteSchema, cuilParamsSchema} from 'sigma-la-schemas'
 
 const clienteController = new ClienteController()
 const clienteRouter = Router()
