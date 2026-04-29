@@ -20,11 +20,15 @@ export class ClienteService {
   }
 
   async create(data: Prisma.clienteCreateInput): Promise<cliente> {
-    const existingCliente = await this.repository.findById(data.cuil)
+    if (!data.cuil) {
+      throw new AppError('El CUIL es requerido.', 400, 'INVALID_CLIENTE_DATA')
+    }
+    const cuilNormalized = data.cuil.split("-").join("")
+    const existingCliente = await this.repository.findById(cuilNormalized)
     if (existingCliente) {
       throw new AppError('Ya existe un cliente con el mismo CUIL.', 409, 'DUPLICATE_CLIENTE')
     }
-    return await this.repository.create(data)
+    return await this.repository.create({ ...data, cuil: cuilNormalized })
   }
 
   async findAll(
