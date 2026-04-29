@@ -287,14 +287,14 @@ export class ObraController {
   })
 
   /**
-   * Changes obra status to EN PRODUCCION.
+   * Changes obra status to EN PRODUCCION manually.
    */
-  recibirStock = catchAsync(async (req: Request, res: Response) => {
+  iniciarProduccion = catchAsync(async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) throw new AppError('ID de obra inválido', 400, 'INVALID_ID')
 
-    const obra = await obraService.recibirStock(id)
-    return sendSuccess(res, obra, 'Stock received and obra now in production')
+    const obra = await obraService.iniciarProduccion(id)
+    return sendSuccess(res, obra, 'Obra in production successfully')
   })
 
   // ----------- STATS -----------
