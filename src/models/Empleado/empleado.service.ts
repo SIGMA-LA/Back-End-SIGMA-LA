@@ -86,7 +86,8 @@ export class EmpleadoService {
     area_trabajo: string
     contrasenia?: string
   }): Promise<EmpleadoPayload> {
-    const existingEmpleado = await this.empleadoRepository.findByCuil(data.cuil)
+    const cuilNormalized = data.cuil.replace(/-/g, '')
+    const existingEmpleado = await this.empleadoRepository.findByCuil(cuilNormalized)
     if (existingEmpleado) {
       throw new AppError('Ya existe un empleado con ese CUIL', 409, 'CONFLICTO_CUIL')
     }
@@ -97,7 +98,7 @@ export class EmpleadoService {
       : null
 
     const empleadoResult = await this.empleadoRepository.create({
-      cuil: data.cuil,
+      cuil: cuilNormalized,
       nombre: data.nombre,
       apellido: data.apellido,
       rol_actual: data.rol_actual,
