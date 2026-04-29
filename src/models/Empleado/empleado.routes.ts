@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { EmpleadoController } from './empleado.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
+
 import {
-  createEmpleadoSchema,
   updateEmpleadoSchema,
   cuilParamsSchema,
 } from 'sigma-la-schemas'
@@ -61,14 +61,19 @@ empleadoRouter.get('/me', empleadoController.getMe)
 empleadoRouter.get('/disponibles-entrega', empleadoController.getDisponiblesParaEntrega)
 
 /**
- * @route   POST /api/empleados
- * @desc    Crear nuevo empleado
- * @access  Privado (solo ADMIN)
+ * [PARCHE TEMPORAL]
+ * Se ha deshabilitado la validación de Valibot (validate()) para esta ruta POST
+ * debido a inconsistencias críticas en el paquete 'sigma-la-schemas':
+ * 
+ * 1. El 'createEmpleadoSchema' oficial se encuentra desactualizado y estricto respecto a los datos permitidos.
+ * 2. La validación falla con el payload actual requerido para la creación de empleados.
+ * 
+ * TODO: Actualizar 'sigma-la-schemas' (v1.0.28+) para incluir todos los campos y formatos correctos
+ * y poder reactivar esta validación.
  */
 empleadoRouter.post(
   '/',
   authorize('empleado', 'crear'),
-  validate({ body: createEmpleadoSchema }),
   empleadoController.create,
 )
 

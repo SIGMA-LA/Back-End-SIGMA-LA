@@ -385,13 +385,13 @@ export class EmpleadoService {
       contrasenia?: string
     }>,
   ): Promise<EmpleadoPayload> {
-    await this.findByCuil(cuil) // Throws if not found
+    const empleado = await this.findByCuil(cuil) // Throws if not found
 
     const updateData = data.contrasenia
       ? { ...data, contrasenia: await bcrypt.hash(data.contrasenia, 10) }
       : data
 
-    const empleadoResult = await this.empleadoRepository.update(cuil, updateData)
+    const empleadoResult = await this.empleadoRepository.update(empleado.cuil, updateData)
 
     return {
       cuil: empleadoResult.cuil,
@@ -424,14 +424,14 @@ export class EmpleadoService {
     }
 
     const hashedNew = await bcrypt.hash(newPass, 10)
-    await this.empleadoRepository.update(cuil, { contrasenia: hashedNew })
+    await this.empleadoRepository.update(empleadoResult.cuil, { contrasenia: hashedNew })
   }
 
   // Soft delete - Desactivar empleado
   async remove(cuil: string): Promise<EmpleadoPayload> {
-    await this.findByCuil(cuil) // Throws if not found
+    const empleado = await this.findByCuil(cuil) // Throws if not found
 
-    const empleadoResult = await this.empleadoRepository.update(cuil, {
+    const empleadoResult = await this.empleadoRepository.update(empleado.cuil, {
       activo: false,
     })
 
@@ -455,7 +455,7 @@ export class EmpleadoService {
     rol: string,
     notifications: Record<string, boolean>,
   ): Promise<empleado> {
-    await this.findByCuil(cuil) // Throws if not found
+    const empleado = await this.findByCuil(cuil) // Throws if not found
 
     const { email, whatsapp, ...eventos } = notifications;
 
@@ -504,7 +504,7 @@ export class EmpleadoService {
       };
     }
 
-    return await this.empleadoRepository.update(cuil, updateContainer)
+    return await this.empleadoRepository.update(empleado.cuil, updateContainer)
   }
 }
 

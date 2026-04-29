@@ -60,8 +60,9 @@ export class ObraController {
    */
   getByCliente = catchAsync(async (req: Request, res: Response) => {
     const cuil = req.params.cuil
-    const obras = await obraService.findByCliente(cuil)
-    return sendSuccess(res, obras)
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await obraService.findByCliente(cuil, pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**

@@ -63,10 +63,20 @@ export class EmpleadoRepository {
     })
   }
 
+  // Helper para generar variaciones del CUIL
+  private getCuilVariations(cuil: string): string[] {
+    const cuilNormalized = cuil.split('-').join('')
+    let cuilConGuiones = cuil
+    if (cuilNormalized.length === 11) {
+      cuilConGuiones = `${cuilNormalized.slice(0, 2)}-${cuilNormalized.slice(2, 10)}-${cuilNormalized.slice(10)}`
+    }
+    return [cuilNormalized, cuilConGuiones, cuil]
+  }
+
   // Obtener empleado por CUIL (solo datos públicos)
   async findByCuilPublic(cuil: string): Promise<EmpleadoPayload | null> {
-    return await this.prisma.empleado.findUnique({
-      where: { cuil: cuil },
+    return await this.prisma.empleado.findFirst({
+      where: { cuil: { in: this.getCuilVariations(cuil) } },
       select: {
         cuil: true,
         nombre: true,
@@ -79,14 +89,14 @@ export class EmpleadoRepository {
   }
   // Obtener empleado por CUIL
   async findByCuil(cuil: string): Promise<empleado | null> {
-    return await this.prisma.empleado.findUnique({
-      where: { cuil: cuil },
+    return await this.prisma.empleado.findFirst({
+      where: { cuil: { in: this.getCuilVariations(cuil) } },
     })
   }
 
   async findPerfil(cuil: string): Promise<EmpleadoPayload | null> {
-    return await this.prisma.empleado.findUnique({
-      where: { cuil: cuil },
+    return await this.prisma.empleado.findFirst({
+      where: { cuil: { in: this.getCuilVariations(cuil) } },
       select: {
         cuil: true,
         nombre: true,
@@ -199,8 +209,8 @@ export class EmpleadoRepository {
 
   // Verificar si existe empleado por CUIL
   async existsByCuil(cuil: string): Promise<boolean> {
-    const empleado = await this.prisma.empleado.findUnique({
-      where: { cuil: cuil },
+    const empleado = await this.prisma.empleado.findFirst({
+      where: { cuil: { in: this.getCuilVariations(cuil) } },
       select: { cuil: true },
     })
     return !!empleado
