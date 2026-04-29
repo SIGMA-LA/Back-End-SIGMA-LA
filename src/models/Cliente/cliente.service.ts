@@ -53,19 +53,8 @@ export class ClienteService {
   }
 
   async findById(cuil: string): Promise<cliente> {
-    const cuilNormalized = cuil.split("-").join("")
-    let cliente = await this.repository.findById(cuilNormalized)
-    
-    let cuilConGuiones = cuil
-    if (!cliente && cuil.length === 11 && !cuil.includes('-')) {
-      cuilConGuiones = `${cuil.slice(0, 2)}-${cuil.slice(2, 10)}-${cuil.slice(10)}`
-      cliente = await this.repository.findById(cuilConGuiones)
-    }
-
-    if (!cliente && cuil !== cuilNormalized && cuil !== cuilConGuiones) {
-      // Fallback por si llega con guiones pero no fue encontrado en los pasos anteriores
-      cliente = await this.repository.findById(cuil)
-    }
+    const cuilNormalized = cuil.replace(/-/g, '')
+    const cliente = await this.repository.findById(cuilNormalized)
 
     if (!cliente) {
       throw new AppError('Cliente no encontrado', 404, 'CLIENTE_NOT_FOUND')
