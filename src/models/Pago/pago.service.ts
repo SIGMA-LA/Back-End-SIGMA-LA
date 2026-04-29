@@ -4,6 +4,7 @@ import { prisma } from '../../shared/db/prismaClient.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { eventBus } from '../../shared/events/eventBus.js'
+import type { PaginationParams, PaginatedResponse } from '../../shared/types/pagination.js'
 
 /**
  * Service to manage payment (pago) operations.
@@ -183,6 +184,44 @@ export class PagoService {
         },
       },
     }))
+  }
+
+  /**
+   * Gets all payments with optional filtering, paginated by obra.
+   */
+  async findAllPaginated(filters: {
+    search?: string
+    cliente?: string
+    fechaDesde?: string
+    fechaHasta?: string
+    obra?: string
+    montoMin?: number
+    montoMax?: number
+  } | undefined, pagination: PaginationParams): Promise<PaginatedResponse<Record<string, unknown>>> {
+    const { data: pagos, total } = await this.repository.findAllWithFiltersPaginated(
+      filters ?? {},
+      pagination,
+    )
+
+    const formattedPagos = pagos.map(pago => ({
+      ...pago,
+      fecha_pago: pago.fecha_pago.toISOString().split('T')[0],
+      obra: {
+        ...pago.obra,
+        cliente: {
+          ...pago.obra.cliente,
+          cuil: this.formatCUIL(pago.obra.cliente.cuil),
+        },
+      },
+    }))
+
+    return {
+      data: formattedPagos,
+      total,
+      totalPages: Math.ceil(total / pagination.pageSize),
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   /**

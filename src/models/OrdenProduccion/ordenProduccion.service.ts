@@ -165,38 +165,12 @@ export class OrdenProduccionService {
       )
     }
 
-    return await prisma.$transaction(async tx => {
-      const ordenActualizada = await tx.orden_de_produccion.update({
-        where: { cod_op },
-        data: { estado: 'FINALIZADA' },
-      })
-
-      // Verificar si todas las OPs de la obra están finalizadas
-      const todasLasOps = await tx.orden_de_produccion.findMany({
-        where: { cod_obra: orden.cod_obra },
-        select: { estado: true },
-      })
-
-      const todasFinalizadas = todasLasOps.every(op => op.estado === 'FINALIZADA')
-
-      if (todasFinalizadas) {
-        await tx.obra.update({
-          where: { cod_obra: orden.cod_obra },
-          data: { estado: 'PRODUCCION FINALIZADA' },
-        })
-        // Emitir el evento fuera de la transacción para no bloquearla
-        if (ordenActualizada.cod_obra) {
-          setTimeout(() => {
-            eventBus.emit('obra.cambio_estado', {
-              cod_obra: orden.cod_obra,
-              nuevo_estado: 'PRODUCCION FINALIZADA',
-            })
-          }, 0)
-        }
-      }
-
-      return ordenActualizada
+    const ordenActualizada = await prisma.orden_de_produccion.update({
+      where: { cod_op },
+      data: { estado: 'FINALIZADA' },
     })
+
+    return ordenActualizada
   }
 
   /**

@@ -4,6 +4,7 @@ import { catchAsync } from '../../shared/utils/catchAsync.js'
 import { sendSuccess } from '../../shared/utils/apiResponse.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
+import { parsePagination } from '../../shared/utils/parsePagination.js'
 
 const pagoService = new PagoService()
 
@@ -65,7 +66,10 @@ export class PagoController {
       }
     })
 
-    const pagos = await pagoService.findAll(Object.keys(cleanFilters).length > 0 ? cleanFilters : undefined)
+    const pagos = await pagoService.findAllPaginated(
+      Object.keys(cleanFilters).length > 0 ? cleanFilters : undefined,
+      parsePagination(req.query as Record<string, unknown>),
+    )
     return sendSuccess(res, pagos)
   })
 
