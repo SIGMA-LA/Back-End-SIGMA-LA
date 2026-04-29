@@ -53,7 +53,20 @@ export class ClienteService {
   }
 
   async findById(cuil: string): Promise<cliente> {
-    const cliente = await this.repository.findById(cuil)
+    const cuilNormalized = cuil.split("-").join("")
+    let cliente = await this.repository.findById(cuilNormalized)
+    
+    let cuilConGuiones = cuil
+    if (!cliente && cuil.length === 11 && !cuil.includes('-')) {
+      cuilConGuiones = `${cuil.slice(0, 2)}-${cuil.slice(2, 10)}-${cuil.slice(10)}`
+      cliente = await this.repository.findById(cuilConGuiones)
+    }
+
+    if (!cliente && cuil !== cuilNormalized && cuil !== cuilConGuiones) {
+      // Fallback por si llega con guiones pero no fue encontrado en los pasos anteriores
+      cliente = await this.repository.findById(cuil)
+    }
+
     if (!cliente) {
       throw new AppError('Cliente no encontrado', 404, 'CLIENTE_NOT_FOUND')
     }
@@ -64,14 +77,14 @@ export class ClienteService {
     cuil: string,
     data: Prisma.clienteUpdateInput,
   ): Promise<cliente> {
-    await this.findById(cuil) // Throws if not found
-    return await this.repository.update(cuil, data)
+    const cliente = await this.findById(cuil) // Throws if not found
+    return await this.repository.update(cliente.cuil, data)
   }
 
   async remove(cuil: string): Promise<void> {
-    await this.findById(cuil) // Throws if not found
+    const cliente = await this.findById(cuil) // Throws if not found
 
-    const dependencyCounts = await this.repository.countDeleteDependencies(cuil)
+    const dependencyCounts = await this.repository.countDeleteDependencies(cliente.cuil)
 
     if (
       dependencyCounts.obras > 0 ||
@@ -88,14 +101,14 @@ export class ClienteService {
     }
 
     try {
-      await this.repository.delete(cuil)
+      await this.repository.delete(cliente.cuil)
     } catch (error: unknown) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2003'
       ) {
         const refreshedDependencyCounts =
-          await this.repository.countDeleteDependencies(cuil)
+          await this.repository.countDeleteDependencies(cliente.cuil)
         throw new AppError(
           'No se puede eliminar el cliente debido a dependencias detectadas.',
           409,

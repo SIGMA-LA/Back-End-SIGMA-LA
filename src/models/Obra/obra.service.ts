@@ -73,10 +73,17 @@ export class ObraService {
   }
 
   /**
-   * Gets obras for a specific client.
+   * Gets obras for a specific client (paginated).
    */
-  async findByCliente(cuil_cliente: string): Promise<obra[]> {
-    return this.repository.findByCliente(cuil_cliente)
+  async findByCliente(cuil_cliente: string, pagination: PaginationParams): Promise<PaginatedResponse<obra>> {
+    const { data, total } = await this.repository.findByCliente(cuil_cliente, pagination)
+    return {
+      data,
+      total,
+      totalPages: Math.ceil(total / pagination.pageSize),
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 
   /**
