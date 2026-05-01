@@ -291,8 +291,23 @@ export function setupNotificationListeners() {
 
   eventBus.on('obra.cambio_estado', async ({ cod_obra, nuevo_estado }) => {
     try {
-      // 1. Notificar a COORDINACION (si tienen activo "cambio_estado")
-      const emailsCoordinacion = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'cambio_estado');
+      // 1. Notificar a COORDINACION
+      let emailsCoordinacion: string[] = [];
+      if (nuevo_estado === 'EN PRODUCCION') {
+        const empleadosCoordinacion = await prisma.empleado.findMany({
+          where: {
+            rol_actual: 'COORDINACION',
+            activo: true,
+            mail: { not: null }
+          },
+          select: { mail: true }
+        });
+        emailsCoordinacion = empleadosCoordinacion.map(e => e.mail).filter((m): m is string => !!m);
+      } else {
+        // Para otros estados se mantiene la lógica previa basada en configuraciones.
+        emailsCoordinacion = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'cambio_estado');
+      }
+
       if (emailsCoordinacion.length > 0) {
         await emailService.sendNotification(
           emailsCoordinacion,
@@ -305,6 +320,14 @@ export function setupNotificationListeners() {
           `<i>Este es un aviso automático generado por el sistema SIGMA-LA.</i>`
         );
       }
+
+      /*
+      // Código anterior para notificaciones con configuración de role/field:
+      const emailsCoordinacion = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'cambio_estado');
+      if (emailsCoordinacion.length > 0) {
+        await emailService.sendNotification(...)
+      }
+      */
 
       // 2. Notificar a VENTAS según el nuevo estado
       let campoVentas: ConfigRolesFields['VENTAS'] | null = null;
