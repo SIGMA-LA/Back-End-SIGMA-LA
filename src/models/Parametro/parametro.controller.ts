@@ -39,6 +39,14 @@ export class ParametroController {
   })
 
   /**
+   * Gets the current parameter record (all parameters).
+   */
+  getActual = catchAsync(async (req: Request, res: Response) => {
+    const parametro = await parametroService.findLatest()
+    return sendSuccess(res, parametro)
+  })
+
+  /**
    * Gets the current travel allowance (viatico) configuration.
    */
   getActualViatico = catchAsync(async (req: Request, res: Response) => {

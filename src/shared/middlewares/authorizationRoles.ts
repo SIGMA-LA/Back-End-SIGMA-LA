@@ -69,9 +69,10 @@ export const PERMISSIONS = {
     eliminar: ['PRODUCCION'],
   },
   parametro: {
-    actualizar: ['COORDINACION'],
+    crear: ['VENTAS'],
+    actualizar: ['VENTAS'],
   },
-  cliente : {
+  cliente: {
     crear: ['VENTAS'],
     actualizar: ['VENTAS'],
     eliminar: ['VENTAS'],

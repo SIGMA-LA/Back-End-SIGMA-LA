@@ -59,6 +59,14 @@ export class ParametroRepository {
     })
   }
 
+  // Obtener el máximo ID
+  async findMaxId(): Promise<number> {
+    const result = await this.prisma.parametro.aggregate({
+      _max: { cod_parametro: true },
+    })
+    return result._max.cod_parametro || 0
+  }
+
   // Contar total de parametros
   async count(): Promise<number> {
     return await this.prisma.parametro.count()
