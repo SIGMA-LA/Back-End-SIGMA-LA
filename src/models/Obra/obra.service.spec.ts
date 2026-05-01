@@ -46,12 +46,12 @@ describe('ObraService - Pruebas Unitarias', () => {
     it('debería fallar si el estado no es PAGADA PARCIALMENTE', async () => {
       vi.spyOn(ObraRepository.prototype, 'findById').mockResolvedValue({
         cod_obra: 1,
-        estado: 'PENDIENTE',
+        estado: 'EN ESPERA DE PAGO',
       } as unknown as Awaited<ReturnType<ObraRepository['findById']>>)
       await expect(obraService.iniciarProduccion(1)).rejects.toThrow('Esta obra no está lista para iniciar producción (Debe estar pagada parcialmente y tener stock).')
     })
 
-    it('debería cambiar a EN PRODUCCION exitosamente', async () => {
+    it('debería cambiar a EN PRODUCCION exitosamente cuando está PAGADA PARCIALMENTE', async () => {
       vi.spyOn(ObraRepository.prototype, 'findById').mockResolvedValue({
         cod_obra: 2,
         estado: 'PAGADA PARCIALMENTE',

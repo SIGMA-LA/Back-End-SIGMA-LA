@@ -236,18 +236,11 @@ export class ObraRepository {
     }
 
     if (filters.estado === 'EN_PRODUCCION') {
-      // Tiene al menos una orden en estado EN PRODUCCION (y la obra está EN PRODUCCION)
+      // La obra está EN PRODUCCION: usa el estado de la OBRA como fuente de verdad.
+      // Una obra en producción permanece aquí hasta que Producción la finaliza
+      // explícitamente (→ PRODUCCION FINALIZADA), sin importar el estado de sus OPs.
       andConditions.push({
-        orden_de_produccion: {
-          some: {
-            estado: 'EN PRODUCCION',
-          },
-        },
-      })
-      andConditions.push({
-        estado: {
-          notIn: ['PRODUCCION FINALIZADA', 'CANCELADA'],
-        },
+        estado: 'EN PRODUCCION',
       })
     }
 
@@ -286,6 +279,7 @@ export class ObraRepository {
         },
         presupuesto: true,
         pago: true,
+        pedido_stock: true,
       },
     })
   }

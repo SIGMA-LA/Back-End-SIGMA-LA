@@ -42,6 +42,32 @@ export class OrdenProduccionService {
       throw new ValidationError('Código de obra inválido', 'INVALID_ID')
     }
 
+    // Validar que la obra existe y tiene el estado correcto para crear una OP
+    const obra = await prisma.obra.findUnique({ where: { cod_obra: codObra } })
+    if (!obra) {
+      throw new ValidationError(`Obra no encontrada (ID: ${codObra})`, 'OBRA_NOT_FOUND')
+    }
+    if (obra.estado !== 'PAGADA PARCIALMENTE') {
+      throw new ValidationError(
+        'Solo se puede crear una Orden de Producción para obras con pago parcial.',
+        'INVALID_STATE'
+      )
+    }
+
+    // Validar que la obra no tenga un pedido de stock pendiente
+    const pedidoPendiente = await prisma.pedido_stock.findFirst({
+      where: {
+        obraId: codObra,
+        estado: { not: 'RECIBIDO' },
+      },
+    })
+    if (pedidoPendiente) {
+      throw new ValidationError(
+        'La obra tiene un pedido de stock pendiente. Debe resolverse antes de crear una Orden de Producción.',
+        'PENDING_STOCK_REQUEST'
+      )
+    }
+
     const normalizedUrl = (uploadedFile?.path ?? data.url ?? '').trim()
     if (!normalizedUrl) {
       throw new ValidationError('No se ha subido ningún archivo', 'FILE_REQUIRED')
