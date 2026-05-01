@@ -293,7 +293,7 @@ export function setupNotificationListeners() {
     try {
       // 1. Notificar a COORDINACION
       let emailsCoordinacion: string[] = [];
-      if (nuevo_estado === 'EN PRODUCCION') {
+      if (nuevo_estado === 'EN PRODUCCION' || nuevo_estado === 'PRODUCCION FINALIZADA') {
         const empleadosCoordinacion = await prisma.empleado.findMany({
           where: {
             rol_actual: 'COORDINACION',
