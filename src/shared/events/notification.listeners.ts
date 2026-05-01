@@ -6,7 +6,16 @@ import { prisma } from '../db/prismaClient.js';
 export function setupNotificationListeners() {
   eventBus.on('visita.finalizada', async (visita) => {
     try {
-      const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'visita_completada');
+      // Enviar a todos los usuarios de Coordinación con mail válido.
+      const empleados = await prisma.empleado.findMany({
+        where: {
+          rol_actual: 'COORDINACION',
+          activo: true,
+          mail: { not: null }
+        },
+        select: { mail: true }
+      });
+      const emails = empleados.map(e => e.mail).filter((m): m is string => !!m);
       if (emails.length === 0) return;
 
       const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
@@ -27,6 +36,12 @@ export function setupNotificationListeners() {
       console.error('Error procesando evento visita.finalizada:', err);
     }
   });
+  
+  /*
+  // Código anterior para notificaciones con configuración de role/field:
+  const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'visita_completada');
+  if (emails.length === 0) return;
+  */
 
   eventBus.on('orden_produccion.creada', async (orden) => {
     try {
