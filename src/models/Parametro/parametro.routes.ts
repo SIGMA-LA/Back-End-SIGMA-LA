@@ -12,8 +12,11 @@ parametroRouter.get('/', parametroController.getAll)
 parametroRouter.post(
   '/',
   validate({ body: createParametroSchema }),
+  authorize('parametro', 'crear'),
   parametroController.create,
 )
+
+parametroRouter.get('/actual', parametroController.getActual)
 
 parametroRouter.get('/actual/viatico', parametroController.getActualViatico)
 

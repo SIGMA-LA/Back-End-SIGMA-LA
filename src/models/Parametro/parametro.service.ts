@@ -58,6 +58,18 @@ export class ParametroService {
   }
 
   /**
+   * Finds the latest parameter record.
+   * @returns The latest parameter.
+   */
+  async findLatest(): Promise<parametro> {
+    const latest = await this.repository.findLatest()
+    if (!latest) {
+      throw new AppError('No parameters found', 404, 'PARAMETRO_NOT_FOUND')
+    }
+    return latest
+  }
+
+  /**
    * Finds the latest viatico (travel allowance) value.
    * @returns The latest viatico amount.
    */
