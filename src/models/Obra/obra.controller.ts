@@ -10,6 +10,7 @@ const obraService = new ObraService()
 type NotasFabricaEstado = NotasFabricaFilters['estado']
 const NOTAS_FABRICA_ESTADOS = [
   'SIN_ORDEN',
+  'CON_ORDEN',
   'EN_PRODUCCION',
   'FINALIZADA',
 ] as const
@@ -129,7 +130,7 @@ export class ObraController {
     if (
       !NOTAS_FABRICA_ESTADOS.includes(normalizedEstado as NotasFabricaEstado)
     ) {
-      throw new AppError('El estado debe ser SIN_ORDEN, EN_PRODUCCION o FINALIZADA', 400, 'INVALID_STATE')
+      throw new AppError('El estado debe ser SIN_ORDEN, CON_ORDEN, EN_PRODUCCION o FINALIZADA', 400, 'INVALID_STATE')
     }
 
     const fechaDesdeDate = normalizedFechaDesde ? new Date(normalizedFechaDesde) : null

@@ -4,6 +4,7 @@ import type { PaginationParams } from '../../shared/types/pagination.js'
 
 export type NotasFabricaEstado =
   | 'SIN_ORDEN'
+  | 'CON_ORDEN'
   | 'EN_PRODUCCION'
   | 'FINALIZADA'
 
@@ -199,6 +200,7 @@ export class ObraRepository {
     ]
 
     if (filters.estado === 'SIN_ORDEN') {
+      // Tiene nota de fábrica pero ninguna orden de producción asociada
       andConditions.push({
         orden_de_produccion: {
           none: {},
@@ -211,10 +213,35 @@ export class ObraRepository {
       })
     }
 
-    if (filters.estado === 'EN_PRODUCCION') {
+    if (filters.estado === 'CON_ORDEN') {
+      // Tiene al menos una orden, pero ninguna está en EN PRODUCCION
+      // (la obra todavía no empezó producción)
       andConditions.push({
         orden_de_produccion: {
           some: {},
+        },
+      })
+      andConditions.push({
+        orden_de_produccion: {
+          none: {
+            estado: 'EN PRODUCCION',
+          },
+        },
+      })
+      andConditions.push({
+        estado: {
+          notIn: ['EN PRODUCCION', 'PRODUCCION FINALIZADA', 'CANCELADA'],
+        },
+      })
+    }
+
+    if (filters.estado === 'EN_PRODUCCION') {
+      // Tiene al menos una orden en estado EN PRODUCCION (y la obra está EN PRODUCCION)
+      andConditions.push({
+        orden_de_produccion: {
+          some: {
+            estado: 'EN PRODUCCION',
+          },
         },
       })
       andConditions.push({
