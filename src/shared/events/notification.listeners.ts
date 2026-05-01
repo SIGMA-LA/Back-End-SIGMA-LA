@@ -1,11 +1,21 @@
 import { eventBus } from './eventBus.js';
 import { emailService } from '../providers/email/index.js';
 import { notificationConfigRepository, type ConfigRolesFields } from '../providers/email/NotificationConfigRepository.js';
+import { prisma } from '../db/prismaClient.js';
 
 export function setupNotificationListeners() {
   eventBus.on('visita.finalizada', async (visita) => {
     try {
-      const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'visita_completada');
+      // Enviar a todos los usuarios de Coordinación con mail válido.
+      const empleados = await prisma.empleado.findMany({
+        where: {
+          rol_actual: 'COORDINACION',
+          activo: true,
+          mail: { not: null }
+        },
+        select: { mail: true }
+      });
+      const emails = empleados.map(e => e.mail).filter((m): m is string => !!m);
       if (emails.length === 0) return;
 
       const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
@@ -26,6 +36,12 @@ export function setupNotificationListeners() {
       console.error('Error procesando evento visita.finalizada:', err);
     }
   });
+  
+  /*
+  // Código anterior para notificaciones con configuración de role/field:
+  const emails = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'visita_completada');
+  if (emails.length === 0) return;
+  */
 
   eventBus.on('orden_produccion.creada', async (orden) => {
     try {
@@ -50,7 +66,16 @@ export function setupNotificationListeners() {
 
   eventBus.on('orden_produccion.aprobada', async (orden) => {
     try {
-      const emails = await notificationConfigRepository.getEmailsForRoleNotification('PRODUCCION', 'orden_aprobada');
+      // Enviar a todos los usuarios de Producción con mail válido.
+      const empleados = await prisma.empleado.findMany({
+        where: {
+          rol_actual: 'PRODUCCION',
+          activo: true,
+          mail: { not: null }
+        },
+        select: { mail: true }
+      });
+      const emails = empleados.map(e => e.mail).filter((m): m is string => !!m);
       if (emails.length === 0) return;
 
       await emailService.sendNotification(
@@ -69,20 +94,32 @@ export function setupNotificationListeners() {
     }
   });
 
+  /*
+  // Código anterior para notificaciones con configuración de role/field:
+  const emails = await notificationConfigRepository.getEmailsForRoleNotification('PRODUCCION', 'orden_aprobada');
+  if (emails.length === 0) return;
+  */
+
   eventBus.on('visita.asignada', async ({ visita, cuils }) => {
     try {
-      // Notificar a Visitadores y personal de Planta asignados
-      const emailsVisitador = await notificationConfigRepository.getEmailsForRoleNotification('VISITADOR', 'asignacion_visita', cuils);
-      const emailsPlanta = await notificationConfigRepository.getEmailsForRoleNotification('PLANTA', 'asignacion_visita', cuils);
+      // Obtener emails de los empleados asignados que tengan mail
+      const empleados = await prisma.empleado.findMany({
+        where: {
+          cuil: { in: cuils },
+          activo: true,
+          mail: { not: null }
+        },
+        select: { mail: true }
+      });
       
-      const allEmails = [...emailsVisitador, ...emailsPlanta];
-      if (allEmails.length === 0) return;
+      const emails = empleados.map(e => e.mail).filter((m): m is string => !!m);
+      if (emails.length === 0) return;
 
       const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
       const direccion = visita.direccion_visita || visita.obra?.direccion || 'A coordinar';
 
       await emailService.sendNotification(
-        allEmails,
+        emails,
         `Asignación de Visita Técnica - ${visita.motivo_visita}`,
         `Hola,<br><br>` +
         `Le informamos que ha sido asignado a una nueva visita técnica en el sistema.<br><br>` +
@@ -101,7 +138,17 @@ export function setupNotificationListeners() {
 
   eventBus.on('visita.actualizada', async ({ visita, cuils, tipo }) => {
     try {
-      const emailsVisitador = await notificationConfigRepository.getEmailsForRoleNotification('VISITADOR', 'actualizacion_visita', cuils);
+      // Obtener emails de los empleados asignados que tengan mail
+      const empleados = await prisma.empleado.findMany({
+        where: {
+          cuil: { in: cuils },
+          activo: true,
+          mail: { not: null }
+        },
+        select: { mail: true }
+      });
+      
+      const emailsVisitador = empleados.map(e => e.mail).filter((m): m is string => !!m);
       const emailsPlanta = await notificationConfigRepository.getEmailsForRoleNotification('PLANTA', 'actualizacion_visita', cuils);
       
       const allEmails = [...emailsVisitador, ...emailsPlanta];
@@ -244,8 +291,23 @@ export function setupNotificationListeners() {
 
   eventBus.on('obra.cambio_estado', async ({ cod_obra, nuevo_estado }) => {
     try {
-      // 1. Notificar a COORDINACION (si tienen activo "cambio_estado")
-      const emailsCoordinacion = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'cambio_estado');
+      // 1. Notificar a COORDINACION
+      let emailsCoordinacion: string[] = [];
+      if (nuevo_estado === 'EN PRODUCCION' || nuevo_estado === 'PRODUCCION FINALIZADA') {
+        const empleadosCoordinacion = await prisma.empleado.findMany({
+          where: {
+            rol_actual: 'COORDINACION',
+            activo: true,
+            mail: { not: null }
+          },
+          select: { mail: true }
+        });
+        emailsCoordinacion = empleadosCoordinacion.map(e => e.mail).filter((m): m is string => !!m);
+      } else {
+        // Para otros estados se mantiene la lógica previa basada en configuraciones.
+        emailsCoordinacion = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'cambio_estado');
+      }
+
       if (emailsCoordinacion.length > 0) {
         await emailService.sendNotification(
           emailsCoordinacion,
@@ -258,6 +320,14 @@ export function setupNotificationListeners() {
           `<i>Este es un aviso automático generado por el sistema SIGMA-LA.</i>`
         );
       }
+
+      /*
+      // Código anterior para notificaciones con configuración de role/field:
+      const emailsCoordinacion = await notificationConfigRepository.getEmailsForRoleNotification('COORDINACION', 'cambio_estado');
+      if (emailsCoordinacion.length > 0) {
+        await emailService.sendNotification(...)
+      }
+      */
 
       // 2. Notificar a VENTAS según el nuevo estado
       let campoVentas: ConfigRolesFields['VENTAS'] | null = null;
