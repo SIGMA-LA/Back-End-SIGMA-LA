@@ -1,6 +1,7 @@
 import { eventBus } from './eventBus.js';
 import { emailService } from '../providers/email/index.js';
 import { notificationConfigRepository, type ConfigRolesFields } from '../providers/email/NotificationConfigRepository.js';
+import { prisma } from '../db/prismaClient.js';
 
 export function setupNotificationListeners() {
   eventBus.on('visita.finalizada', async (visita) => {
@@ -71,18 +72,24 @@ export function setupNotificationListeners() {
 
   eventBus.on('visita.asignada', async ({ visita, cuils }) => {
     try {
-      // Notificar a Visitadores y personal de Planta asignados
-      const emailsVisitador = await notificationConfigRepository.getEmailsForRoleNotification('VISITADOR', 'asignacion_visita', cuils);
-      const emailsPlanta = await notificationConfigRepository.getEmailsForRoleNotification('PLANTA', 'asignacion_visita', cuils);
+      // Obtener emails de los empleados asignados que tengan mail
+      const empleados = await prisma.empleado.findMany({
+        where: {
+          cuil: { in: cuils },
+          activo: true,
+          mail: { not: null }
+        },
+        select: { mail: true }
+      });
       
-      const allEmails = [...emailsVisitador, ...emailsPlanta];
-      if (allEmails.length === 0) return;
+      const emails = empleados.map(e => e.mail).filter((m): m is string => !!m);
+      if (emails.length === 0) return;
 
       const clienteNombre = visita.nombre_cliente || visita.obra?.cliente?.nombre || 'Cliente';
       const direccion = visita.direccion_visita || visita.obra?.direccion || 'A coordinar';
 
       await emailService.sendNotification(
-        allEmails,
+        emails,
         `Asignación de Visita Técnica - ${visita.motivo_visita}`,
         `Hola,<br><br>` +
         `Le informamos que ha sido asignado a una nueva visita técnica en el sistema.<br><br>` +
@@ -101,7 +108,17 @@ export function setupNotificationListeners() {
 
   eventBus.on('visita.actualizada', async ({ visita, cuils, tipo }) => {
     try {
-      const emailsVisitador = await notificationConfigRepository.getEmailsForRoleNotification('VISITADOR', 'actualizacion_visita', cuils);
+      // Obtener emails de los empleados asignados que tengan mail
+      const empleados = await prisma.empleado.findMany({
+        where: {
+          cuil: { in: cuils },
+          activo: true,
+          mail: { not: null }
+        },
+        select: { mail: true }
+      });
+      
+      const emailsVisitador = empleados.map(e => e.mail).filter((m): m is string => !!m);
       const emailsPlanta = await notificationConfigRepository.getEmailsForRoleNotification('PLANTA', 'actualizacion_visita', cuils);
       
       const allEmails = [...emailsVisitador, ...emailsPlanta];
