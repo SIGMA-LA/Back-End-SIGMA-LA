@@ -66,7 +66,16 @@ export function setupNotificationListeners() {
 
   eventBus.on('orden_produccion.aprobada', async (orden) => {
     try {
-      const emails = await notificationConfigRepository.getEmailsForRoleNotification('PRODUCCION', 'orden_aprobada');
+      // Enviar a todos los usuarios de Producción con mail válido.
+      const empleados = await prisma.empleado.findMany({
+        where: {
+          rol_actual: 'PRODUCCION',
+          activo: true,
+          mail: { not: null }
+        },
+        select: { mail: true }
+      });
+      const emails = empleados.map(e => e.mail).filter((m): m is string => !!m);
       if (emails.length === 0) return;
 
       await emailService.sendNotification(
@@ -84,6 +93,12 @@ export function setupNotificationListeners() {
       console.error('Error procesando evento orden_produccion.aprobada:', err);
     }
   });
+
+  /*
+  // Código anterior para notificaciones con configuración de role/field:
+  const emails = await notificationConfigRepository.getEmailsForRoleNotification('PRODUCCION', 'orden_aprobada');
+  if (emails.length === 0) return;
+  */
 
   eventBus.on('visita.asignada', async ({ visita, cuils }) => {
     try {
