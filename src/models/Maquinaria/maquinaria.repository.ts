@@ -23,7 +23,9 @@ export class MaquinariaRepository {
     search?: string
     estado?: string
   }): Promise<maquinaria[]> {
-    const where: Prisma.maquinariaWhereInput = {}
+    const where: Prisma.maquinariaWhereInput = {
+      estado: { not: 'ELIMINADO' },
+    }
     if (filters?.estado) {
       where.estado = filters.estado
     }
@@ -111,6 +113,29 @@ export class MaquinariaRepository {
   async delete(cod_maquina: number): Promise<maquinaria> {
     return await this.prisma.maquinaria.delete({
       where: { cod_maquina },
+    })
+  }
+  async findUsosProgramados(cod_maquina: number) {
+    const now = new Date()
+    return await this.prisma.maquinaria.findUnique({
+      where: { cod_maquina },
+      select: {
+        uso_maquinaria: {
+          where: {
+            fecha_hora_fin_est: { gte: now },
+            entrega: { estado: { notIn: ['CANCELADO', 'ENTREGADO'] } },
+          },
+          include: {
+            entrega: {
+              include: {
+                obra: {
+                  select: { direccion: true },
+                },
+              },
+            },
+          },
+        },
+      },
     })
   }
 }

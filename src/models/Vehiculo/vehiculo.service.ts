@@ -166,8 +166,22 @@ export class VehiculoService {
 
   // Eliminar vehiculo
   async remove(patente: string): Promise<vehiculo> {
-    await this.findByPatente(patente) // Throws if not found
-    return await this.vehiculoRepository.remove(patente)
+    const vehiculoInfo = await this.findByPatente(patente) // Throws if not found
+
+    if (vehiculoInfo.estado !== 'FUERA DE SERVICIO') {
+      throw new AppError(
+        'El vehículo solo puede ser eliminado si se encuentra en estado "FUERA DE SERVICIO".',
+        400,
+        'INVALID_STATE'
+      )
+    }
+
+    return await this.vehiculoRepository.update(patente, { estado: 'ELIMINADO' })
+  }
+  // Obtener usos programados
+  async getUsosProgramados(patente: string) {
+    await this.findByPatente(patente)
+    return await this.vehiculoRepository.findUsosProgramados(patente)
   }
 }
 

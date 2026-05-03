@@ -15,6 +15,8 @@ vehiculoRouter.get('/disponibles', vehiculoController.getDisponibles)
 
 vehiculoRouter.get('/:patente', authorize('vehiculo', 'obtener'), vehiculoController.getOne)
 
+vehiculoRouter.get('/:patente/usos-programados', authorize('vehiculo', 'obtener'), vehiculoController.getUsosProgramados)
+
 vehiculoRouter.put('/:patente', authorize('vehiculo', 'actualizar'), vehiculoController.update)
 
 vehiculoRouter.delete('/:patente', authorize('vehiculo', 'eliminar'), vehiculoController.remove)
