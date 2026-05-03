@@ -141,8 +141,21 @@ export class MaquinariaService {
   }
 
   async remove(cod_maquina: number): Promise<maquinaria> {
-    await this.findById(cod_maquina) // Throws if not found
-    return await this.repository.delete(cod_maquina)
+    const maquina = await this.findById(cod_maquina) // Throws if not found
+    
+    if (maquina.estado !== 'NO DISPONIBLE') {
+      throw new AppError(
+        'La maquinaria solo puede ser eliminada si se encuentra en estado "NO DISPONIBLE".',
+        400,
+        'INVALID_STATE'
+      )
+    }
+
+    return await this.repository.update(cod_maquina, { estado: 'ELIMINADO' })
+  }
+  async getUsosProgramados(cod_maquina: number) {
+    await this.findById(cod_maquina)
+    return await this.repository.findUsosProgramados(cod_maquina)
   }
 }
 

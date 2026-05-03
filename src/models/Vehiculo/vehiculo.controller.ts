@@ -70,6 +70,12 @@ export class VehiculoController {
     return sendSuccess(res, vehiculo, 'Vehiculo actualizado exitosamente')
   })
 
+  getUsosProgramados = catchAsync(async (req: Request, res: Response) => {
+    const { patente } = req.params
+    const usos = await vehiculoService.getUsosProgramados(patente)
+    return sendSuccess(res, usos)
+  })
+
   remove = catchAsync(async (req: Request, res: Response) => {
     const { patente } = req.params
     await vehiculoService.remove(patente)

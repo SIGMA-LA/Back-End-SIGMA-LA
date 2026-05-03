@@ -31,6 +31,12 @@ maquinariaRouter.get(
   maquinariaController.getOne,
 )
 
+maquinariaRouter.get(
+  '/:id/usos-programados',
+  validate({ params: idParamsSchema }),
+  maquinariaController.getUsosProgramados,
+)
+
 maquinariaRouter.put(
   '/:id',
   validate({

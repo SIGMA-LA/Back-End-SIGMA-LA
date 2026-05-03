@@ -85,6 +85,13 @@ export class MaquinariaController {
     return sendSuccess(res, maquina, 'Estado de maquinaria actualizado exitosamente')
   })
 
+  getUsosProgramados = catchAsync(async (req: Request, res: Response) => {
+    const cod_maquina = parseInt(req.params.id, 10)
+    if (isNaN(cod_maquina)) throw new AppError('ID de maquinaria inválido', 400, 'INVALID_ID')
+    const usos = await maquinariaService.getUsosProgramados(cod_maquina)
+    return sendSuccess(res, usos)
+  })
+
   remove = catchAsync(async (req: Request, res: Response) => {
     const cod_maquina = parseInt(req.params.id, 10)
     if (isNaN(cod_maquina)) throw new AppError('ID de maquinaria inválido', 400, 'INVALID_ID')

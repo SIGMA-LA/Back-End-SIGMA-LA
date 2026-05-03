@@ -12,7 +12,9 @@ export class VehiculoRepository {
     search?: string
     estado?: string
   }): Promise<vehiculo[]> {
-    const where: Prisma.vehiculoWhereInput = {}
+    const where: Prisma.vehiculoWhereInput = {
+      estado: { not: 'ELIMINADO' },
+    }
     if (filters?.estado) {
       where.estado = filters.estado
     }
@@ -136,6 +138,44 @@ export class VehiculoRepository {
     return await this.prisma.vehiculo.findMany({
       where: { estado },
       orderBy: { patente: 'asc' },
+    })
+  }
+  async findUsosProgramados(patente: string) {
+    const now = new Date()
+    return await this.prisma.vehiculo.findUnique({
+      where: { patente },
+      select: {
+        uso_vehiculo_entrega: {
+          where: {
+            fecha_hora_ini_est: { gte: now },
+            entrega: { estado: { notIn: ['CANCELADO', 'ENTREGADO'] } },
+          },
+          include: {
+            entrega: {
+              include: {
+                obra: {
+                  select: { direccion: true },
+                },
+              },
+            },
+          },
+        },
+        uso_vehiculo_visita: {
+          where: {
+            fecha_hora_fin_est: { gte: now },
+            visita: { estado: { notIn: ['CANCELADA', 'COMPLETADA'] } },
+          },
+          include: {
+            visita: {
+              include: {
+                obra: {
+                  select: { direccion: true },
+                },
+              },
+            },
+          },
+        },
+      },
     })
   }
 }
