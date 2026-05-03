@@ -113,7 +113,6 @@ model obra {
   cod_localidad        Int
   cuil_arquitecto      String?                @db.VarChar(50)
   esGrande             Boolean                @default(true)
-  requiere_visita      Boolean                @default(false)
   mediciones           String?                @db.VarChar(1000)
   entrega              entrega[]
   entrega_empleado     entrega_empleado[]
