@@ -113,6 +113,8 @@ model obra {
   cod_localidad        Int
   cuil_arquitecto      String?                @db.VarChar(50)
   esGrande             Boolean                @default(true)
+  mediciones           String?                @db.VarChar(1000)
+  requiere_visita      Boolean                @default(false)
   entrega              entrega[]
   entrega_empleado     entrega_empleado[]
   localidad            localidad              @relation(fields: [cod_localidad], references: [cod_localidad], onDelete: NoAction, onUpdate: NoAction)
