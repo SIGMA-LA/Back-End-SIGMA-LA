@@ -11,6 +11,8 @@ visitaRouter.get('/', visitaController.getAll)
 
 visitaRouter.get('/stats/progreso-diario', visitaController.getProgresoDiario)
 
+visitaRouter.get('/prospectos', visitaController.getProspectos)
+
 visitaRouter.post('/', authorize('visita', 'crear'), visitaController.create)
 
 visitaRouter.get('/buscar', visitaController.buscar)

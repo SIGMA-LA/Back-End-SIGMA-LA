@@ -148,6 +148,14 @@ export class VisitaController {
     const stats = await visitaService.getProgresoDiario()
     return sendSuccess(res, stats)
   })
+
+  // ----------- PROSPECTOS -----------
+  getProspectos = catchAsync(async (req: Request, res: Response) => {
+    const estado = req.query.estado as string | undefined
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await visitaService.getProspectos(estado, pagination)
+    return sendPaginatedSuccess(res, result)
+  })
 }
 
 export const visitaController = new VisitaController()

@@ -13,6 +13,7 @@ export interface AppEvents {
   'visita.actualizada': (data: { visita: VisitaWithRelations, cuils: string[], tipo: 'CANCELADA' | 'HORARIO_MODIFICADO' | 'DESASIGNADO' }) => void | Promise<void>;
   'entrega.asignada': (data: { entrega: EntregaWithRelations, cuils: string[] }) => void | Promise<void>;
   'entrega.actualizada': (data: { entrega: EntregaWithRelations, cuils: string[], tipo: 'CANCELADA' | 'HORARIO_MODIFICADO' | 'DESASIGNADO' }) => void | Promise<void>;
+  'obra.requiere_visita_inicial': (data: { cod_obra: number }) => void | Promise<void>;
 }
 
 class TypedEventEmitter extends EventEmitter {

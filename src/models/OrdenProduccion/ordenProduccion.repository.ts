@@ -58,6 +58,9 @@ export class OrdenProduccionRepository {
           include: {
             cliente: true,
             localidad: true,
+            visita: {
+              orderBy: { fecha_hora_visita: 'desc' },
+            },
           },
         },
       },
@@ -72,6 +75,9 @@ export class OrdenProduccionRepository {
           include: {
             cliente: true,
             localidad: true,
+            visita: {
+              orderBy: { fecha_hora_visita: 'desc' },
+            },
           },
         },
       },
@@ -89,6 +95,9 @@ export class OrdenProduccionRepository {
           include: {
             cliente: true,
             localidad: true,
+            visita: {
+              orderBy: { fecha_hora_visita: 'desc' },
+            },
           },
         },
       },
@@ -106,6 +115,9 @@ export class OrdenProduccionRepository {
           include: {
             cliente: true,
             localidad: true,
+            visita: {
+              orderBy: { fecha_hora_visita: 'desc' },
+            },
           },
         },
       },
@@ -121,6 +133,9 @@ export class OrdenProduccionRepository {
           include: {
             cliente: true,
             localidad: true,
+            visita: {
+              orderBy: { fecha_hora_visita: 'desc' },
+            },
           },
         },
       },
@@ -140,6 +155,9 @@ export class OrdenProduccionRepository {
           include: {
             cliente: true,
             localidad: true,
+            visita: {
+              orderBy: { fecha_hora_visita: 'desc' },
+            },
           },
         },
       },
@@ -158,6 +176,9 @@ export class OrdenProduccionRepository {
           include: {
             cliente: true,
             localidad: true,
+            visita: {
+              orderBy: { fecha_hora_visita: 'desc' },
+            },
           },
         },
       },

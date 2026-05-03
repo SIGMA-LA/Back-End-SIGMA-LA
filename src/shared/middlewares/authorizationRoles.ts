@@ -49,7 +49,7 @@ export const PERMISSIONS = {
     obtener: ['COORDINACION'],
   },
   visita: {
-    crear: ['COORDINACION'],
+    crear: ['COORDINACION', 'VENTAS'],
     actualizar: ['COORDINACION'],
     eliminar: ['COORDINACION'],
     cancelar: ['COORDINACION', 'VISITADOR', 'PLANTA'],

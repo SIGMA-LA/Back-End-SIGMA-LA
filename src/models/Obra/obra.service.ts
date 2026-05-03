@@ -19,6 +19,7 @@ type ObraCreateInputExtended = Prisma.obraCreateInput & {
     fecha_emision?: string | Date
     fecha_aceptacion?: string | Date
   }[]
+  cod_visita?: number
 }
 
 type ObraUpdateInputExtended = Prisma.obraUpdateInput & {
@@ -168,6 +169,7 @@ export class ObraService {
       cuil_arquitecto,
       cod_localidad,
       presupuestos,
+      cod_visita,
       ...rest
     } = data
 
@@ -243,7 +245,16 @@ export class ObraService {
       delete prismaData.nota_fabrica
     }
 
-    return await this.repository.create(prismaData)
+    const nuevaObra = await this.repository.create(prismaData)
+
+    if (cod_visita) {
+      await prisma.visita.update({
+        where: { cod_visita: Number(cod_visita) },
+        data: { cod_obra: nuevaObra.cod_obra }
+      })
+    }
+
+    return nuevaObra
   }
 
   /**
@@ -487,11 +498,20 @@ export class ObraService {
   /**
    * Obtiene estadísticas de obras para el dashboard de Coordinación.
    */
-  async getCoordinacionStats(): Promise<{ listasParaEntregar: number }> {
+  async getCoordinacionStats(): Promise<{ listasParaEntregar: number; obrasConVisitaPendiente: number }> {
     const listasParaEntregar = await prisma.obra.count({
       where: { estado: 'PRODUCCION FINALIZADA' },
     })
-    return { listasParaEntregar }
+    
+    const obrasConVisitaPendiente = await prisma.visita.count({
+      where: {
+        cod_obra: null,
+        motivo_visita: 'INICIAL',
+        estado: 'PROGRAMADA',
+      }
+    })
+
+    return { listasParaEntregar, obrasConVisitaPendiente }
   }
 
   /**
