@@ -24,7 +24,7 @@ ordenProduccionRouter.post('/:cod_op/finalizar', authorize('OP', 'actualizar'), 
 
 ordenProduccionRouter.get('/:cod_op', ordenProduccionController.getOne)
 
-ordenProduccionRouter.put('/:cod_op', authorize('OP', 'actualizar'), ordenProduccionController.update)
+ordenProduccionRouter.patch('/:cod_op', authorize('OP', 'actualizar'), upload.single('file'), ordenProduccionController.update)
 
 ordenProduccionRouter.delete('/:cod_op', authorize('OP', 'eliminar'), ordenProduccionController.remove)
 

@@ -79,7 +79,16 @@ export class OrdenProduccionController {
     const codOpNum = Number(cod_op)
     if (isNaN(codOpNum)) throw new AppError('Código de orden inválido', 400, 'INVALID_ID')
 
-    const orden = await ordenProduccionService.update(codOpNum, req.body)
+    if (!req.file) {
+      throw new AppError('No se ha proporcionado el archivo de orden de producción', 400, 'FILE_REQUIRED')
+    }
+
+    const updateData = {
+      url: req.file.path,
+      public_id: req.file.filename,
+    }
+
+    const orden = await ordenProduccionService.update(codOpNum, updateData)
     return sendSuccess(res, orden, 'Production order updated successfully')
   })
 
