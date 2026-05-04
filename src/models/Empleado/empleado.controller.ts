@@ -96,7 +96,7 @@ export class EmpleadoController {
 
   getOne = catchAsync(async (req: Request, res: Response) => {
     const { cuil } = req.params
-    const empleado = await empleadoService.findByCuil(cuil)
+    const empleado = await empleadoService.findByCuil(cuil, true)
     return sendSuccess(res, empleado)
   })
 

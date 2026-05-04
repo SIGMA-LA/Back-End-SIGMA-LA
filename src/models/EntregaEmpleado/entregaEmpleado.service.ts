@@ -1,20 +1,27 @@
 import { entrega_empleado, Prisma } from '@prisma/client'
 import { EntregaEmpleadoRepository } from './entregaEmpleado.repository.js'
 import { AppError } from '../../shared/errors/AppError.js'
+import { EmpleadoService } from '../Empleado/empleado.service.js'
 
 /**
  * Servicio para gestionar las operaciones relacionadas con las relaciones entrega-empleado.
  */
 export class EntregaEmpleadoService {
   private repository: EntregaEmpleadoRepository
+  private empleadoService: EmpleadoService
 
   constructor() {
     this.repository = new EntregaEmpleadoRepository()
+    this.empleadoService = new EmpleadoService()
   }
 
   async create(
     data: Prisma.entrega_empleadoCreateInput,
   ): Promise<entrega_empleado> {
+    const cuil = typeof data.empleado === 'string' ? data.empleado : data.empleado?.connect?.cuil
+    if (cuil) {
+      await this.empleadoService.findByCuil(cuil) // lanza excepción si es inactivo
+    }
     return await this.repository.create(data)
   }
 

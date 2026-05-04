@@ -53,6 +53,10 @@ export class AuthService {
       throw new AppError('CUIL o contraseña incorrectos', 401, 'INVALID_CREDENTIALS')
     }
 
+    if (!empleado.activo) {
+      throw new AppError('El empleado se encuentra inactivo', 403, 'USER_INACTIVE')
+    }
+
     const isValid = await this.verifyPassword(contrasenia, empleado.contrasenia)
     if (!isValid) {
       throw new AppError('CUIL o contraseña incorrectos', 401, 'INVALID_CREDENTIALS')
@@ -120,6 +124,9 @@ export class AuthService {
     if (!empleado) {
       throw new AppError('Usuario no encontrado', 404, 'USER_NOT_FOUND')
     }
+    if (!empleado.activo) {
+      throw new AppError('El empleado se encuentra inactivo', 403, 'USER_INACTIVE')
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { contrasenia, refreshTokenHash, ...empleadoSinContrasenia } = empleado
@@ -144,6 +151,10 @@ export class AuthService {
       const empleado = await this.empleadoRepository.findByCuil(payload.cuil)
       if (!empleado || !empleado.refreshTokenHash) {
         throw new AppError('Refresh token invalid or expired', 401, 'INVALID_REFRESH_TOKEN')
+      }
+
+      if (!empleado.activo) {
+        throw new AppError('El empleado se encuentra inactivo', 403, 'USER_INACTIVE')
       }
 
       const isValid = await bcrypt.compare(

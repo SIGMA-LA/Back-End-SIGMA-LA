@@ -274,9 +274,12 @@ export class EmpleadoService {
   }
 
   // Obtener empleado por CUIL
-  async findByCuil(cuil: string): Promise<EmpleadoPayload> {
+  async findByCuil(cuil: string, allowInactive: boolean = false): Promise<EmpleadoPayload> {
     const empleadoResult = await this.empleadoRepository.findByCuilPublic(cuil)
-    if (!empleadoResult || !empleadoResult.activo) {
+    if (!empleadoResult) {
+      throw new AppError('Empleado no encontrado', 404, 'EMPLEADO_NOT_FOUND')
+    }
+    if (!empleadoResult.activo && !allowInactive) {
       throw new AppError('Empleado no encontrado o inactivo', 404, 'EMPLEADO_NOT_FOUND')
     }
     return empleadoResult
@@ -305,6 +308,12 @@ export class EmpleadoService {
       cuiles,
       thirtyDaysAgo,
     )
+
+    const empleadosInactivos = empleadosConUsos.filter((emp) => !emp.activo)
+    if (empleadosInactivos.length > 0) {
+      const inactivosNames = empleadosInactivos.map((emp) => `${emp.nombre} ${emp.apellido}`).join(', ')
+      throw new AppError(`Los siguientes empleados se encuentran inactivos: ${inactivosNames}`, 400, 'EMPLEADO_INACTIVO')
+    }
 
     const empleadosEnConflicto: string[] = []
 
@@ -384,9 +393,10 @@ export class EmpleadoService {
       area_trabajo: string
       mail?: string | null
       contrasenia?: string
+      activo?: boolean
     }>,
   ): Promise<EmpleadoPayload> {
-    const empleado = await this.findByCuil(cuil) // Throws if not found
+    const empleado = await this.findByCuil(cuil, true) // Allow inactive to update them
 
     const updateData = data.contrasenia
       ? { ...data, contrasenia: await bcrypt.hash(data.contrasenia, 10) }
