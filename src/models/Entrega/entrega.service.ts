@@ -53,8 +53,40 @@ export class EntregaService {
       ...entregaData
     } = data
 
-    const obra = await prisma.obra.findUnique({ where: { cod_obra } })
+    const obra = await prisma.obra.findUnique({ 
+      where: { cod_obra },
+      include: {
+        orden_de_produccion: {
+          include: { entrega: true }
+        }
+      }
+    })
     if (!obra) throw new AppError(`Obra no encontrada (ID: ${cod_obra})`, 404, 'OBRA_NOT_FOUND')
+
+    // Reglas de negocio de asignación de OPs
+    const todasLasOPs = obra.orden_de_produccion || []
+    const totalOPsCount = todasLasOPs.length
+    // OPs ya asignadas a otras entregas no canceladas
+    const opsYaAsignadas = todasLasOPs.filter(op => op.cod_entrega !== null && op.entrega?.estado !== 'CANCELADO')
+    const opsYaAsignadasCount = opsYaAsignadas.length
+    const selectedOPsCount = cod_ops?.length || 0
+    const totalAssignedAfterThis = opsYaAsignadasCount + selectedOPsCount
+
+    let esFinalFinal = esFinal ?? false
+
+    if (totalAssignedAfterThis >= totalOPsCount && totalOPsCount > 0) {
+      if (obra.estado === 'EN PRODUCCION') {
+        throw new ValidationError("Debe dejar al menos 1 OP sin asignar para poder hacer la entrega. Si ya finalizó toda la obra, pásela a PRODUCCIÓN FINALIZADA primero.", "INVALID_DELIVERY_OPS")
+      } else if (obra.estado === 'PRODUCCION FINALIZADA') {
+        if (!esFinalFinal) {
+          throw new ValidationError("No puede entregar la totalidad de la obra en una entrega parcial. La obra debe estar PAGADA TOTALMENTE para su entrega final.", "INVALID_DELIVERY_OPS")
+        }
+      } else if (obra.estado === 'PAGADA TOTALMENTE') {
+        if (!esFinalFinal) {
+          esFinalFinal = true // Auto-convertir a Entrega Final
+        }
+      }
+    }
 
     const fechaParaPrisma = new Date(data.fecha_hora_entrega)
     const fechaSalidaPrisma = fecha_salida_estimada ? new Date(fecha_salida_estimada) : fechaParaPrisma
@@ -85,7 +117,7 @@ export class EntregaService {
       detalle: entregaData.detalle,
       estado: entregaData.estado,
       fecha_hora_entrega: fechaParaPrisma,
-      esFinal: esFinal ?? false,
+      esFinal: esFinalFinal,
       ...(entregaData.observaciones && { observaciones: entregaData.observaciones }),
       ...(dias_viaticos !== undefined && { dias_viaticos }),
       obra: { connect: { cod_obra } },
@@ -172,8 +204,21 @@ export class EntregaService {
     fecha_regreso_estimado?: string
     cod_ops?: number[]
     entrega_empleado?: unknown
+    esFinal?: boolean
   }): Promise<EntregaWithRelations> {
-    const existingEntrega = await this.findById(cod_entrega) // Throws if not found
+    const existingEntrega = await this.entregaRepository.findById(cod_entrega)
+    if (!existingEntrega) throw new AppError('Entrega no encontrada', 404, 'ENTREGA_NOT_FOUND')
+
+    const obra = await prisma.obra.findUnique({
+      where: { cod_obra: existingEntrega.cod_obra },
+      include: {
+        orden_de_produccion: {
+          include: { entrega: true }
+        }
+      }
+    })
+
+    if (!obra) throw new AppError('Obra no encontrada', 404, 'OBRA_NOT_FOUND')
 
     const { 
       fecha_hora_entrega, 
@@ -186,6 +231,31 @@ export class EntregaService {
       entrega_empleado: _ignored, // Evitar que arrays planos de relaciones ensucien el spread
       ...simpleFields 
     } = data
+
+    // Reglas de negocio de asignación de OPs para update
+    if (cod_ops) {
+      const todasLasOPs = obra.orden_de_produccion || []
+      const totalOPsCount = todasLasOPs.length
+      // OPs ya asignadas a otras entregas no canceladas (excluyendo la actual)
+      const opsYaAsignadas = todasLasOPs.filter(op => op.cod_entrega !== null && op.cod_entrega !== cod_entrega && op.entrega?.estado !== 'CANCELADO')
+      const opsYaAsignadasCount = opsYaAsignadas.length
+      const selectedOPsCount = cod_ops.length
+      const totalAssignedAfterThis = opsYaAsignadasCount + selectedOPsCount
+
+      if (totalAssignedAfterThis >= totalOPsCount && totalOPsCount > 0) {
+        if (obra.estado === 'EN PRODUCCION') {
+          throw new ValidationError("Debe dejar al menos 1 OP sin asignar para poder hacer la entrega. Si ya finalizó toda la obra, pásela a PRODUCCIÓN FINALIZADA primero.", "INVALID_DELIVERY_OPS")
+        } else if (obra.estado === 'PRODUCCION FINALIZADA') {
+          if (!existingEntrega.esFinal) {
+            throw new ValidationError("No puede entregar la totalidad de la obra en una entrega parcial. La obra debe estar PAGADA TOTALMENTE para su entrega final.", "INVALID_DELIVERY_OPS")
+          }
+        } else if (obra.estado === 'PAGADA TOTALMENTE') {
+          if (!existingEntrega.esFinal) {
+            simpleFields.esFinal = true // Auto-convertir a Entrega Final
+          }
+        }
+      }
+    }
 
     // 1. Detección de cambios en fechas
     const newFechaEntrega = fecha_hora_entrega ? new Date(fecha_hora_entrega) : new Date(existingEntrega.fecha_hora_entrega)
