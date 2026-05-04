@@ -20,6 +20,8 @@ parametroRouter.get('/actual', parametroController.getActual)
 
 parametroRouter.get('/actual/viatico', parametroController.getActualViatico)
 
+parametroRouter.get('/viatico-fecha', parametroController.getViaticoByDate)
+
 parametroRouter.get('/:id', parametroController.getOne)
 
 parametroRouter.put(

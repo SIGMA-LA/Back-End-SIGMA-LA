@@ -82,6 +82,20 @@ export class ParametroService {
   }
 
   /**
+   * Finds the viatico value for a specific date.
+   * @param date The date to search for.
+   * @returns The viatico amount valid at that date.
+   */
+  async findViaticoByDate(date: Date): Promise<{ viatico_dia_persona: number }> {
+    const entry = await this.repository.findByDate(date)
+    if (!entry) {
+      // Fallback to latest if no entry found for that date (though usually findLatest is safer)
+      return this.findActualViatico()
+    }
+    return { viatico_dia_persona: entry.viatico_dia_persona ?? 0 }
+  }
+
+  /**
    * Updates an existing parameter record.
    * @param id The parameter ID to update.
    * @param data The new data for the parameter.

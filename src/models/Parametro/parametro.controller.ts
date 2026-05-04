@@ -55,6 +55,23 @@ export class ParametroController {
   })
 
   /**
+   * Gets the travel allowance (viatico) for a specific date.
+   */
+  getViaticoByDate = catchAsync(async (req: Request, res: Response) => {
+    const { fecha } = req.query
+    if (!fecha || typeof fecha !== 'string') {
+      throw new AppError('Fecha es requerida', 400, 'FECHA_REQUIRED')
+    }
+    const date = new Date(fecha)
+    if (isNaN(date.getTime())) {
+      throw new AppError('Fecha inválida', 400, 'INVALID_DATE')
+    }
+
+    const viatico = await parametroService.findViaticoByDate(date)
+    return sendSuccess(res, viatico)
+  })
+
+  /**
    * Updates an existing parameter record.
    */
   update = catchAsync(async (req: Request, res: Response) => {
