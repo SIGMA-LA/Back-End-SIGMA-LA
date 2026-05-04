@@ -20,7 +20,7 @@ export class VisitaEmpleadoService {
   ): Promise<empleado_visita> {
     const cuil = typeof data.empleado === 'string' ? data.empleado : data.empleado?.connect?.cuil
     if (cuil) {
-      const empleado = await this.empleadoService.findByCuil(cuil) // esto ya lanza excepción si está inactivo
+      await this.empleadoService.findByCuil(cuil) // esto ya lanza excepción si está inactivo
     }
     return await this.repository.create(data)
   }
