@@ -79,22 +79,26 @@ export class VisitaService {
       ...(data.cod_localidad && {
         localidad: { connect: { cod_localidad: data.cod_localidad } },
       }),
-      empleado_visita: {
-        create: data.empleados_visita.map((cuil: string) => ({ cuil })),
-      },
-      uso_vehiculo_visita: {
-        create: {
-          vehiculo: {
-            connect: {
-              patente: data.vehiculo,
-            },
-          },
-          fecha_hora_ini_uso: new Date(
-            data.fechaSalida || data.fecha_hora_visita,
-          ),
-          fecha_hora_fin_est: fechaFinEstimada,
+      ...(data.empleados_visita && data.empleados_visita.length > 0 && {
+        empleado_visita: {
+          create: data.empleados_visita.map((cuil: string) => ({ cuil })),
         },
-      },
+      }),
+      ...(data.vehiculo && {
+        uso_vehiculo_visita: {
+          create: {
+            vehiculo: {
+              connect: {
+                patente: data.vehiculo,
+              },
+            },
+            fecha_hora_ini_uso: new Date(
+              data.fechaSalida || data.fecha_hora_visita,
+            ),
+            fecha_hora_fin_est: fechaFinEstimada,
+          },
+        },
+      }),
     }
 
     // Availability validation before creation
@@ -102,7 +106,7 @@ export class VisitaService {
     const fFin = fechaFinEstimada
 
     const checks: Promise<string | null>[] = []
-    if (data.empleados_visita.length > 0) {
+    if (data.empleados_visita && data.empleados_visita.length > 0) {
       checks.push(
         this.empleadoService
           .verificarDisponibilidadEmpleados(data.empleados_visita, fIni, fFin)
@@ -132,7 +136,7 @@ export class VisitaService {
 
     const visita = await this.visitaRepository.create(visitaData)
 
-    if (data.empleados_visita.length > 0) {
+    if (data.empleados_visita && data.empleados_visita.length > 0) {
       eventBus.emit('visita.asignada', { visita, cuils: data.empleados_visita })
     }
 
@@ -517,6 +521,27 @@ export class VisitaService {
     })
 
     return { agendaHoyVisitas, completadosHoyVisitas }
+  }
+
+  /**
+   * Obtiene prospectos (visitas de medición inicial sin obra).
+   */
+  async getProspectos(estado?: string, pagination?: PaginationParams): Promise<PaginatedResponse<VisitaWithRelations>> {
+    const { data, total } = await this.visitaRepository.findProspectos(estado, pagination)
+
+    if (!pagination) {
+      return { data, total, totalPages: 1, page: 1, pageSize: Math.max(total, 1) }
+    }
+
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1
+
+    return {
+      data,
+      total,
+      totalPages,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
   }
 }
 

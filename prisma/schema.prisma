@@ -86,12 +86,12 @@ model provincia {
 }
 
 model localidad {
-  nombre_localidad String    @db.VarChar(255)
-  cod_localidad    Int       @id @default(autoincrement())
+  nombre_localidad String      @db.VarChar(255)
+  cod_localidad    Int         @id @default(autoincrement())
   cod_provincia    Int
-  provincia        provincia @relation(fields: [cod_provincia], references: [cod_provincia], onDelete: NoAction, onUpdate: NoAction)
-  obra             obra[]
+  provincia        provincia   @relation(fields: [cod_provincia], references: [cod_provincia], onDelete: NoAction, onUpdate: NoAction)
   visita           visita[]
+  obra             obra[]
 }
 
 model maquinaria {
@@ -114,7 +114,6 @@ model obra {
   cuil_arquitecto      String?                @db.VarChar(50)
   esGrande             Boolean                @default(true)
   mediciones           String?                @db.VarChar(1000)
-  requiere_visita      Boolean                @default(false)
   entrega              entrega[]
   entrega_empleado     entrega_empleado[]
   localidad            localidad              @relation(fields: [cod_localidad], references: [cod_localidad], onDelete: NoAction, onUpdate: NoAction)
@@ -125,8 +124,8 @@ model obra {
   pedido_stock         pedido_stock?
   presupuesto          presupuesto[]
   uso_maquinaria       uso_maquinaria[]
-  uso_vehiculo_entrega uso_vehiculo_entrega[]
   visita               visita[]
+  uso_vehiculo_entrega uso_vehiculo_entrega[]
 }
 
 model orden_de_produccion {

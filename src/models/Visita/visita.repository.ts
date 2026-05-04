@@ -483,6 +483,58 @@ export class VisitaRepository {
 
     return { data: data as VisitaWithRelations[], total }
   }
+  // Obtener prospectos (visitas sin obra asignada)
+  async findProspectos(
+    estado?: string,
+    paginationConfig?: PaginationParams
+  ): Promise<{ data: VisitaWithRelations[]; total: number }> {
+    const whereClause: Prisma.visitaWhereInput = {
+      cod_obra: null,
+      motivo_visita: 'INICIAL',
+    }
+    
+    if (estado) {
+      whereClause.estado = { equals: estado, mode: 'insensitive' }
+    }
+
+    const skip = paginationConfig
+      ? (paginationConfig.page - 1) * paginationConfig.pageSize
+      : undefined
+    const take = paginationConfig ? paginationConfig.pageSize : undefined
+
+    const includeOptions = {
+        obra: {
+          include: {
+            cliente: true,
+            localidad: true,
+          },
+        },
+        localidad: true,
+        empleado_visita: {
+          include: {
+            empleado: true,
+          },
+        },
+        uso_vehiculo_visita: {
+          include: {
+            vehiculo: true,
+          },
+        },
+      }
+
+    const [data, total] = await Promise.all([
+      this.prisma.visita.findMany({
+        where: whereClause,
+        orderBy: { cod_visita: 'desc' },
+        include: includeOptions,
+        take,
+        skip,
+      }),
+      this.prisma.visita.count({ where: whereClause }),
+    ])
+
+    return { data: data as VisitaWithRelations[], total }
+  }
 }
 
 export const visitaRepository = new VisitaRepository()
