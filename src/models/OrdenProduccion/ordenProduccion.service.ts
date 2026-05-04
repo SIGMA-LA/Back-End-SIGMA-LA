@@ -155,6 +155,29 @@ export class OrdenProduccionService {
 
     return nuevaOrden
   }
+  
+  /**
+   * Marks a production order as authorized (approved).
+   */
+  async autorizar(cod_op: number): Promise<orden_de_produccion> {
+    const orden = await this.findById(cod_op)
+    const obra = await prisma.obra.findUnique({ where: { cod_obra: orden.cod_obra } })
+    if (obra?.estado === 'EN ESPERA DE STOCK') {
+      throw new ValidationError(
+        'La obra asociada a esta orden de producción se encuentra en espera de stock.',
+        'INVALID_OBRA_STATE'
+      )
+    }
+    if (orden.estado !== 'PENDIENTE') {
+      throw new ValidationError(
+        'Solo las órdenes en estado "Pendiente" pueden ser autorizadas.',
+        'INVALID_STATE'
+      )
+    }
+    const ordenActualizada = await this.repository.update(cod_op, { estado: 'APROBADA' })
+    return ordenActualizada
+  }
+
 
   /**
    * Deletes a production order by its ID.

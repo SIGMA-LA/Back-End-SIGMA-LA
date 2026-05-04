@@ -92,6 +92,19 @@ export class OrdenProduccionController {
     return sendSuccess(res, orden, 'Production order updated successfully')
   })
 
+
+  /**
+   * Authorizes a production order.
+   */
+  aprobar = catchAsync(async (req: Request, res: Response) => {
+    const { cod_op } = req.params
+    const codOpNum = Number(cod_op)
+    if (isNaN(codOpNum)) throw new AppError('Código de orden inválido', 400, 'INVALID_ID')
+
+    const orden = await ordenProduccionService.autorizar(codOpNum)
+    return sendSuccess(res, orden, 'Production order authorized successfully')
+  })
+
   /**
    * Removes a production order by its ID.
    */
