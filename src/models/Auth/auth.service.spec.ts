@@ -66,6 +66,7 @@ describe('AuthService - Pruebas Unitarias', () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
         cuil: '20111111112',
         contrasenia: 'hash',
+        activo: true,
       } as unknown as empleado)
       ;(bcrypt.compare as Mock).mockResolvedValue(false)
       
@@ -76,6 +77,7 @@ describe('AuthService - Pruebas Unitarias', () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
         cuil: '20111111112',
         contrasenia: 'hash',
+        activo: true,
       } as unknown as empleado)
       ;(bcrypt.compare as Mock).mockResolvedValue(true)
       ;(jwt.sign as Mock)
@@ -99,6 +101,7 @@ describe('AuthService - Pruebas Unitarias', () => {
       vi.spyOn(EmpleadoRepository.prototype, 'findByCuil').mockResolvedValue({
         cuil: '111',
         refreshTokenHash: 'hash-rt',
+        activo: true,
       } as unknown as empleado)
       ;(bcrypt.compare as Mock).mockResolvedValue(true)
       ;(jwt.sign as Mock).mockReturnValue('nuevo-token')
