@@ -47,24 +47,10 @@ export class OrdenProduccionService {
     if (!obra) {
       throw new ValidationError(`Obra no encontrada (ID: ${codObra})`, 'OBRA_NOT_FOUND')
     }
-    if (obra.estado !== 'PAGADA PARCIALMENTE') {
+    if (obra.estado !== 'PAGADA PARCIALMENTE' && obra.estado !== 'EN ESPERA DE STOCK' && obra.estado !== 'EN PRODUCCION') {
       throw new ValidationError(
-        'Solo se puede crear una Orden de Producción para obras con pago parcial.',
+        'La obra asociada a esta orden de producción no tiene el estado adecuado para crear una orden.',
         'INVALID_STATE'
-      )
-    }
-
-    // Validar que la obra no tenga un pedido de stock pendiente
-    const pedidoPendiente = await prisma.pedido_stock.findFirst({
-      where: {
-        obraId: codObra,
-        estado: { not: 'RECIBIDO' },
-      },
-    })
-    if (pedidoPendiente) {
-      throw new ValidationError(
-        'La obra tiene un pedido de stock pendiente. Debe resolverse antes de crear una Orden de Producción.',
-        'PENDING_STOCK_REQUEST'
       )
     }
 
