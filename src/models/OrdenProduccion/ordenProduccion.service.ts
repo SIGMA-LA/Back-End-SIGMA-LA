@@ -47,24 +47,10 @@ export class OrdenProduccionService {
     if (!obra) {
       throw new ValidationError(`Obra no encontrada (ID: ${codObra})`, 'OBRA_NOT_FOUND')
     }
-    if (obra.estado !== 'PAGADA PARCIALMENTE') {
+    if (obra.estado !== 'PAGADA PARCIALMENTE' && obra.estado !== 'EN ESPERA DE STOCK' && obra.estado !== 'EN PRODUCCION') {
       throw new ValidationError(
-        'Solo se puede crear una Orden de Producción para obras con pago parcial.',
+        'La obra asociada a esta orden de producción no tiene el estado adecuado para crear una orden.',
         'INVALID_STATE'
-      )
-    }
-
-    // Validar que la obra no tenga un pedido de stock pendiente
-    const pedidoPendiente = await prisma.pedido_stock.findFirst({
-      where: {
-        obraId: codObra,
-        estado: { not: 'RECIBIDO' },
-      },
-    })
-    if (pedidoPendiente) {
-      throw new ValidationError(
-        'La obra tiene un pedido de stock pendiente. Debe resolverse antes de crear una Orden de Producción.',
-        'PENDING_STOCK_REQUEST'
       )
     }
 
@@ -155,6 +141,22 @@ export class OrdenProduccionService {
 
     return nuevaOrden
   }
+  
+  /**
+   * Marks a production order as authorized (approved).
+   */
+  async aprobar(cod_op: number): Promise<orden_de_produccion> {
+    const orden = await this.findById(cod_op)
+    if (orden.estado !== 'PENDIENTE') {
+      throw new ValidationError(
+        'Solo las órdenes en estado "Pendiente" pueden ser aprobadas.',
+        'INVALID_STATE'
+      )
+    }
+    const ordenActualizada = await this.repository.update(cod_op, { estado: 'APROBADA' })
+    return ordenActualizada
+  }
+
 
   /**
    * Deletes a production order by its ID.
@@ -204,6 +206,13 @@ export class OrdenProduccionService {
    */
   async iniciarProduccion(cod_op: number): Promise<orden_de_produccion> {
     const orden = await this.findById(cod_op)
+    const obra = await prisma.obra.findUnique({ where: { cod_obra: orden.cod_obra } })
+    if (obra?.estado === 'EN ESPERA DE STOCK') {
+      throw new ValidationError(
+        'La obra asociada a esta orden de producción se encuentra en espera de stock.',
+        'INVALID_OBRA_STATE'
+      )
+    }
 
     if (orden.estado !== 'APROBADA') {
       throw new ValidationError(
