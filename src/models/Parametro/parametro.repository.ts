@@ -67,6 +67,20 @@ export class ParametroRepository {
     return result._max.cod_parametro || 0
   }
 
+  async findByDate(date: Date): Promise<parametro | null> {
+    return await this.prisma.parametro.findFirst({
+      where: {
+        fecha_cambio: {
+          lte: date,
+        },
+      },
+      orderBy: [
+        { fecha_cambio: 'desc' },
+        { hora_cambio: 'desc' },
+      ],
+    })
+  }
+
   // Contar total de parametros
   async count(): Promise<number> {
     return await this.prisma.parametro.count()
