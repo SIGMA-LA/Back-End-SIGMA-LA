@@ -48,6 +48,22 @@ export class LocalidadRepository {
     })
   }
 
+  async findByNombreAndProvincia(
+    nombre_localidad: string,
+    cod_provincia: number,
+  ): Promise<localidad | null> {
+    return await this.prisma.localidad.findFirst({
+      where: {
+        nombre_localidad: {
+          equals: nombre_localidad,
+          mode: 'insensitive',
+        },
+        cod_provincia,
+      },
+      include: { provincia: true },
+    })
+  }
+
   async search(searchTerm: string): Promise<localidad[]> {
     return await this.prisma.localidad.findMany({
       where: {

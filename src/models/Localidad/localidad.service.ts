@@ -23,6 +23,22 @@ export class LocalidadService {
    * Creates a new location record.
    */
   async create(data: Prisma.localidadCreateInput): Promise<localidad> {
+    // Extract nombre and cod_provincia from the create input
+    const nombre = typeof data.nombre_localidad === 'string' ? data.nombre_localidad : ''
+    const codProvincia = (data.provincia as any)?.connect?.cod_provincia
+
+    if (nombre && typeof codProvincia === 'number') {
+      // Check for duplicate
+      const existing = await this.repository.findByNombreAndProvincia(nombre, codProvincia)
+      if (existing) {
+        throw new AppError(
+          `Ya existe una localidad con el nombre "${nombre}" en esta provincia`,
+          400,
+          'LOCALIDAD_DUPLICATE'
+        )
+      }
+    }
+
     return await this.repository.create(data)
   }
 

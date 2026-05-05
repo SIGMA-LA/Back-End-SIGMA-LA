@@ -14,7 +14,18 @@ export class LocalidadController {
    * Creates a new location.
    */
   create = catchAsync(async (req: Request, res: Response) => {
-    const localidad = await localidadService.create(req.body)
+    const body = req.body as any
+    
+    // Transform cod_provincia to provincia.connect if it comes directly
+    const createData = { ...body }
+    if (body.cod_provincia && !body.provincia) {
+      createData.provincia = {
+        connect: { cod_provincia: body.cod_provincia },
+      }
+      delete createData.cod_provincia
+    }
+    
+    const localidad = await localidadService.create(createData)
     return sendSuccess(res, localidad, 'Location created successfully', 201)
   })
 
