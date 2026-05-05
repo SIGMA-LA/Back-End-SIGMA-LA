@@ -59,8 +59,16 @@ export class LocalidadService {
    * Deletes a location record.
    */
   async remove(cod_localidad: number): Promise<localidad> {
-    await this.findById(cod_localidad)
-    return await this.repository.delete(cod_localidad)
+    try {
+      return await this.repository.delete(cod_localidad)
+    } catch (error: any) {
+      // If the error is due to record not found, throw our custom error
+      if (error.code === 'P2025') {
+        throw new AppError('Location not found', 404, 'LOCALIDAD_NOT_FOUND')
+      }
+      // Re-throw other errors (like foreign key constraints)
+      throw error
+    }
   }
 }
 

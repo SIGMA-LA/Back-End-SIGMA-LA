@@ -11,17 +11,21 @@ export class LocalidadRepository {
   async create(data: Prisma.localidadCreateInput): Promise<localidad> {
     return await this.prisma.localidad.create({
       data,
+      include: { provincia: true },
     })
   }
+
   async findByProvincia(cod_provincia: number): Promise<localidad[]> {
     return await this.prisma.localidad.findMany({
       where: { cod_provincia },
+      include: { provincia: true },
       orderBy: { nombre_localidad: 'asc' },
     })
   }
 
   async findAll(): Promise<localidad[]> {
     return await this.prisma.localidad.findMany({
+      include: { provincia: true },
       orderBy: { nombre_localidad: 'asc' },
     })
   }
@@ -29,6 +33,7 @@ export class LocalidadRepository {
   async findById(cod_localidad: number): Promise<localidad | null> {
     return await this.prisma.localidad.findUnique({
       where: { cod_localidad },
+      include: { provincia: true },
     })
   }
 
@@ -39,6 +44,7 @@ export class LocalidadRepository {
     return await this.prisma.localidad.update({
       where: { cod_localidad },
       data,
+      include: { provincia: true },
     })
   }
 
