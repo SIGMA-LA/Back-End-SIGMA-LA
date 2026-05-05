@@ -56,6 +56,13 @@ export class LocalidadService {
   }
 
   /**
+   * Searches locations by name.
+   */
+  async search(searchTerm: string): Promise<localidad[]> {
+    return await this.repository.search(searchTerm)
+  }
+
+  /**
    * Deletes a location record.
    */
   async remove(cod_localidad: number): Promise<localidad> {

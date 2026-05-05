@@ -48,6 +48,19 @@ export class LocalidadRepository {
     })
   }
 
+  async search(searchTerm: string): Promise<localidad[]> {
+    return await this.prisma.localidad.findMany({
+      where: {
+        nombre_localidad: {
+          contains: searchTerm,
+          mode: 'insensitive',
+        },
+      },
+      include: { provincia: true },
+      orderBy: { nombre_localidad: 'asc' },
+    })
+  }
+
   async delete(cod_localidad: number): Promise<localidad> {
     return await this.prisma.localidad.delete({
       where: { cod_localidad },

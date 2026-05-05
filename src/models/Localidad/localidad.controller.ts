@@ -31,10 +31,18 @@ export class LocalidadController {
   })
 
   /**
-   * Gets all location records.
+   * Gets all location records or searches by name.
    */
   getAll = catchAsync(async (req: Request, res: Response) => {
-    const localidades = await localidadService.findAll()
+    const { search } = req.query
+    let localidades
+
+    if (search && typeof search === 'string' && search.trim()) {
+      localidades = await localidadService.search(search.trim())
+    } else {
+      localidades = await localidadService.findAll()
+    }
+
     return sendSuccess(res, localidades)
   })
 
