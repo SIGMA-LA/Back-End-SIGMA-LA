@@ -3,7 +3,6 @@ import { EmpleadoController } from './empleado.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
 
 import {
-  updateEmpleadoSchema,
   cuilParamsSchema,
 } from 'sigma-la-schemas'
 import { authorize } from '../../shared/middlewares/authorizationRoles.js'
@@ -92,13 +91,17 @@ empleadoRouter.get(
  * @route   PUT /api/empleados/:cuil
  * @desc    Actualizar un empleado
  * @access  Privado (solo ADMIN)
+ * 
+ * [PARCHE TEMPORAL]
+ * Se ha deshabilitado la validación de body (updateEmpleadoSchema) debido a que 
+ * 'sigma-la-schemas' (v1.0.28) tiene una lista restrictiva de áreas de trabajo
+ * que no incluye las nuevas áreas necesarias (ADMINISTRADOR, etc).
  */
 empleadoRouter.put(
   '/:cuil',
   authorize('empleado', 'actualizar'),
   validate({
     params: cuilParamsSchema,
-    body: updateEmpleadoSchema,
   }),
   empleadoController.update,
 )
