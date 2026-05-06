@@ -13,6 +13,17 @@ export class LocalidadService {
   }
 
   /**
+   * Converts a string to title case (first letter of each word capitalized).
+   */
+  private toTitleCase(str: string): string {
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
+  /**
    * Gets all locations within a specific province.
    */
   async findByProvincia(cod_provincia: number): Promise<localidad[]> {
@@ -23,6 +34,11 @@ export class LocalidadService {
    * Creates a new location record.
    */
   async create(data: Prisma.localidadCreateInput): Promise<localidad> {
+    // Normalize the nombre_localidad to title case
+    if (typeof data.nombre_localidad === 'string') {
+      data.nombre_localidad = this.toTitleCase(data.nombre_localidad)
+    }
+
     // Extract nombre and cod_provincia from the create input
     const nombre = typeof data.nombre_localidad === 'string' ? data.nombre_localidad : ''
     const codProvincia = (data.provincia as any)?.connect?.cod_provincia
