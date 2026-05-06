@@ -41,7 +41,7 @@ export class LocalidadService {
 
     // Extract nombre and cod_provincia from the create input
     const nombre = typeof data.nombre_localidad === 'string' ? data.nombre_localidad : ''
-    const codProvincia = (data.provincia as any)?.connect?.cod_provincia
+    const codProvincia = (data.provincia as { connect?: { cod_provincia?: number } })?.connect?.cod_provincia
 
     if (nombre && typeof codProvincia === 'number') {
       // Check for duplicate
@@ -110,9 +110,9 @@ export class LocalidadService {
 
     try {
       return await this.repository.delete(cod_localidad)
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If the error is due to record not found, throw our custom error
-      if (error.code === 'P2025') {
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2025') {
         throw new AppError('Location not found', 404, 'LOCALIDAD_NOT_FOUND')
       }
       // Re-throw other errors (like foreign key constraints)

@@ -1,8 +1,11 @@
 import { Request, Response } from 'express'
+import { Prisma } from '@prisma/client'
 import { LocalidadService } from './localidad.service.js'
 import { catchAsync } from '../../shared/utils/catchAsync.js'
 import { sendSuccess } from '../../shared/utils/apiResponse.js'
 import { AppError } from '../../shared/errors/AppError.js'
+
+type CreateLocalidadBody = Omit<Prisma.localidadCreateInput, 'provincia'> & { cod_provincia?: number; provincia?: Prisma.localidadCreateInput['provincia'] }
 
 const localidadService = new LocalidadService()
 
@@ -14,7 +17,7 @@ export class LocalidadController {
    * Creates a new location.
    */
   create = catchAsync(async (req: Request, res: Response) => {
-    const body = req.body as any
+    const body = req.body as CreateLocalidadBody
     
     // Transform cod_provincia to provincia.connect if it comes directly
     const createData = { ...body }
@@ -25,7 +28,7 @@ export class LocalidadController {
       delete createData.cod_provincia
     }
     
-    const localidad = await localidadService.create(createData)
+    const localidad = await localidadService.create(createData as Prisma.localidadCreateInput)
     return sendSuccess(res, localidad, 'Location created successfully', 201)
   })
 
