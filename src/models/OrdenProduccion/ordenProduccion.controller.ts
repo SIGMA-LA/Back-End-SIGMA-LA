@@ -42,7 +42,7 @@ export class OrdenProduccionController {
       cod_obra: cod_obra ? Number(cod_obra) : undefined,
       estado: estado as string | undefined,
     }, pagination)
-    return sendPaginatedSuccess(res, result as any)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**

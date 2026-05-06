@@ -95,6 +95,11 @@ export class OrdenProduccionService {
    * Gets all production orders with optional filters.
    */
   async findAll(
+    filters: OrdenProduccionFilters | undefined,
+    pagination: PaginationParams,
+  ): Promise<PaginatedResponse<orden_de_produccion>>
+  async findAll(filters?: OrdenProduccionFilters): Promise<orden_de_produccion[]>
+  async findAll(
     filters?: OrdenProduccionFilters,
     pagination?: PaginationParams,
   ): Promise<PaginatedResponse<orden_de_produccion> | orden_de_produccion[]> {
