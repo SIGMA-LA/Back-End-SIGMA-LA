@@ -1,8 +1,11 @@
 import { Request, Response } from 'express'
+import { Prisma } from '@prisma/client'
 import { LocalidadService } from './localidad.service.js'
 import { catchAsync } from '../../shared/utils/catchAsync.js'
 import { sendSuccess } from '../../shared/utils/apiResponse.js'
 import { AppError } from '../../shared/errors/AppError.js'
+
+type CreateLocalidadBody = Omit<Prisma.localidadCreateInput, 'provincia'> & { cod_provincia?: number; provincia?: Prisma.localidadCreateInput['provincia'] }
 
 const localidadService = new LocalidadService()
 
@@ -14,7 +17,18 @@ export class LocalidadController {
    * Creates a new location.
    */
   create = catchAsync(async (req: Request, res: Response) => {
-    const localidad = await localidadService.create(req.body)
+    const body = req.body as CreateLocalidadBody
+    
+    // Transform cod_provincia to provincia.connect if it comes directly
+    const createData = { ...body }
+    if (body.cod_provincia && !body.provincia) {
+      createData.provincia = {
+        connect: { cod_provincia: body.cod_provincia },
+      }
+      delete createData.cod_provincia
+    }
+    
+    const localidad = await localidadService.create(createData as Prisma.localidadCreateInput)
     return sendSuccess(res, localidad, 'Location created successfully', 201)
   })
 
@@ -31,10 +45,18 @@ export class LocalidadController {
   })
 
   /**
-   * Gets all location records.
+   * Gets all location records or searches by name.
    */
   getAll = catchAsync(async (req: Request, res: Response) => {
-    const localidades = await localidadService.findAll()
+    const { search } = req.query
+    let localidades
+
+    if (search && typeof search === 'string' && search.trim()) {
+      localidades = await localidadService.search(search.trim())
+    } else {
+      localidades = await localidadService.findAll()
+    }
+
     return sendSuccess(res, localidades)
   })
 
