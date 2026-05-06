@@ -23,7 +23,10 @@ export class OrdenProduccionRepository {
     })
   }
 
-  async findAll(filters?: OrdenProduccionFilters): Promise<orden_de_produccion[]> {
+  async findAll(
+    filters?: OrdenProduccionFilters,
+    pagination?: { page: number; pageSize: number },
+  ): Promise<{ data: orden_de_produccion[]; total: number }> {
     const andConditions: Prisma.orden_de_produccionWhereInput[] = []
 
     if (filters?.estado) {
@@ -50,30 +53,41 @@ export class OrdenProduccionRepository {
       andConditions.push({ fecha_confeccion: fechaConfeccionFilter })
     }
 
-    return await this.prisma.orden_de_produccion.findMany({
-      where: andConditions.length ? { AND: andConditions } : undefined,
-      orderBy: { fecha_confeccion: 'desc' },
-      include: {
-        visita: {
-          include: {
-            empleado_visita: {
-              include: {
-                empleado: true,
+    const where = andConditions.length ? { AND: andConditions } : undefined
+    const skip = pagination ? (pagination.page - 1) * pagination.pageSize : undefined
+    const take = pagination ? pagination.pageSize : undefined
+
+    const [data, total] = await Promise.all([
+      this.prisma.orden_de_produccion.findMany({
+        where,
+        orderBy: { fecha_confeccion: 'desc' },
+        include: {
+          visita: {
+            include: {
+              empleado_visita: {
+                include: {
+                  empleado: true,
+                },
+              },
+            },
+          },
+          obra: {
+            include: {
+              cliente: true,
+              localidad: true,
+              visita: {
+                orderBy: { fecha_hora_visita: 'desc' },
               },
             },
           },
         },
-        obra: {
-          include: {
-            cliente: true,
-            localidad: true,
-            visita: {
-              orderBy: { fecha_hora_visita: 'desc' },
-            },
-          },
-        },
-      },
-    })
+        skip,
+        take,
+      }),
+      this.prisma.orden_de_produccion.count({ where }),
+    ])
+
+    return { data, total }
   }
 
   async findById(cod_op: number): Promise<orden_de_produccion | null> {

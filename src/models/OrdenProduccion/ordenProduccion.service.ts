@@ -7,6 +7,7 @@ import { prisma } from '../../shared/db/prismaClient.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { eventBus } from '../../shared/events/eventBus.js'
+import type { PaginationParams, PaginatedResponse } from '../../shared/types/pagination.js'
 
 interface OrdenProduccionCreateInput {
   cod_obra: number | string
@@ -95,8 +96,21 @@ export class OrdenProduccionService {
    */
   async findAll(
     filters?: OrdenProduccionFilters,
-  ): Promise<orden_de_produccion[]> {
-    return this.repository.findAll(filters)
+    pagination?: PaginationParams,
+  ): Promise<PaginatedResponse<orden_de_produccion> | orden_de_produccion[]> {
+    const { data, total } = await this.repository.findAll(filters, pagination)
+
+    if (pagination) {
+      return {
+        data,
+        total,
+        totalPages: Math.ceil(total / pagination.pageSize),
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      }
+    }
+
+    return data
   }
 
   /**
