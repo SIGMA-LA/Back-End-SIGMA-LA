@@ -156,6 +156,15 @@ export class VisitaController {
     const result = await visitaService.getProspectos(estado, pagination)
     return sendPaginatedSuccess(res, result)
   })
+
+  /**
+   * Resets a cancelled prospect visit.
+   */
+  reSolicitar = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params
+    const visita = await visitaService.reSolicitar(Number(id))
+    return sendSuccess(res, visita, 'Prospect re-solicited successfully')
+  })
 }
 
 export const visitaController = new VisitaController()

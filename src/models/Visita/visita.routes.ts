@@ -53,5 +53,7 @@ visitaRouter.patch('/:id/finalizar', authorize('visita', 'finalizar'), visitaCon
 
 visitaRouter.patch('/:id/cancelar', authorize('visita', 'cancelar'), visitaController.cancelarVisita)
 
+visitaRouter.patch('/:id/re-solicitar', authorize('visita', 'reSolicitar'), visitaController.reSolicitar)
+
 
 export default visitaRouter

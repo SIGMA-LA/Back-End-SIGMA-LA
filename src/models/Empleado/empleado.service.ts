@@ -352,12 +352,14 @@ export class EmpleadoService {
             continue
 
           const vUsage = visita.uso_vehiculo_visita?.[0]
+          if (!visita.fecha_hora_visita) continue
+
           let ini = new Date(visita.fecha_hora_visita)
           let fin: Date
 
           if (vUsage) {
             ini = new Date(vUsage.fecha_hora_ini_uso)
-            fin = new Date(vUsage.fecha_hora_fin_est || vUsage.fecha_hora_fin_real || visita.fecha_hora_visita)
+            fin = new Date(vUsage.fecha_hora_fin_est || vUsage.fecha_hora_fin_real || (visita.fecha_hora_visita ? visita.fecha_hora_visita : ini))
           } else {
             const dias = visita.dias_viatico && visita.dias_viatico > 0 ? visita.dias_viatico : 1
             fin = new Date(ini.getTime() + dias * 24 * 60 * 60 * 1000)
