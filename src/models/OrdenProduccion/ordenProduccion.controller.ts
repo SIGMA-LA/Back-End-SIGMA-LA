@@ -165,4 +165,17 @@ export class OrdenProduccionController {
     return sendSuccess(res, orden, 'Production order finalized successfully')
   })
 
+  /**
+   * Rejects a production order.
+   */
+  rechazar = catchAsync(async (req: Request, res: Response) => {
+    const { cod_op } = req.params
+    const { motivo } = req.body
+    const codOpNum = Number(cod_op)
+    if (isNaN(codOpNum)) throw new AppError('Código de orden inválido', 400, 'INVALID_ID')
+
+    const orden = await ordenProduccionService.rechazar(codOpNum, motivo)
+    return sendSuccess(res, orden, 'Production order rejected successfully')
+  })
+
 }

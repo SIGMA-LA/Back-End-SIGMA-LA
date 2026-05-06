@@ -25,7 +25,7 @@ ordenProduccionRouter.post('/:cod_op/finalizar', authorize('OP', 'actualizar'), 
 ordenProduccionRouter.get('/:cod_op', ordenProduccionController.getOne)
 
 ordenProduccionRouter.patch('/:cod_op/aprobar', authorize('OP', 'actualizar'), ordenProduccionController.aprobar)
-
+ordenProduccionRouter.patch('/:cod_op/rechazar', authorize('OP', 'actualizar'), ordenProduccionController.rechazar)
 ordenProduccionRouter.patch('/:cod_op', authorize('OP', 'actualizar'), upload.single('file'), ordenProduccionController.update)
 
 ordenProduccionRouter.delete('/:cod_op', authorize('OP', 'eliminar'), ordenProduccionController.remove)
