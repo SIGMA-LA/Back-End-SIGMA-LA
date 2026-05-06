@@ -54,6 +54,7 @@ export const PERMISSIONS = {
     eliminar: ['COORDINACION'],
     cancelar: ['COORDINACION', 'VISITADOR', 'PLANTA'],
     finalizar: ['COORDINACION', 'VISITADOR'],
+    reSolicitar: ['VENTAS', 'COORDINACION'],
   },
   entrega: {
     crear: ['COORDINACION'],

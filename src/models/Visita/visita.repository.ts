@@ -498,7 +498,7 @@ export class VisitaRepository {
   ): Promise<{ data: VisitaWithRelations[]; total: number }> {
     const whereClause: Prisma.visitaWhereInput = {
       cod_obra: null,
-      motivo_visita: 'INICIAL',
+      motivo_visita: { in: ['INICIAL', 'VISITA INICIAL'] },
     }
     
     if (estado) {

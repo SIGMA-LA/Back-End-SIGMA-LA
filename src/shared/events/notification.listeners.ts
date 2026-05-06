@@ -28,7 +28,7 @@ export function setupNotificationListeners() {
         `<b>Detalles de la operación:</b><br>` +
         `- <b>Cliente:</b> ${clienteNombre}<br>` +
         `- <b>Motivo:</b> ${visita.motivo_visita}<br>` +
-        `- <b>Fecha:</b> ${visita.fecha_hora_visita.toLocaleString()}<br>` +
+        `- <b>Fecha:</b> ${visita.fecha_hora_visita ? visita.fecha_hora_visita.toLocaleString() : 'Pendiente de programación'}<br>` +
         `- <b>Observaciones finales:</b> ${visita.observaciones || 'Sin observaciones'}<br><br>` +
         `<i>Este es un aviso automático generado por el sistema SIGMA-LA para el personal de Coordinación. Por favor no responder a este correo.</i>`
       );
@@ -127,7 +127,7 @@ export function setupNotificationListeners() {
         `- <b>Cliente:</b> ${clienteNombre}<br>` +
         `- <b>Motivo:</b> ${visita.motivo_visita}<br>` +
         `- <b>Dirección:</b> ${direccion}<br>` +
-        `- <b>Fecha Programada:</b> ${new Date(visita.fecha_hora_visita).toLocaleString()}<br>` +
+        `- <b>Fecha Programada:</b> ${visita.fecha_hora_visita ? new Date(visita.fecha_hora_visita).toLocaleString() : 'Pendiente de programación'}<br>` +
         `- <b>Observaciones:</b> ${visita.observaciones || 'Ninguna'}<br><br>` +
         `<i>Este es un aviso automático generado por el sistema SIGMA-LA.</i>`
       );
@@ -163,7 +163,7 @@ export function setupNotificationListeners() {
       switch (tipo) {
         case 'CANCELADA':
           titulo = `Visita Técnica Cancelada - ${visita.motivo_visita}`;
-          mensajeHtml = `Le informamos que la visita técnica programada para el <b>${new Date(visita.fecha_hora_visita).toLocaleString()}</b> ha sido <b>CANCELADA</b>.<br><br>` +
+          mensajeHtml = `Le informamos que la visita técnica programada para el <b>${visita.fecha_hora_visita ? new Date(visita.fecha_hora_visita).toLocaleString() : 'Sin fecha'}</b> ha sido <b>CANCELADA</b>.<br><br>` +
                         `<b>Detalles:</b><br>` +
                         `- <b>Cliente:</b> ${clienteNombre}<br>` +
                         `- <b>Observaciones:</b> ${visita.observaciones || 'Ninguna'}`;
@@ -172,7 +172,7 @@ export function setupNotificationListeners() {
           titulo = `Horario Modificado - Visita Técnica - ${visita.motivo_visita}`;
           mensajeHtml = `Le informamos que los horarios de su visita técnica asignada han sido <b>MODIFICADOS</b>.<br><br>` +
                         `<b>Nuevos Detalles:</b><br>` +
-                        `- <b>Nueva Fecha/Hora:</b> ${new Date(visita.fecha_hora_visita).toLocaleString()}<br>` +
+                        `- <b>Nueva Fecha/Hora:</b> ${visita.fecha_hora_visita ? new Date(visita.fecha_hora_visita).toLocaleString() : 'Pendiente'}<br>` +
                         `- <b>Cliente:</b> ${clienteNombre}<br>` +
                         `- <b>Dirección:</b> ${direccion}`;
           break;
@@ -180,7 +180,7 @@ export function setupNotificationListeners() {
           titulo = `Desasignación de Visita Técnica - ${visita.motivo_visita}`;
           mensajeHtml = `Le informamos que ha sido <b>REMOVIDO</b> de la asignación para la siguiente visita técnica.<br><br>` +
                         `<b>Detalles de la visita original:</b><br>` +
-                        `- <b>Fecha/Hora:</b> ${new Date(visita.fecha_hora_visita).toLocaleString()}<br>` +
+                        `- <b>Fecha/Hora:</b> ${visita.fecha_hora_visita ? new Date(visita.fecha_hora_visita).toLocaleString() : 'N/A'}<br>` +
                         `- <b>Cliente:</b> ${clienteNombre}`;
           break;
       }

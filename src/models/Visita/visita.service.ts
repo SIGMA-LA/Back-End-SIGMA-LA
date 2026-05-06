@@ -272,18 +272,23 @@ export class VisitaService {
     } = data
 
     // 1. Date change detection
-    const newFechaInicio = fecha_hora_visita ? new Date(fecha_hora_visita) : new Date(existingVisita.fecha_hora_visita)
+    const newFechaInicio = fecha_hora_visita !== undefined 
+      ? (fecha_hora_visita ? new Date(fecha_hora_visita) : null)
+      : (existingVisita.fecha_hora_visita ? new Date(existingVisita.fecha_hora_visita) : null)
     const vUsage = existingVisita.uso_vehiculo_visita?.[0]
-    const curFechaSalida = vUsage ? new Date(vUsage.fecha_hora_ini_uso) : new Date(existingVisita.fecha_hora_visita)
-    const curFechaRetorno = vUsage ? new Date(vUsage.fecha_hora_fin_est) : new Date(new Date(existingVisita.fecha_hora_visita).getTime() + (existingVisita.dias_viatico || 1) * 24 * 60 * 60 * 1000)
+    
+    // Support for visits without date (prospects)
+    const curFechaInicio = existingVisita.fecha_hora_visita ? new Date(existingVisita.fecha_hora_visita) : null
+    const curFechaSalida = vUsage ? new Date(vUsage.fecha_hora_ini_uso) : curFechaInicio
+    const curFechaRetorno = vUsage ? new Date(vUsage.fecha_hora_fin_est) : (curFechaInicio ? new Date(curFechaInicio.getTime() + (existingVisita.dias_viatico || 1) * 24 * 60 * 60 * 1000) : null)
 
     const newFechaSalida = fechaSalida ? new Date(fechaSalida) : curFechaSalida
     const newFechaRetorno = fechaHasta ? new Date(fechaHasta) : curFechaRetorno
 
     const hasDatesChanged =
-      newFechaInicio.getTime() !== new Date(existingVisita.fecha_hora_visita).getTime() ||
-      newFechaSalida.getTime() !== curFechaSalida.getTime() ||
-      newFechaRetorno.getTime() !== curFechaRetorno.getTime()
+      newFechaInicio?.getTime() !== curFechaInicio?.getTime() ||
+      newFechaSalida?.getTime() !== curFechaSalida?.getTime() ||
+      newFechaRetorno?.getTime() !== curFechaRetorno?.getTime()
 
     // 2. Assignment change detection
     const hasPersonnelChanged = !!empleados_visita && (
@@ -296,7 +301,7 @@ export class VisitaService {
     )
 
     // 3. Conditional availability validations
-    if (hasDatesChanged || hasPersonnelChanged || hasVehicleChanged) {
+    if ((hasDatesChanged || hasPersonnelChanged || hasVehicleChanged) && newFechaSalida && newFechaRetorno) {
       const cuilesToValidate = empleados_visita || existingVisita.empleado_visita.map((ev) => ev.cuil)
       const vehiculoToValidate = vehiculo || (vUsage ? vUsage.patente : undefined)
 
@@ -331,8 +336,8 @@ export class VisitaService {
     // 4. Update payload preparation
     const updateData: Prisma.visitaUpdateInput = {
       ...simpleFields,
-      ...(fecha_hora_visita && { fecha_hora_visita: newFechaInicio }),
-      ...(fecha_cancelacion && { fecha_cancelacion: new Date(fecha_cancelacion) }),
+      ...(fecha_hora_visita !== undefined && { fecha_hora_visita: newFechaInicio }),
+      ...(fecha_cancelacion !== undefined && { fecha_cancelacion: fecha_cancelacion ? new Date(fecha_cancelacion) : null }),
       ...(dias_viatico !== undefined && { dias_viatico }),
     }
 
@@ -344,13 +349,19 @@ export class VisitaService {
     }
 
     if (hasVehicleChanged || (hasDatesChanged && vUsage)) {
-      updateData.uso_vehiculo_visita = {
-        deleteMany: {},
-        create: {
-          vehiculo: { connect: { patente: vehiculo || (vUsage ? vUsage.patente : '') } },
-          fecha_hora_ini_uso: newFechaSalida,
-          fecha_hora_fin_est: newFechaRetorno,
-        },
+      if (newFechaSalida && newFechaRetorno) {
+        updateData.uso_vehiculo_visita = {
+          deleteMany: {},
+          create: {
+            vehiculo: { connect: { patente: vehiculo || (vUsage ? vUsage.patente : '') } },
+            fecha_hora_ini_uso: newFechaSalida,
+            fecha_hora_fin_est: newFechaRetorno,
+          },
+        }
+      } else {
+        updateData.uso_vehiculo_visita = {
+          deleteMany: {},
+        }
       }
     }
 
@@ -548,6 +559,19 @@ export class VisitaService {
       page: pagination.page,
       pageSize: pagination.pageSize,
     }
+  }
+  /**
+   * Resets a cancelled visit back to pending (prospect re-solicitation)
+   */
+  async reSolicitar(cod_visita: number): Promise<VisitaWithRelations> {
+    await this.findById(cod_visita)
+
+    return await this.visitaRepository.update(cod_visita, {
+      estado: 'PROGRAMADA',
+      fecha_hora_visita: null,
+      fecha_cancelacion: null,
+      observaciones: 'RE-SOLICITUD DE MEDICIÓN (Previamente cancelada)'
+    })
   }
 }
 

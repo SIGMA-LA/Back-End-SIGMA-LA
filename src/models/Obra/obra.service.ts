@@ -506,7 +506,7 @@ export class ObraService {
     const obrasConVisitaPendiente = await prisma.visita.count({
       where: {
         cod_obra: null,
-        motivo_visita: 'INICIAL',
+        motivo_visita: { in: ['INICIAL', 'VISITA INICIAL'] },
         estado: 'PROGRAMADA',
       }
     })
