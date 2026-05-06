@@ -27,6 +27,7 @@ interface CreateVisitaData {
   cod_localidad?: number
   vehiculo: string
   fechaHasta?: string
+  cod_ops?: number[]
 }
 
 /**
@@ -97,6 +98,11 @@ export class VisitaService {
             ),
             fecha_hora_fin_est: fechaFinEstimada,
           },
+        },
+      }),
+      ...(data.cod_ops && data.cod_ops.length > 0 && {
+        ordenes_de_produccion: {
+          connect: data.cod_ops.map((cod_op) => ({ cod_op })),
         },
       }),
     }

@@ -21,6 +21,7 @@ export type VisitaWithRelations = Prisma.visitaGetPayload<{
         vehiculo: true,
       },
     },
+    ordenes_de_produccion: true,
   },
 }>
 
@@ -62,6 +63,7 @@ export class VisitaRepository {
             vehiculo: true,
           },
         },
+        ordenes_de_produccion: true,
       }
 
     const [data, total] = await Promise.all([
@@ -102,6 +104,7 @@ export class VisitaRepository {
             vehiculo: true,
           },
         },
+        ordenes_de_produccion: true,
       },
     }) as VisitaWithRelations | null
   }
@@ -128,6 +131,7 @@ export class VisitaRepository {
             vehiculo: true,
           },
         },
+        ordenes_de_produccion: true,
       },
     }) as VisitaWithRelations
   }
@@ -160,6 +164,7 @@ export class VisitaRepository {
             vehiculo: true,
           },
         },
+        ordenes_de_produccion: true,
       },
     }) as VisitaWithRelations
   }
@@ -196,6 +201,7 @@ export class VisitaRepository {
             vehiculo: true,
           },
         },
+        ordenes_de_produccion: true,
       },
     }) as VisitaWithRelations[]
   }
@@ -378,6 +384,7 @@ export class VisitaRepository {
               vehiculo: true,
             },
           },
+          ordenes_de_produccion: true,
         },
         orderBy: {
           fecha_hora_visita: 'desc',
@@ -471,6 +478,7 @@ export class VisitaRepository {
               vehiculo: true,
             },
           },
+          ordenes_de_produccion: true,
         },
         orderBy: {
           fecha_hora_visita: 'desc',
@@ -520,6 +528,7 @@ export class VisitaRepository {
             vehiculo: true,
           },
         },
+        ordenes_de_produccion: true,
       }
 
     const [data, total] = await Promise.all([

@@ -54,6 +54,15 @@ export class OrdenProduccionRepository {
       where: andConditions.length ? { AND: andConditions } : undefined,
       orderBy: { fecha_confeccion: 'desc' },
       include: {
+        visita: {
+          include: {
+            empleado_visita: {
+              include: {
+                empleado: true,
+              },
+            },
+          },
+        },
         obra: {
           include: {
             cliente: true,
@@ -71,6 +80,15 @@ export class OrdenProduccionRepository {
     return await this.prisma.orden_de_produccion.findUnique({
       where: { cod_op },
       include: {
+        visita: {
+          include: {
+            empleado_visita: {
+              include: {
+                empleado: true,
+              },
+            },
+          },
+        },
         obra: {
           include: {
             cliente: true,
@@ -91,6 +109,15 @@ export class OrdenProduccionRepository {
       },
       orderBy: { fecha_validacion: 'desc' },
       include: {
+        visita: {
+          include: {
+            empleado_visita: {
+              include: {
+                empleado: true,
+              },
+            },
+          },
+        },
         obra: {
           include: {
             cliente: true,
@@ -111,6 +138,15 @@ export class OrdenProduccionRepository {
       },
       orderBy: { fecha_validacion: 'desc' },
       include: {
+        visita: {
+          include: {
+            empleado_visita: {
+              include: {
+                empleado: true,
+              },
+            },
+          },
+        },
         obra: {
           include: {
             cliente: true,
@@ -129,6 +165,15 @@ export class OrdenProduccionRepository {
       where: {cod_obra},
       orderBy: { fecha_confeccion: 'desc' },
       include: {
+        visita: {
+          include: {
+            empleado_visita: {
+              include: {
+                empleado: true,
+              },
+            },
+          },
+        },
         obra: {
           include: {
             cliente: true,
@@ -151,6 +196,15 @@ export class OrdenProduccionRepository {
       },
       orderBy: { fecha_confeccion: 'desc' },
       include: {
+        visita: {
+          include: {
+            empleado_visita: {
+              include: {
+                empleado: true,
+              },
+            },
+          },
+        },
         obra: {
           include: {
             cliente: true,
@@ -172,6 +226,15 @@ export class OrdenProduccionRepository {
       where: { cod_op },
       data,
       include: {
+        visita: {
+          include: {
+            empleado_visita: {
+              include: {
+                empleado: true,
+              },
+            },
+          },
+        },
         obra: {
           include: {
             cliente: true,
