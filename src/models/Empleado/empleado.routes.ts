@@ -3,7 +3,6 @@ import { EmpleadoController } from './empleado.controller.js'
 import { validate } from '../../shared/middlewares/validateSchemas.js'
 
 import {
-  updateEmpleadoSchema,
   cuilParamsSchema,
 } from 'sigma-la-schemas'
 import { authorize } from '../../shared/middlewares/authorizationRoles.js'
