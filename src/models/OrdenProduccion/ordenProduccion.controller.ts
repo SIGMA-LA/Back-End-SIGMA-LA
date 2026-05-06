@@ -36,11 +36,12 @@ export class OrdenProduccionController {
    * Gets all production orders with optional filters.
    */
   getAll = catchAsync(async (req: Request, res: Response) => {
-    const { cod_obra, estado } = req.query
+    const { cod_obra, estado, cuil_cliente } = req.query
     const pagination = parsePagination(req.query as Record<string, unknown>)
     const result = await ordenProduccionService.findAll({
       cod_obra: cod_obra ? Number(cod_obra) : undefined,
       estado: estado as string | undefined,
+      cuil_cliente: cuil_cliente as string | undefined,
     }, pagination)
     return sendPaginatedSuccess(res, result)
   })
