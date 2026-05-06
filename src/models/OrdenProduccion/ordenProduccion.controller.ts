@@ -1,7 +1,8 @@
 import { Request, Response } from 'express'
 import { OrdenProduccionService } from './ordenProduccion.service.js'
 import { catchAsync } from '../../shared/utils/catchAsync.js'
-import { sendSuccess } from '../../shared/utils/apiResponse.js'
+import { sendSuccess, sendPaginatedSuccess } from '../../shared/utils/apiResponse.js'
+import { parsePagination } from '../../shared/utils/parsePagination.js'
 import { AppError } from '../../shared/errors/AppError.js'
 
 const ordenProduccionService = new OrdenProduccionService()
@@ -36,11 +37,12 @@ export class OrdenProduccionController {
    */
   getAll = catchAsync(async (req: Request, res: Response) => {
     const { cod_obra, estado } = req.query
-    const ordenes = await ordenProduccionService.findAll({
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await ordenProduccionService.findAll({
       cod_obra: cod_obra ? Number(cod_obra) : undefined,
       estado: estado as string | undefined,
-    })
-    return sendSuccess(res, ordenes)
+    }, pagination)
+    return sendPaginatedSuccess(res, result)
   })
 
   /**
@@ -163,6 +165,19 @@ export class OrdenProduccionController {
 
     const orden = await ordenProduccionService.finalizarProduccion(codOpNum)
     return sendSuccess(res, orden, 'Production order finalized successfully')
+  })
+
+  /**
+   * Rejects a production order.
+   */
+  rechazar = catchAsync(async (req: Request, res: Response) => {
+    const { cod_op } = req.params
+    const { motivo } = req.body
+    const codOpNum = Number(cod_op)
+    if (isNaN(codOpNum)) throw new AppError('Código de orden inválido', 400, 'INVALID_ID')
+
+    const orden = await ordenProduccionService.rechazar(codOpNum, motivo)
+    return sendSuccess(res, orden, 'Production order rejected successfully')
   })
 
 }

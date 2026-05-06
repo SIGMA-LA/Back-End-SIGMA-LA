@@ -7,6 +7,7 @@ import { prisma } from '../../shared/db/prismaClient.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
 import { eventBus } from '../../shared/events/eventBus.js'
+import type { PaginationParams, PaginatedResponse } from '../../shared/types/pagination.js'
 
 interface OrdenProduccionCreateInput {
   cod_obra: number | string
@@ -94,9 +95,27 @@ export class OrdenProduccionService {
    * Gets all production orders with optional filters.
    */
   async findAll(
+    filters: OrdenProduccionFilters | undefined,
+    pagination: PaginationParams,
+  ): Promise<PaginatedResponse<orden_de_produccion>>
+  async findAll(filters?: OrdenProduccionFilters): Promise<orden_de_produccion[]>
+  async findAll(
     filters?: OrdenProduccionFilters,
-  ): Promise<orden_de_produccion[]> {
-    return this.repository.findAll(filters)
+    pagination?: PaginationParams,
+  ): Promise<PaginatedResponse<orden_de_produccion> | orden_de_produccion[]> {
+    const { data, total } = await this.repository.findAll(filters, pagination)
+
+    if (pagination) {
+      return {
+        data,
+        total,
+        totalPages: Math.ceil(total / pagination.pageSize),
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      }
+    }
+
+    return data
   }
 
   /**
@@ -132,6 +151,15 @@ export class OrdenProduccionService {
     data: Prisma.orden_de_produccionUpdateInput,
   ): Promise<orden_de_produccion> {
     const orden = await this.findById(cod_op) // Ensure existence
+
+    // Si la orden estaba rechazada, al resubir el archivo (update) 
+    // la volvemos a PENDIENTE y limpiamos el motivo
+    if (orden.estado === 'RECHAZADA') {
+      data.estado = 'PENDIENTE'
+      data.motivo_rechazo = null
+      data.fecha_confeccion = new Date()
+    }
+
     const nuevaOrden = await this.repository.update(cod_op, data)
 
     // Emitir evento si la orden de producción acaba de ser aprobada
@@ -147,13 +175,41 @@ export class OrdenProduccionService {
    */
   async aprobar(cod_op: number): Promise<orden_de_produccion> {
     const orden = await this.findById(cod_op)
-    if (orden.estado !== 'PENDIENTE') {
+    if (orden.estado !== 'PENDIENTE' && orden.estado !== 'RECHAZADA') {
       throw new ValidationError(
-        'Solo las órdenes en estado "Pendiente" pueden ser aprobadas.',
+        'Solo las órdenes en estado "Pendiente" o "Rechazada" pueden ser aprobadas.',
         'INVALID_STATE'
       )
     }
-    const ordenActualizada = await this.repository.update(cod_op, { estado: 'APROBADA' })
+    const ordenActualizada = await this.repository.update(cod_op, { 
+      estado: 'APROBADA',
+      motivo_rechazo: null // Limpiamos por las dudas
+    })
+    return ordenActualizada
+  }
+
+  /**
+   * Rejects a production order with a reason.
+   */
+  async rechazar(cod_op: number, motivo: string): Promise<orden_de_produccion> {
+    const orden = await this.findById(cod_op)
+    
+    if (orden.estado !== 'PENDIENTE') {
+      throw new ValidationError(
+        'Solo las órdenes en estado "Pendiente" pueden ser rechazadas.',
+        'INVALID_STATE'
+      )
+    }
+
+    if (!motivo || motivo.trim().length === 0) {
+      throw new ValidationError('Debe proporcionar un motivo para el rechazo.', 'MOTIVO_REQUIRED')
+    }
+
+    const ordenActualizada = await this.repository.update(cod_op, {
+      estado: 'RECHAZADA',
+      motivo_rechazo: motivo
+    })
+
     return ordenActualizada
   }
 
