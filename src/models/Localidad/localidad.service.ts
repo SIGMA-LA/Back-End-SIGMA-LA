@@ -82,6 +82,16 @@ export class LocalidadService {
    * Deletes a location record.
    */
   async remove(cod_localidad: number): Promise<localidad> {
+    // Check if the location has related entities (obras or visitas)
+    const hasRelated = await this.repository.hasRelatedEntities(cod_localidad)
+    if (hasRelated) {
+      throw new AppError(
+        'No se puede eliminar la localidad porque tiene obras o visitas asociadas.',
+        400,
+        'LOCALIDAD_HAS_RELATIONS'
+      )
+    }
+
     try {
       return await this.repository.delete(cod_localidad)
     } catch (error: any) {

@@ -82,4 +82,10 @@ export class LocalidadRepository {
       where: { cod_localidad },
     })
   }
+
+  async hasRelatedEntities(cod_localidad: number): Promise<boolean> {
+    const obraCount = await this.prisma.obra.count({ where: { cod_localidad } })
+    const visitaCount = await this.prisma.visita.count({ where: { cod_localidad } })
+    return obraCount > 0 || visitaCount > 0
+  }
 }
