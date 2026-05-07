@@ -25,7 +25,7 @@ export class EmpleadoRepository {
   }
 
   // Buscar usos en un rango de tiempo
-  async findUsagesInRange(cuiles: string[], timeWindowStart: Date) {
+  async findUsagesInRange(cuiles: string[]) {
     // 1. Obtener los empleados primero
     const empleados = await this.prisma.empleado.findMany({
       where: { cuil: { in: cuiles } },

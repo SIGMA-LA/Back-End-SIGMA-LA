@@ -305,8 +305,7 @@ export class EmpleadoService {
       fechaInicio.getTime() - 30 * 24 * 60 * 60 * 1000,
     )
     const empleadosConUsos = await this.empleadoRepository.findUsagesInRange(
-      cuiles,
-      timeWindowStart,
+      cuiles
     )
 
     const empleadosInactivos = empleadosConUsos.filter((emp) => !emp.activo)
