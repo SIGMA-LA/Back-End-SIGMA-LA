@@ -528,13 +528,47 @@ export class ObraService {
    * Finalizes production of an obra by changing its status to PRODUCCION FINALIZADA.
    */
   async finalizarProduccion(id: number): Promise<obra> {
-    const obra = await this.findById(id)
+    const obra = await prisma.obra.findUnique({
+      where: { cod_obra: id },
+      include: { orden_de_produccion: true }
+    })
+
+    if (!obra) {
+      throw new AppError(`Obra no encontrada (ID: ${id})`, 404, 'OBRA_NOT_FOUND')
+    }
+
     if (obra.estado !== 'EN PRODUCCION') {
       throw new ValidationError(
         'Solo se pueden finalizar obras que están "En Producción".',
         'INVALID_STATE'
       )
     }
+
+    const ordenes = obra.orden_de_produccion
+    if (ordenes.length === 0) {
+      throw new ValidationError(
+        'No se puede finalizar una obra sin órdenes de producción.',
+        'NO_OPS_FOUND'
+      )
+    }
+
+    const tieneFinalizada = ordenes.some(op => op.estado === 'FINALIZADA')
+    const todasCerradas = ordenes.every(op => op.estado === 'FINALIZADA' || op.estado === 'CANCELADA')
+
+    if (!tieneFinalizada) {
+      throw new ValidationError(
+        'La obra debe tener al menos una orden de producción finalizada para ser completada.',
+        'MISSING_FINALIZED_OP'
+      )
+    }
+
+    if (!todasCerradas) {
+      throw new ValidationError(
+        'Existen órdenes de producción pendientes o en proceso. Debe finalizarlas o cancelarlas antes de cerrar la obra.',
+        'PENDING_OPS'
+      )
+    }
+
     const updated = await this.repository.update(id, { estado: 'PRODUCCION FINALIZADA' })
     eventBus.emit('obra.cambio_estado', { cod_obra: id, nuevo_estado: updated.estado })
     return updated
