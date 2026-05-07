@@ -507,7 +507,7 @@ export class ObraService {
       where: {
         cod_obra: null,
         motivo_visita: { in: ['INICIAL', 'VISITA INICIAL'] },
-        estado: 'PROGRAMADA',
+        estado: 'SIN AGENDAR',
       }
     })
 

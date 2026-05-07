@@ -4,6 +4,11 @@ import { env } from '../../config/env.js'
 import { AppError } from '../errors/AppError.js'
 import { sendError } from '../utils/apiResponse.js'
 import { ERROR_MAP } from '../utils/ERROR_MAP.js'
+ 
+const cleanErrorMessage = (str: string) => {
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/\x1B\[[0-9;]*[mG]/g, '').trim()
+}
 
 export const errorHandler = (
   err: unknown,
@@ -25,7 +30,7 @@ export const errorHandler = (
   if (err instanceof AppError) {
     statusCode = err.statusCode
     errorCode = err.errorCode
-    message = err.message
+    message = cleanErrorMessage(err.message)
     details = err.details
     isOperational = err.isOperational
   } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -55,7 +60,7 @@ export const errorHandler = (
         message = 'Error de base de datos'
     }
   } else if (err instanceof Error) {
-    message = err.message
+    message = cleanErrorMessage(err.message)
     if (err.name === 'ValidationError' || err.name === 'ValiError') {
       statusCode = 400
       errorCode = (err as { code?: string }).code ?? 'VALIDATION_ERROR'

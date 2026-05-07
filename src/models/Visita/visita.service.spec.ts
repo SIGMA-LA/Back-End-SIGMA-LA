@@ -3,6 +3,7 @@ import { VisitaService } from './visita.service'
 import { VisitaRepository, type VisitaWithRelations } from './visita.repository'
 import { EmpleadoService } from '../Empleado/empleado.service'
 import { VehiculoService } from '../Vehiculo/vehiculo.service'
+import { ValidationError } from '../../shared/errors/validationError'
 
 vi.mock('./visita.repository')
 vi.mock('../Empleado/empleado.service')
@@ -22,7 +23,7 @@ describe('VisitaService - Pruebas Unitarias', () => {
       vi.spyOn(
         EmpleadoService.prototype,
         'verificarDisponibilidadEmpleados'
-      ).mockRejectedValue(new Error('El empleado Juan ya tiene asignada otra visita'))
+      ).mockRejectedValue(new ValidationError('El empleado Juan ya tiene asignada otra visita'))
 
       // VehiculoService pasa bien
       vi.spyOn(
@@ -37,7 +38,7 @@ describe('VisitaService - Pruebas Unitarias', () => {
           motivo_visita: 'Medición',
           vehiculo: 'AB123CD',
         })
-      ).rejects.toThrow('Se detectaron sobreposiciones de agenda:\nEl empleado Juan ya tiene asignada otra visita')
+      ).rejects.toThrow(/Conflictos de agenda:\n• El empleado Juan ya tiene asignada otra visita/)
     })
 
     it('debería crear correctamente si no hay conflictos', async () => {

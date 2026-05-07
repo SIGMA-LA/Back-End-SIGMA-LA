@@ -1,4 +1,5 @@
 import { VisitaRepository, VisitaWithRelations } from './visita.repository.js'
+// Service for managing visits
 import { visita, Prisma } from '@prisma/client'
 import { EmpleadoService } from '../Empleado/empleado.service.js'
 import { VehiculoService } from '../Vehiculo/vehiculo.service.js'
@@ -28,6 +29,7 @@ interface CreateVisitaData {
   vehiculo: string
   fechaHasta?: string
   cod_ops?: number[]
+  estado?: string
 }
 
 /**
@@ -50,24 +52,26 @@ export class VisitaService {
    * @returns The created visit with relations.
    */
   async create(data: CreateVisitaData): Promise<VisitaWithRelations> {
-    const fechaParaPrisma = new Date(data.fecha_hora_visita)
+    const fechaParaPrisma = data.fecha_hora_visita ? new Date(data.fecha_hora_visita) : null
     const fechaFinEstimada = data.fechaHasta
       ? new Date(data.fechaHasta)
-      : new Date(
-        fechaParaPrisma.getTime() +
-        (data.dias_viatico && data.dias_viatico > 0
-          ? data.dias_viatico
-          : 1) *
-        24 *
-        60 *
-        60 *
-        1000,
-      )
+      : fechaParaPrisma
+        ? new Date(
+          fechaParaPrisma.getTime() +
+          (data.dias_viatico && data.dias_viatico > 0
+            ? data.dias_viatico
+            : 1) *
+          24 *
+          60 *
+          60 *
+          1000,
+        )
+        : null
 
     const visitaData: Prisma.visitaCreateInput = {
       fecha_hora_visita: fechaParaPrisma,
       motivo_visita: data.motivo_visita || 'OTRO',
-      estado: 'PROGRAMADA',
+      estado: data.estado || (fechaParaPrisma ? 'PROGRAMADA' : 'SIN AGENDAR'),
       observaciones: data.observaciones,
       direccion_visita: data.direccion_visita,
       nombre_cliente: data.nombre_cliente,
@@ -85,7 +89,7 @@ export class VisitaService {
           create: data.empleados_visita.map((cuil: string) => ({ cuil })),
         },
       }),
-      ...(data.vehiculo && {
+      ...(data.vehiculo && fechaParaPrisma && {
         uso_vehiculo_visita: {
           create: {
             vehiculo: {
@@ -96,7 +100,7 @@ export class VisitaService {
             fecha_hora_ini_uso: new Date(
               data.fechaSalida || data.fecha_hora_visita,
             ),
-            fecha_hora_fin_est: fechaFinEstimada,
+            fecha_hora_fin_est: fechaFinEstimada as Date,
           },
         },
       }),
@@ -111,31 +115,42 @@ export class VisitaService {
     const fIni = new Date(data.fechaSalida || data.fecha_hora_visita)
     const fFin = fechaFinEstimada
 
-    const checks: Promise<string | null>[] = []
-    if (data.empleados_visita && data.empleados_visita.length > 0) {
-      checks.push(
-        this.empleadoService
-          .verificarDisponibilidadEmpleados(data.empleados_visita, fIni, fFin)
-          .then(() => null)
-          .catch((err: Error) => err.message),
-      )
-    }
-    if (data.vehiculo) {
-      checks.push(
-        this.vehiculoService
-          .verificarDisponibilidadVehiculos([data.vehiculo], fIni, fFin)
-          .then(() => null)
-          .catch((err: Error) => err.message),
-      )
+    const errMessages: string[] = []
+
+    if (fIni && !isNaN(fIni.getTime()) && fFin && !isNaN(fFin.getTime())) {
+      const checks: Promise<string | null>[] = []
+      if (data.empleados_visita && data.empleados_visita.length > 0) {
+        checks.push(
+          this.empleadoService
+            .verificarDisponibilidadEmpleados(data.empleados_visita, fIni, fFin)
+            .then(() => null)
+            .catch((err: Error) => {
+              if (err.name === 'ValidationError' || err.name === 'AppError') return err.message
+              return 'Error al verificar disponibilidad de empleados'
+            }),
+        )
+      }
+      if (data.vehiculo) {
+        checks.push(
+          this.vehiculoService
+            .verificarDisponibilidadVehiculos([data.vehiculo], fIni, fFin)
+            .then(() => null)
+            .catch((err: Error) => {
+              if (err.name === 'ValidationError' || err.name === 'AppError') return err.message
+              return 'Error al verificar disponibilidad de vehículos'
+            }),
+        )
+      }
+
+      const results = await Promise.all(checks)
+      errMessages.push(...results.filter(
+        (msg): msg is string => typeof msg === 'string',
+      ))
     }
 
-    const results = await Promise.all(checks)
-    const errMessages = results.filter(
-      (msg): msg is string => typeof msg === 'string',
-    )
     if (errMessages.length > 0) {
       throw new ValidationError(
-        `Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`,
+        `Conflictos de agenda:\n• ${errMessages.join('\n• ')}`,
         'CONFLICTO_AGENDA',
       )
     }
@@ -169,7 +184,7 @@ export class VisitaService {
         emailDestino,
         `Confirmación de Visita Técnica - SIGMA-LA - ${motivo}`,
         `Hola ${nombreDestino},<br><br>` +
-        `Le informamos que se ha programado una visita técnica para el día <b>${fechaParaPrisma.toLocaleString()}</b>.<br>` +
+        `Le informamos que se ha programado una visita técnica para el día <b>${fechaParaPrisma ? fechaParaPrisma.toLocaleString() : 'A COORDINAR'}</b>.<br>` +
         `Motivo: <b>${motivo}</b><br>` +
         `Dirección: ${data.direccion_visita || visita.obra?.direccion || 'A coordinar'}<br><br>` +
         `Saludos,<br>Equipo de SIGMA-LA`
@@ -272,11 +287,11 @@ export class VisitaService {
     } = data
 
     // 1. Date change detection
-    const newFechaInicio = fecha_hora_visita !== undefined 
+    const newFechaInicio = fecha_hora_visita !== undefined
       ? (fecha_hora_visita ? new Date(fecha_hora_visita) : null)
       : (existingVisita.fecha_hora_visita ? new Date(existingVisita.fecha_hora_visita) : null)
     const vUsage = existingVisita.uso_vehiculo_visita?.[0]
-    
+
     // Support for visits without date (prospects)
     const curFechaInicio = existingVisita.fecha_hora_visita ? new Date(existingVisita.fecha_hora_visita) : null
     const curFechaSalida = vUsage ? new Date(vUsage.fecha_hora_ini_uso) : curFechaInicio
@@ -301,7 +316,9 @@ export class VisitaService {
     )
 
     // 3. Conditional availability validations
-    if ((hasDatesChanged || hasPersonnelChanged || hasVehicleChanged) && newFechaSalida && newFechaRetorno) {
+    if ((hasDatesChanged || hasPersonnelChanged || hasVehicleChanged) &&
+      newFechaSalida && !isNaN(newFechaSalida.getTime()) &&
+      newFechaRetorno && !isNaN(newFechaRetorno.getTime())) {
       const cuilesToValidate = empleados_visita || existingVisita.empleado_visita.map((ev) => ev.cuil)
       const vehiculoToValidate = vehiculo || (vUsage ? vUsage.patente : undefined)
 
@@ -311,7 +328,10 @@ export class VisitaService {
           this.empleadoService
             .verificarDisponibilidadEmpleados(cuilesToValidate, newFechaSalida, newFechaRetorno, cod_visita)
             .then(() => null)
-            .catch((err: Error) => err.message)
+            .catch((err: Error) => {
+              if (err.name === 'ValidationError' || err.name === 'AppError') return err.message
+              return 'Error al verificar disponibilidad de empleados'
+            })
         )
       }
       if (vehiculoToValidate) {
@@ -319,7 +339,10 @@ export class VisitaService {
           this.vehiculoService
             .verificarDisponibilidadVehiculos([vehiculoToValidate], newFechaSalida, newFechaRetorno, cod_visita)
             .then(() => null)
-            .catch((err: Error) => err.message)
+            .catch((err: Error) => {
+              if (err.name === 'ValidationError' || err.name === 'AppError') return err.message
+              return 'Error al verificar disponibilidad de vehículos'
+            })
         )
       }
 
@@ -327,7 +350,7 @@ export class VisitaService {
       const errMessages = results.filter((msg): msg is string => typeof msg === 'string')
       if (errMessages.length > 0) {
         throw new ValidationError(
-          `Se detectaron sobreposiciones de agenda:\n${errMessages.join('\n')}`,
+          `Conflictos de agenda:\n• ${errMessages.join('\n• ')}`,
           'CONFLICTO_AGENDA'
         )
       }
@@ -339,6 +362,11 @@ export class VisitaService {
       ...(fecha_hora_visita !== undefined && { fecha_hora_visita: newFechaInicio }),
       ...(fecha_cancelacion !== undefined && { fecha_cancelacion: fecha_cancelacion ? new Date(fecha_cancelacion) : null }),
       ...(dias_viatico !== undefined && { dias_viatico }),
+    }
+
+    // Auto-promote SIN AGENDAR to PROGRAMADA if date is set
+    if (existingVisita.estado === 'SIN AGENDAR' && newFechaInicio) {
+      updateData.estado = 'PROGRAMADA'
     }
 
     if (hasPersonnelChanged && empleados_visita) {
@@ -567,7 +595,7 @@ export class VisitaService {
     await this.findById(cod_visita)
 
     return await this.visitaRepository.update(cod_visita, {
-      estado: 'PROGRAMADA',
+      estado: 'SIN AGENDAR',
       fecha_hora_visita: null,
       fecha_cancelacion: null,
       observaciones: 'RE-SOLICITUD DE MEDICIÓN (Previamente cancelada)'
