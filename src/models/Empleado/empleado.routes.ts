@@ -59,17 +59,6 @@ empleadoRouter.get('/me', empleadoController.getMe)
  */
 empleadoRouter.get('/disponibles-entrega', empleadoController.getDisponiblesParaEntrega)
 
-/**
- * [PARCHE TEMPORAL]
- * Se ha deshabilitado la validación de Valibot (validate()) para esta ruta POST
- * debido a inconsistencias críticas en el paquete 'sigma-la-schemas':
- * 
- * 1. El 'createEmpleadoSchema' oficial se encuentra desactualizado y estricto respecto a los datos permitidos.
- * 2. La validación falla con el payload actual requerido para la creación de empleados.
- * 
- * TODO: Actualizar 'sigma-la-schemas' (v1.0.28+) para incluir todos los campos y formatos correctos
- * y poder reactivar esta validación.
- */
 empleadoRouter.post(
   '/',
   authorize('empleado', 'crear'),
@@ -91,11 +80,6 @@ empleadoRouter.get(
  * @route   PUT /api/empleados/:cuil
  * @desc    Actualizar un empleado
  * @access  Privado (solo ADMIN)
- * 
- * [PARCHE TEMPORAL]
- * Se ha deshabilitado la validación de body (updateEmpleadoSchema) debido a que 
- * 'sigma-la-schemas' (v1.0.28) tiene una lista restrictiva de áreas de trabajo
- * que no incluye las nuevas áreas necesarias (ADMINISTRADOR, etc).
  */
 empleadoRouter.put(
   '/:cuil',

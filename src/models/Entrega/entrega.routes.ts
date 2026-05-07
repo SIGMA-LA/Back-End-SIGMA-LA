@@ -16,20 +16,6 @@ entregaRouter.post('/', authorize('entrega', 'crear'), entregaController.create)
 
 entregaRouter.get('/:id', validate({ params: idParamsSchema }), entregaController.getOne)
 
-/**
- * [PARCHE TEMPORAL]
- * Se ha deshabilitado la validación de Valibot (validate()) para esta ruta PUT 
- * debido a inconsistencias críticas en el paquete 'sigma-la-schemas':
- * 
- * 1. El 'updateEntregaSchema' oficial solo permite [cod_obra, fecha_hora_entrega, estado, observaciones, detalle].
- * 2. El esquema CARECE de los campos [dias_viaticos, empleados, vehiculos, maquinarias, fecha_salida_estimada, fecha_regreso_estimado], 
- *    los cuales SÍ son soportados y requeridos por el EntregaService.
- * 3. Existe un mismatch de roles: el esquema espera 'AYUDANTE' mientras que la DB/Service usan 'ACOMPANANTE'.
- * 4. El 'idParamsSchema' causa conflictos de transformación en el middleware.
- * 
- * TODO: Actualizar 'sigma-la-schemas' (v1.0.28+) para incluir todos los campos del servicio
- * y corregir los nombres de picklist para poder reactivar esta validación.
- */
 entregaRouter.put('/:id', authorize('entrega', 'actualizar'), entregaController.update)
 
 entregaRouter.delete(
