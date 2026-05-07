@@ -439,9 +439,12 @@ export class EntregaService {
 
   async agregarOrdenesDeProduccion(cod_entrega: number, cod_ops: number[]): Promise<entrega> {
     if (!cod_ops || cod_ops.length === 0) throw new ValidationError('Debe proporcionar al menos una orden de producción', 'MISSING_PARAMS')
-    const ops = await prisma.orden_de_produccion.findMany({ where: { cod_op: { in: cod_ops } } })
+    const ops = await prisma.orden_de_produccion.findMany({ 
+      where: { cod_op: { in: cod_ops } },
+      include: { entrega: true }
+    })
     if (ops.length !== cod_ops.length) throw new ValidationError('Una o más órdenes de producción no existen', 'ORDEN_NOT_FOUND')
-    const yaAsignadas = ops.filter(op => op.cod_entrega !== null && op.cod_entrega !== cod_entrega)
+    const yaAsignadas = ops.filter(op => op.cod_entrega !== null && op.cod_entrega !== cod_entrega && op.entrega?.estado !== 'CANCELADO')
     if (yaAsignadas.length > 0) throw new ValidationError(`Las siguientes OPs ya están asignadas a otra entrega: ${yaAsignadas.map(op => op.cod_op).join(', ')}`, 'CONFLICTO_OP')
     return this.entregaRepository.update(cod_entrega, { ordenes_de_produccion: { connect: cod_ops.map(cod_op => ({ cod_op })) } })
   }

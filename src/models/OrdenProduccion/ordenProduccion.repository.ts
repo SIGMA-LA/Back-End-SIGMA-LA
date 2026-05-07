@@ -216,6 +216,10 @@ export class OrdenProduccionRepository {
       where: {
         cod_obra,
         estado: 'FINALIZADA',
+        OR: [
+          { cod_entrega: null },
+          { entrega: { estado: 'CANCELADO' } }
+        ]
       },
       orderBy: { fecha_confeccion: 'desc' },
       include: {
