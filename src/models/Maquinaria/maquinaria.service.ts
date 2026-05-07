@@ -147,7 +147,7 @@ export class MaquinariaService {
       throw new AppError(
         'La maquinaria debe estar en el estado no disponible para poder eliminarla.',
         400,
-        'MAQUINARIA_INVALID_STATE'
+        'MAQUINARIA_INVALID_STATE' // Usamos código específico para evitar sobrescritura en ERROR_MAP
       )
     }
 

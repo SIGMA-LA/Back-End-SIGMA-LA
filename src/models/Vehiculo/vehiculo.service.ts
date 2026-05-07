@@ -172,7 +172,7 @@ export class VehiculoService {
       throw new AppError(
         'El vehículo debe estar en el estado fuera de servicio para poder eliminarlo.',
         400,
-        'VEHICULO_INVALID_STATE'
+        'VEHICULO_INVALID_STATE' // Usamos código específico para evitar sobrescritura en ERROR_MAP
       )
     }
 
