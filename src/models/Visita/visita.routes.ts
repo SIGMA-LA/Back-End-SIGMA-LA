@@ -19,19 +19,6 @@ visitaRouter.get('/buscar', visitaController.buscar)
 
 visitaRouter.get('/:id', validate({ params: idParamsSchema }), visitaController.getOne)
 
-/**
- * [PARCHE TEMPORAL]
- * Se ha deshabilitado la validación de Valibot (validate()) para esta ruta PUT 
- * debido a inconsistencias en el paquete 'sigma-la-schemas':
- * 
- * 1. El validador 'isoDateTime' en 'updateVisitaSchema' es extremadamente estricto
- *    y rechaza formatos ISO estándar (con segundos o sufijo Z) que el servicio 
- *    y la base de datos sí aceptan correctamente.
- * 2. Esto causaba errores de validación 400 incluso con datos correctos.
- * 
- * TODO: Corregir los esquemas en 'sigma-la-schemas' para usar un formato de fecha
- * más flexible o una expresión regular antes de reactivar este middleware.
- */
 visitaRouter.put('/:id', authorize('visita', 'actualizar'), visitaController.update)
 
 visitaRouter.delete(
