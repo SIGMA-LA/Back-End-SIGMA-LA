@@ -55,7 +55,7 @@ model entrega {
   fecha_hora_entrega    DateTime               @db.Timestamp(6)
   estado                String                 @db.VarChar(50)
   observaciones         String?                @db.VarChar(500)
-  detalle               String                 @db.VarChar(500)
+  detalle               String                 @db.VarChar(50)
   cod_entrega           Int                    @id @default(autoincrement())
   dias_viaticos         Int?
   fecha_cancelacion     DateTime?              @db.Date

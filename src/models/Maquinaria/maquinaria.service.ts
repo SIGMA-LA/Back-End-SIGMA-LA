@@ -145,9 +145,9 @@ export class MaquinariaService {
     
     if (maquina.estado !== 'NO DISPONIBLE') {
       throw new AppError(
-        'La maquinaria solo puede ser eliminada si se encuentra en estado "NO DISPONIBLE".',
+        'La maquinaria debe estar en el estado no disponible para poder eliminarla.',
         400,
-        'INVALID_STATE'
+        'MAQUINARIA_INVALID_STATE'
       )
     }
 

@@ -170,9 +170,9 @@ export class VehiculoService {
 
     if (vehiculoInfo.estado !== 'FUERA DE SERVICIO') {
       throw new AppError(
-        'El vehículo solo puede ser eliminado si se encuentra en estado "FUERA DE SERVICIO".',
+        'El vehículo debe estar en el estado fuera de servicio para poder eliminarlo.',
         400,
-        'INVALID_STATE'
+        'VEHICULO_INVALID_STATE'
       )
     }
 

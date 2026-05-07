@@ -20,8 +20,10 @@ export const ERROR_MAP: Record<string, string> = {
   'DUPLICATE_PATENTE': 'Ya existe un vehículo con esa patente',
   'USO_VEHICULO_VISITA_NOT_FOUND': 'Registro de uso de vehículo no encontrado',
   'USO_VEHICULO_ENTREGA_NOT_FOUND': 'Registro de uso de vehículo por entrega no encontrado',
-  'MAQUINARIA_NOT_FOUND': 'Maquinaria no encontrada',
+    'MAQUINARIA_NOT_FOUND': 'Maquinaria no encontrada',
   'USO_MAQUINARIA_NOT_FOUND': 'Uso de maquinaria no encontrado',
+  'MAQUINARIA_INVALID_STATE': 'La maquinaria debe estar en el estado no disponible para poder eliminarla.',
+  'VEHICULO_INVALID_STATE': 'El vehículo debe estar en el estado fuera de servicio para poder eliminarlo.',
   
   // Pagos
   'PAGO_NOT_FOUND': 'Pago no encontrado',
