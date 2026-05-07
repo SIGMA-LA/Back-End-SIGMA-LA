@@ -26,41 +26,47 @@ export class EmpleadoRepository {
 
   // Buscar usos en un rango de tiempo
   async findUsagesInRange(cuiles: string[], timeWindowStart: Date) {
-    return await this.prisma.empleado.findMany({
+    // 1. Obtener los empleados primero
+    const empleados = await this.prisma.empleado.findMany({
       where: { cuil: { in: cuiles } },
-      include: {
-        entrega_empleado: {
-          include: {
-            entrega: {
-              include: {
-                uso_vehiculo_entrega: true,
-              },
-            },
-          },
-          where: {
-            entrega: {
-              fecha_hora_entrega: { gt: timeWindowStart },
-              estado: { in: ['PENDIENTE', 'EN CURSO'] },
-            },
-          },
-        },
-        empleado_visita: {
-          include: {
-            visita: {
-              include: {
-                uso_vehiculo_visita: true,
-              },
-            },
-          },
-          where: {
-            visita: {
-              fecha_hora_visita: { gt: timeWindowStart },
-              estado: { in: ['PROGRAMADA', 'EN CURSO', 'REPROGRAMADA'] },
-            },
-          },
-        },
-      },
     })
+
+    // 2. Obtener sus asignaciones de forma separada para evitar consultas complejas
+    // que disparan errores de "cached plan" en Postgres
+    const result = await Promise.all(
+      empleados.map(async (emp) => {
+        const [entregas, visitas] = await Promise.all([
+          this.prisma.entrega_empleado.findMany({
+            where: {
+              cuil: emp.cuil,
+            },
+            include: {
+              entrega: {
+                include: { uso_vehiculo_entrega: true },
+              },
+            },
+          }),
+          this.prisma.empleado_visita.findMany({
+            where: {
+              cuil: emp.cuil,
+            },
+            include: {
+              visita: {
+                include: { uso_vehiculo_visita: true },
+              },
+            },
+          }),
+        ])
+
+        return {
+          ...emp,
+          entrega_empleado: entregas,
+          empleado_visita: visitas,
+        }
+      }),
+    )
+
+    return result
   }
 
   // Obtener empleado por CUIL (solo datos públicos)

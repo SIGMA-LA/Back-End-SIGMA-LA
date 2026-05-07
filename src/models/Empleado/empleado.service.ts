@@ -301,12 +301,12 @@ export class EmpleadoService {
   ): Promise<void> {
     if (cuiles.length === 0) return
 
-    const thirtyDaysAgo = new Date(
+    const timeWindowStart = new Date(
       fechaInicio.getTime() - 30 * 24 * 60 * 60 * 1000,
     )
     const empleadosConUsos = await this.empleadoRepository.findUsagesInRange(
       cuiles,
-      thirtyDaysAgo,
+      timeWindowStart,
     )
 
     const empleadosInactivos = empleadosConUsos.filter((emp) => !emp.activo)
@@ -323,6 +323,11 @@ export class EmpleadoService {
       for (const ee of emp.entrega_empleado) {
         const entrega = ee.entrega as EntregaConUso
         if (!entrega) continue
+        
+        // Filtrado por fecha y estado (movido desde el repositorio por simplicidad de consulta)
+        if (new Date(entrega.fecha_hora_entrega) <= timeWindowStart) continue
+        if (!['PENDIENTE', 'EN CURSO'].includes(entrega.estado)) continue
+
         if (excludeCodEntrega && entrega.cod_entrega === excludeCodEntrega)
           continue
 
@@ -348,6 +353,11 @@ export class EmpleadoService {
         for (const ev of emp.empleado_visita) {
           const visita = ev.visita as VisitaConUso
           if (!visita) continue
+
+          // Filtrado por fecha y estado (movido desde el repositorio por simplicidad de consulta)
+          if (!visita.fecha_hora_visita || new Date(visita.fecha_hora_visita) <= timeWindowStart) continue
+          if (!['PROGRAMADA', 'EN CURSO', 'REPROGRAMADA'].includes(visita.estado)) continue
+
           if (excludeCodVisita && visita.cod_visita === excludeCodVisita)
             continue
 
