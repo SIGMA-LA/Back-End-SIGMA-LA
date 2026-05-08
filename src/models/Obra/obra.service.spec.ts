@@ -3,6 +3,13 @@ import { ObraService } from './obra.service'
 import { ObraRepository } from './obra.repository'
 
 vi.mock('./obra.repository')
+vi.mock('../../shared/db/prismaClient.js', () => ({
+  prisma: {
+    parametro: {
+      findFirst: vi.fn().mockResolvedValue({ dias_vigencia_presu: 30 }),
+    },
+  },
+}))
 
 describe('ObraService - Pruebas Unitarias', () => {
   let obraService: ObraService
