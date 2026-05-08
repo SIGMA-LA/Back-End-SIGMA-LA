@@ -14,6 +14,34 @@ export interface NotasFabricaFilters {
   fechaHasta?: string
 }
 
+export type ObraWithRelations = Prisma.obraGetPayload<{
+  include: {
+    cliente: true,
+    arquitecto: true,
+    localidad: true,
+    presupuesto: true,
+    visita: {
+      include: {
+        empleado_visita: {
+          include: {
+            empleado: true
+          }
+        }
+      }
+    },
+    pago: true,
+    entrega: {
+      include: {
+        entrega_empleado: {
+          include: {
+            empleado: true
+          }
+        }
+      }
+    },
+  }
+}>
+
 /**
  * Repositorio para acceder a la base de datos de obras.
  */
@@ -165,7 +193,7 @@ export class ObraRepository {
   }
 
   /** Obtiene una obra por ID */
-  async findById(id: number): Promise<obra | null> {
+  async findById(id: number): Promise<ObraWithRelations | null> {
     return await this.prisma.obra.findUnique({
       where: { cod_obra: id },
       include: {
@@ -173,11 +201,27 @@ export class ObraRepository {
         arquitecto: true,
         localidad: true,
         presupuesto: true,
-        visita: true,
+        visita: {
+          include: {
+            empleado_visita: {
+              include: {
+                empleado: true,
+              },
+            },
+          },
+        },
         pago: true,
-        entrega: true,
+        entrega: {
+          include: {
+            entrega_empleado: {
+              include: {
+                empleado: true,
+              },
+            },
+          },
+        },
       },
-    })
+    }) as ObraWithRelations | null
   }
 
   // ----------- NOTA DE FÁBRICA -----------

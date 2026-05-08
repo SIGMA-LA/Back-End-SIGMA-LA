@@ -2,6 +2,7 @@ import { obra, Prisma } from '@prisma/client'
 import {
   NotasFabricaFilters,
   ObraRepository,
+  ObraWithRelations,
 } from './obra.repository.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
@@ -104,7 +105,7 @@ export class ObraService {
   /**
    * Gets an obra by its ID.
    */
-  async findById(id: number): Promise<obra> {
+  async findById(id: number): Promise<ObraWithRelations> {
     const entry = await this.repository.findById(id)
     if (!entry) {
       throw new AppError(`Obra no encontrada (ID: ${id})`, 404, 'OBRA_NOT_FOUND')
