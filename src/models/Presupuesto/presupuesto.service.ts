@@ -1,6 +1,8 @@
 import { presupuesto, Prisma } from '@prisma/client'
 import { PresupuestoRepository } from './presupuesto.repository.js'
 import { AppError } from '../../shared/errors/AppError.js'
+import { ValidationError } from '../../shared/errors/validationError.js'
+import { prisma } from '../../shared/db/prismaClient.js'
 
 /**
  * Service to manage budget (presupuesto) operations.
@@ -31,6 +33,9 @@ export class PresupuestoService {
     ) {
       data.fecha_aceptacion = new Date(data.fecha_aceptacion + 'T00:00:00.000Z')
     }
+
+    await this.validarVigencia(data.fecha_emision as Date, data.fecha_aceptacion as Date | null)
+
     return await this.repository.create(data)
   }
 
@@ -80,6 +85,9 @@ export class PresupuestoService {
     }
 
     await this.findById(nro_presupuesto) // Ensure existence
+
+    await this.validarVigencia(data.fecha_emision as Date, data.fecha_aceptacion as Date | null)
+
     return await this.repository.update(nro_presupuesto, data)
   }
 
@@ -91,6 +99,36 @@ export class PresupuestoService {
   async remove(nro_presupuesto: number): Promise<presupuesto> {
     await this.findById(nro_presupuesto)
     return await this.repository.delete(nro_presupuesto)
+  }
+
+  /**
+   * Validates that the difference between emission and acceptance dates
+   * does not exceed the allowed days in system parameters.
+   */
+  private async validarVigencia(fechaEmision: Date | undefined, fechaAceptacion: Date | null | undefined): Promise<void> {
+    if (!fechaEmision || !fechaAceptacion) return
+
+    const parametroActual = await prisma.parametro.findFirst({
+      orderBy: [{ fecha_cambio: 'desc' }, { hora_cambio: 'desc' }],
+    })
+
+    if (!parametroActual) return
+
+    const diasVigencia = parametroActual.dias_vigencia_presu
+    const fEmision = new Date(fechaEmision)
+    const fAceptacion = new Date(fechaAceptacion)
+
+    const utc1 = Date.UTC(fEmision.getUTCFullYear(), fEmision.getUTCMonth(), fEmision.getUTCDate())
+    const utc2 = Date.UTC(fAceptacion.getUTCFullYear(), fAceptacion.getUTCMonth(), fAceptacion.getUTCDate())
+
+    const diffDays = Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24))
+
+    if (diffDays > diasVigencia) {
+      throw new ValidationError(
+        `El presupuesto no puede ser aceptado porque han transcurrido ${diffDays} días desde su emisión, superando el límite de ${diasVigencia} días permitido.`,
+        'PRESUPUESTO_EXPIRADO'
+      )
+    }
   }
 }
 

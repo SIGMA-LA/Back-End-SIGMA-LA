@@ -2,6 +2,7 @@ import { obra, Prisma } from '@prisma/client'
 import {
   NotasFabricaFilters,
   ObraRepository,
+  ObraWithRelations,
 } from './obra.repository.js'
 import { AppError } from '../../shared/errors/AppError.js'
 import { ValidationError } from '../../shared/errors/validationError.js'
@@ -104,7 +105,7 @@ export class ObraService {
   /**
    * Gets an obra by its ID.
    */
-  async findById(id: number): Promise<obra> {
+  async findById(id: number): Promise<ObraWithRelations> {
     const entry = await this.repository.findById(id)
     if (!entry) {
       throw new AppError(`Obra no encontrada (ID: ${id})`, 404, 'OBRA_NOT_FOUND')
@@ -214,6 +215,35 @@ export class ObraService {
       }))
       // Remove from rest so we can rebuild it with parsed dates below
       delete (rest as Record<string, unknown>).presupuesto
+    }
+
+    // Validation: Budget validity period
+    if (parsedPresupuestosCreate && parsedPresupuestosCreate.length > 0) {
+      const parametroActual = await prisma.parametro.findFirst({
+        orderBy: [{ fecha_cambio: 'desc' }, { hora_cambio: 'desc' }],
+      })
+
+      if (parametroActual) {
+        const diasVigencia = parametroActual.dias_vigencia_presu
+        for (const p of parsedPresupuestosCreate) {
+          if (p.fecha_aceptacion && p.fecha_emision) {
+            const fEmision = new Date(p.fecha_emision)
+            const fAceptacion = new Date(p.fecha_aceptacion)
+
+            const utc1 = Date.UTC(fEmision.getUTCFullYear(), fEmision.getUTCMonth(), fEmision.getUTCDate())
+            const utc2 = Date.UTC(fAceptacion.getUTCFullYear(), fAceptacion.getUTCMonth(), fAceptacion.getUTCDate())
+
+            const diffDays = Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24))
+
+            if (diffDays > diasVigencia) {
+              throw new ValidationError(
+                `El presupuesto no puede ser aceptado porque han transcurrido ${diffDays} días desde su emisión, superando el límite de ${diasVigencia} días permitido.`,
+                'PRESUPUESTO_EXPIRADO'
+              )
+            }
+          }
+        }
+      }
     }
 
     const prismaData: Prisma.obraCreateInput = {
