@@ -263,8 +263,14 @@ export class ObraRepository {
     }
 
     if (filters.estado === 'CON_ORDEN') {
-      // Tiene al menos una orden, pero ninguna está en EN PRODUCCION
-      // (la obra todavía no empezó producción)
+      // Solo obras en estado EN ESPERA DE STOCK o PAGADA PARCIALMENTE
+      // que tengan al menos una orden de producción y ninguna esté EN PRODUCCION.
+      // Las obras ENTREGADAS (y cualquier otro estado terminal) quedan excluidas.
+      andConditions.push({
+        estado: {
+          in: ['EN ESPERA DE STOCK', 'PAGADA PARCIALMENTE'],
+        },
+      })
       andConditions.push({
         orden_de_produccion: {
           some: {},
@@ -275,11 +281,6 @@ export class ObraRepository {
           none: {
             estado: 'EN PRODUCCION',
           },
-        },
-      })
-      andConditions.push({
-        estado: {
-          notIn: ['EN PRODUCCION', 'PRODUCCION FINALIZADA', 'CANCELADA'],
         },
       })
     }
