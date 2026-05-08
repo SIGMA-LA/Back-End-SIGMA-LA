@@ -38,7 +38,7 @@ export class VisitaRepository {
   ): Promise<{ data: VisitaWithRelations[]; total: number }> {
     const whereClause: Prisma.visitaWhereInput = estado
       ? { estado: { equals: estado, mode: 'insensitive' } }
-      : {}
+      : { estado: { not: 'SIN AGENDAR' } }
 
     const skip = paginationConfig
       ? (paginationConfig.page - 1) * paginationConfig.pageSize
@@ -266,6 +266,8 @@ export class VisitaRepository {
 
     if (estado) {
       filters.push({ estado: { equals: estado, mode: 'insensitive' } })
+    } else {
+      filters.push({ estado: { not: 'SIN AGENDAR' } })
     }
 
     const skip = paginationConfig
